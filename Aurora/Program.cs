@@ -1,8 +1,10 @@
-﻿#define OWL
+﻿using System.Reflection;
 using CommandLine;
+using CommandLine.Text;
+
 namespace Aurora;
 
-internal static class Program
+public static class Program
 {
     private static string[] ReadCode(string filePath)
     {
@@ -10,15 +12,17 @@ internal static class Program
         {
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"));
         }
+
         if (!File.Exists(filePath))
         {
             Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"));
         }
+
         if (!filePath.EndsWith(".aur"))
         {
             GlobalVariables.LOGGER.Warning("Aurora code should be written in an aurora file (ending with .aur).");
         }
-        
+
         Variables.SYSTEM_DEFINED.Add("__SCRIPT__", new StringToken().Initialise(filePath, withoutQuotes: true));
         return File.ReadAllLines(filePath);
     }
@@ -55,6 +59,17 @@ internal static class Program
 
     private static void RunOptionsAndReturnExitCode(Options opts)
     {
+        if (opts.Version)
+        {
+            var version = Assembly
+                .GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion ?? "Unknown";
+
+            Console.WriteLine($"Aurora version {version}");
+            Environment.Exit(0);
+        }
+
         GlobalVariables.CodeFilePath = opts.FilePath;
 
         if (opts.FilePath == "nothing")
@@ -67,32 +82,32 @@ internal static class Program
         {
             Errors.AlwaysThrow(new FileNotFoundError("404: File intentionally not found."));
         }
-        
+
         Errors.ConfigFilePath = string.IsNullOrEmpty(opts.ConfigFile) ? Errors.ConfigFilePath : opts.ConfigFile;
-        
+
         GlobalVariables.StrictFlagMode = opts.Strict;
         if (!string.IsNullOrEmpty(opts.LogFile))
         {
             GlobalVariables.LOGGER.LogFilePath = opts.LogFile;
         }
-        
+
         if (!string.IsNullOrEmpty(opts.ConfigFile))
         {
             UserConfiguration.ApplyConfiguration(opts.ConfigFile);
         }
 
-        ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict);            
+        ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict);
     }
 
     private static void HandleParseError(IEnumerable<Error> errs)
     {
         errs = errs.ToList();
-        
+
         if (errs.IsHelp() || errs.IsVersion())
         {
             Environment.Exit(0);
         }
-        
+
         foreach (var err in errs)
         {
             GlobalVariables.LOGGER.ForceLog($"System Error: {err}");
@@ -104,16 +119,16 @@ internal static class Program
 
     public static void Main(string[] args)
     {
-        #if TESTING
+#if TESTING
         Test.isTesting = true;
         Test.Main();
         Environment.Exit(0);
-        #endif
-        
-        #if OWL
+#endif
+
+#if OWL
         Owl.Show();
         Environment.Exit(0);
-        #endif
+#endif
 
         if (args.Contains("--supercalifragalisticexpialidocious"))
         {
@@ -138,16 +153,16 @@ internal static class Program
                 "You're doing amazing. Your code isn't perfect, but neither is the moon, and it still controls the tides.");
             Environment.Exit(0);
         }
-        
-        
+
+
         Classes.RegisterSystemClasses();
-        
+
         try
         {
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(RunOptionsAndReturnExitCode)
                 .WithNotParsed(HandleParseError);
-            
+
             string[] code = ReadCode(GlobalVariables.CodeFilePath);
             Evaluate.AllCode(code);
         }
@@ -160,12 +175,10 @@ internal static class Program
                 + "--\n"
                 + $"Source: {e.Source}\n"
                 + $"TargetSite: {e.TargetSite}\n";
-            
+
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
                 new SystemError(e.Message));
         }
-        
-        
     }
 }

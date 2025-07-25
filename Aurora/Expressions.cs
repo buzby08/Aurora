@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 namespace Aurora;
 
 internal abstract class Expression
@@ -27,9 +28,9 @@ internal class LiteralExpression(List<Token> value) : Expression
                 (Token result, _) = EvaluateExpression(tokens, firstIteration: true);
                 return result;
         }
-        }
-    
-    private static (Token, int) EvaluateExpression(List<Token> tokens, bool firstIteration=false)
+    }
+
+    private static (Token, int) EvaluateExpression(List<Token> tokens, bool firstIteration = false)
     {
         GlobalVariables.ExpressionDepth++;
         if (GlobalVariables.ExpressionDepth > UserConfiguration.MaxExpressionDepth)
@@ -37,9 +38,9 @@ internal class LiteralExpression(List<Token> value) : Expression
             Errors.RaiseError(new MaxExpressionDepthExceededError());
             throw new UnreachableException();
         }
-            
+
         GlobalVariables.LOGGER.Verbose($"Literal expression: {PrettyPrint.TokenList(tokens, output: false)}");
-        
+
         int itemsChecked = 0;
         List<Token> finalExpression = [];
         bool expectsCloseBracket = !firstIteration;
@@ -53,10 +54,10 @@ internal class LiteralExpression(List<Token> value) : Expression
             {
                 (Token nextToken, int indexToAdd) = EvaluateExpression(tokens[(itemsChecked + 1)..]);
                 finalExpression.Add(nextToken);
-                itemsChecked += indexToAdd+1;
+                itemsChecked += indexToAdd + 1;
                 continue;
             }
-            
+
             itemsChecked++;
 
             if (item is BracketToken { IsNormal: true, IsOpen: false } && expectsCloseBracket)
@@ -70,9 +71,8 @@ internal class LiteralExpression(List<Token> value) : Expression
                 foundCloseBracket = true;
                 continue;
             }
-            
-            finalExpression.Add(item);
 
+            finalExpression.Add(item);
         }
 
         switch (expectsCloseBracket, foundCloseBracket)
@@ -90,7 +90,7 @@ internal class LiteralExpression(List<Token> value) : Expression
         Token? total = null;
         char operation = '+';
 
-        foreach (Token item in finalExpression) 
+        foreach (Token item in finalExpression)
         {
             if (item is OperatorToken)
             {
@@ -109,7 +109,7 @@ internal class LiteralExpression(List<Token> value) : Expression
         throw new UnreachableException();
     }
 
-    private static Token Combine(Token? left, char operation, Token right)
+    public static Token Combine(Token? left, char operation, Token right)
     {
         switch (left, operation)
         {
@@ -137,10 +137,10 @@ internal class LiteralExpression(List<Token> value) : Expression
         {
             // String operations
             case (StringToken.TokenType, _, '+'):
-                return new StringToken().Initialise((string?)left.Value + right.Value, withoutQuotes:true);
+                return new StringToken().Initialise((string?)left.Value + right.Value, withoutQuotes: true);
             case (StringToken.TokenType, IntegerToken.TokenType, '*'):
                 return new StringToken().Initialise(
-                    string.Concat(Enumerable.Repeat((string?)left.Value, (int)right.Value)), withoutQuotes:true);
+                    string.Concat(Enumerable.Repeat((string?)left.Value, (int)right.Value)), withoutQuotes: true);
 
             // Integer operations
             case (IntegerToken.TokenType, IntegerToken.TokenType, '+'):
@@ -196,7 +196,6 @@ internal class LiteralExpression(List<Token> value) : Expression
                     new TypeMismatchError($"Unsupported operation: {left.Type} {operation} {right.Type}"));
                 throw new UnreachableException();
         }
-
     }
 }
 

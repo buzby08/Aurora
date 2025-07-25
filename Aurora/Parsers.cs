@@ -9,6 +9,7 @@ internal static class Parsers
     
         HashSet<string> processedPositionalArgs = [];
         HashSet<string> processedKeywordArgs = [];
+        int? lastPositionalIndex = null;
     
         foreach (string arg in expectedArguments.Keys)
         {
@@ -34,34 +35,43 @@ internal static class Parsers
                 Errors.RaiseError(
                     new TypeMismatchError($"Parameter '{arg}' expected to be of the type '{expectedType}'"));
             }
-    
+
+            if (actualValue is WordToken wordToken && Variables.IsVariable(wordToken.ValueAsString))
+            {
+                actualValue = Variables.GetVariable(wordToken.ValueAsString);
+            }
+            
             result[arg] = actualValue;
+            lastPositionalIndex = positionalIndex;
     
             if (positionalValue is not null)
                 processedPositionalArgs.Add(arg);
             if (keywordValue is not null)
                 processedKeywordArgs.Add(arg);
         }
-    
-        if (provideExtras)
+
+        if (!provideExtras) return result;
+
+
+        int count = 1;
+        for (int i = 0; i < positionals.Count; i++)
         {
-            for (int i = 0; i < positionals.Count; i++)
-            {
-                if (!processedPositionalArgs.Contains(positionalOrder[i]))
-                {
-                    result[$"extra_positional_{i}"] = positionals[i];
-                }
-            }
-    
-            foreach (var keyword in keywords.Keys)
-            {
-                if (!processedKeywordArgs.Contains(keyword))
-                {
-                    result[keyword] = keywords[keyword];
-                }
-            }
+            if (lastPositionalIndex is null) break;
+            
+            if (i <= lastPositionalIndex) continue;
+            
+            result.Add($"extra_positional_{count}", positionals[i]);
+            count++;
         }
     
+        foreach (var keyword in keywords.Keys)
+        {
+            if (!processedKeywordArgs.Contains(keyword))
+            {
+                result[keyword] = keywords[keyword];
+            }
+        }
+
         return result;
     }
 

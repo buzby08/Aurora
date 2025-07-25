@@ -2,11 +2,14 @@ using CommandLine;
 
 namespace Aurora
 {
-    internal class Options
+    public class Options
     {
         [Value(0, MetaName = "file", Required = true, HelpText = "Input file to be processed")]
         public required string FilePath { get; set; }
-        
+
+        [Option("version", HelpText = "Display version information")]
+        public bool Version { get; set; }
+
         [Option('v', "verbose", Default = false, HelpText = "Prints verbose log messages")]
         public bool Verbose { get; set; }
 
@@ -24,8 +27,12 @@ namespace Aurora
 
         [Option('s', "strict", Default = false, HelpText = "Only displays the log messages specified from flags")]
         public bool Strict { get; set; }
-        
-        [Option("config-file", Default = "./auroraConfig.json", HelpText = "The config file for the aurora interpreter")]
+
+        [Option("config-file", Default = null, HelpText = "The config file for the aurora interpreter")]
         public string? ConfigFile { get; set; }
+
+        public Options()
+        {
+        }
     }
 }

@@ -53,9 +53,17 @@ internal static class Variables
 
     public static void RegisterVariable(string name, Token value)
     {
-        UserDefined.Add(name, value);
-        
         if (name.Contains("banana", StringComparison.CurrentCultureIgnoreCase))
             GlobalVariables.LOGGER.Warning("Variable names containing 'banana' are slippery: proceed with caution.");
+        
+        if (UserDefined.TryAdd(name, value))
+            return;
+        
+        Token currentVariable = GetVariable(name);
+        if (currentVariable.Type != value.Type)
+            Errors.AlwaysThrow(new TypeMismatchError($"`{value.Type}` is not assignable to `{currentVariable.Type}`."));
+
+        UserDefined[name] = value;
+
     }
 }

@@ -1,3 +1,5 @@
+using CommandLine;
+
 namespace Aurora;
 
 /// <summary>
@@ -12,8 +14,9 @@ internal static class GlobalVariables
     public static int ExpressionDepth = 0;
     public const string ConfigFilePath = @"\mnt\CTRL-S\Aurora\auroraConfig.json";
     public static bool StrictFlagMode = false;
+    public static ParserResult<Options>? ParserResult;
 
-    public static readonly Tuple<char, char> STRING_START_CHARS = new ('"', '\'');
+    public static readonly Tuple<char, char> STRING_START_CHARS = new('"', '\'');
 
     /// <summary>
     /// Returns a version of the string with its surrounding quotes, not interfering with the internal string
@@ -23,9 +26,12 @@ internal static class GlobalVariables
     /// <returns>The converted string</returns>
     public static string? ReprString(string? value)
     {
-        if (string.IsNullOrEmpty(value)) { return value; }
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
 
-        char quote = value.Contains('\'') ? '"': '\'';
+        char quote = value.Contains('\'') ? '"' : '\'';
         return $"{quote}{value}{quote}";
     }
 }

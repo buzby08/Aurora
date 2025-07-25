@@ -1,7 +1,6 @@
 namespace Aurora;
 
-
-internal class AST
+internal class Ast
 {
     public enum AstItemTypes
     {
@@ -13,10 +12,11 @@ internal class AST
         Expression,
         Invalid
     }
-    
+
     public AstItemTypes ItemType { get; private set; }
 
     private Token? _itemValue;
+
     public Token? ItemValue
     {
         get => _itemValue;
@@ -28,17 +28,21 @@ internal class AST
     }
 
     private string? _className;
+
     public string? ClassName
     {
         get => _className;
         set
         {
             _className = value;
+            if (value is not null)
+                this._customClass = Classes.GetClass(value);
             this.UpdateItemType();
         }
     }
 
     private bool? _classWaitingForAccess;
+
     public bool? ClassWaitingForAccess
     {
         get => _classWaitingForAccess;
@@ -48,8 +52,9 @@ internal class AST
             this.UpdateItemType();
         }
     }
-    
+
     private string? _classAttributeName;
+
     public string? ClassAttributeName
     {
         get => _classAttributeName;
@@ -62,6 +67,7 @@ internal class AST
 
     private CustomClass? _customClass;
     private string? _classMethodName;
+
     public string? ClassMethodName
     {
         get => _classMethodName;
@@ -69,14 +75,12 @@ internal class AST
         {
             _classMethodName = value;
             this.UpdateItemType();
-
-            if (value is not null)
-                this._customClass = Classes.GetClass(value);
         }
     }
-    
-    private List<AST>? _classArguments;
-    public List<AST>? ClassArguments
+
+    private List<Ast>? _classArguments;
+
+    public List<Ast>? ClassArguments
     {
         get => _classArguments;
         set
@@ -87,6 +91,7 @@ internal class AST
     }
 
     private bool? _closeBracketFound;
+
     public bool? CloseBracketFound
     {
         get => _closeBracketFound;
@@ -98,12 +103,25 @@ internal class AST
     }
 
     private string? _keywordValue;
+
     public string? KeywordValue
     {
         get => _keywordValue;
         set
         {
             _keywordValue = value;
+            this.UpdateItemType();
+        }
+    }
+
+    private OperatorToken? _operatorToken;
+
+    public OperatorToken? OperatorToken
+    {
+        get => _operatorToken;
+        set
+        {
+            _operatorToken = value;
             this.UpdateItemType();
         }
     }
@@ -119,12 +137,12 @@ internal class AST
 
         return mask;
     }
-    
+
     public void UpdateItemType()
     {
         int mask = GetNullStates(this._itemValue, this._className, this._classWaitingForAccess,
             this._classAttributeName, this._classMethodName, this._classArguments, this._closeBracketFound);
-        
+
         string paddedBinaryMask = Convert.ToString(mask, 2).PadLeft(7, '0');
         GlobalVariables.LOGGER.Verbose($"Ast mask updated. New mask is {paddedBinaryMask}");
 
@@ -144,6 +162,8 @@ internal class AST
             classMethod => AstItemTypes.MethodCall,
             _ => AstItemTypes.Invalid
         };
+
+        GlobalVariables.LOGGER.Verbose($"itemType: {this.ItemType}");
     }
 
     private Token _callCustomMethod()
@@ -154,27 +174,28 @@ internal class AST
                 new SystemError(
                     "The system tried to parse a statement as a method call, which was not allowed in this context"));
         }
-        
+
         CustomClass.CustomMethod currentMethod = this._customClass!.GetMethod(ClassMethodName!);
         List<Token> positionals = [];
         Dictionary<string, Token> keywords = [];
-            
-        foreach (List<Token> evaluatedArg in this.ClassArguments!.Select(argumentAst => argumentAst.EvaluateAsArgument()))
+
+        foreach (Ast argumentAst in this.ClassArguments!)
         {
+            List<Token> evaluatedArg = argumentAst.EvaluateAsArgument();
             switch (evaluatedArg.Count)
             {
                 case 1:
                     positionals.Add(evaluatedArg[0]);
-                    break;
-                        
-                case >2 or  <=0:
+                    continue;
+
+                case > 2 or <= 0:
                     Errors.AlwaysThrow(
                         new SystemError("The system encountered too many elements when parsing the argument AST"));
                     break;
-                
+
                 case 2:
-                    string? keyword = evaluatedArg[0].ToString();
-    
+                    string? keyword = evaluatedArg[0].ValueAsString;
+
                     if (keyword is null)
                     {
                         Errors.AlwaysThrow(
@@ -182,31 +203,64 @@ internal class AST
                                 "Keyword arguments must be a keyword, not any other token, such as string, integer, etc"));
                         break;
                     }
-    
-                    keywords.Add(keyword, evaluatedArg[1]);
-                    break;
+
+                    keywords[keyword] = evaluatedArg[1];
+                    continue;
             }
         }
-            
+
         return currentMethod(positionals, keywords);
     }
-    
+
+    private Token _evaluateLiteral()
+    {
+        if (this.ItemValue is null)
+            Errors.AlwaysThrow(new SystemError("The system tried to parse an invalid expression"));
+
+        if (Variables.IsVariable(this.ItemValue.ValueAsString))
+            return Variables.GetVariable(this.ItemValue.ValueAsString);
+
+        if (Classes.ClassExists(this.ItemValue.ValueAsString))
+        {
+            string className = Classes.GetClass(this.ItemValue.ValueAsString).Name;
+            string message = $"CLASS<{className}>";
+            return new StringToken().Initialise(message, withoutQuotes: true, interpolate: false);
+        }
+
+        return this.ItemValue;
+    }
+
     public Token Evaluate()
     {
         return this.ItemType switch
         {
-            AstItemTypes.Literal         => this.ItemValue!,
-            AstItemTypes.ClassReference  => new WordToken().Initialise(ItemValue!.ValueAsString),
+            AstItemTypes.Literal => this._evaluateLiteral(),
+            AstItemTypes.ClassReference => new WordToken().Initialise(ItemValue!.ValueAsString),
             AstItemTypes.AttributeAccess => this._customClass!.GetAttribute(ClassAttributeName!)(),
-            AstItemTypes.MethodCall      => this._callCustomMethod(),
+            AstItemTypes.MethodCall => this._callCustomMethod(),
             _ => Errors.AlwaysThrow<Token>(new SystemError("The system tried to parse an invalid expression"))
         };
+    }
+
+    public void Combine(Ast other)
+    {
+        if (this.ItemType is AstItemTypes.None)
+        {
+            this.ItemValue = other.Evaluate();
+            return;
+        }
+
+        if (this.OperatorToken is null)
+            Errors.AlwaysThrow(new SystemError("The system tried to parse an invalid expression"));
+
+        this.ItemValue = LiteralExpression.Combine(this.Evaluate(), this.OperatorToken.ValueAsChar, other.Evaluate());
+        this.OperatorToken = other.OperatorToken;
     }
 
     public List<Token> EvaluateAsArgument()
     {
         if (KeywordValue is null) return [this.Evaluate()];
-        
+
         return [new WordToken().Initialise(KeywordValue), this.Evaluate()];
     }
 

@@ -13,7 +13,7 @@ namespace Aurora
             AlwaysThrow(error);
             throw new UnreachableException();
         }
-        
+
         [DoesNotReturn]
         public static void AlwaysThrow(ErrorTypes error)
         {
@@ -21,13 +21,13 @@ namespace Aurora
             Environment.Exit(1);
             throw new UnreachableException();
         }
-        
+
         public static void RaiseError(ErrorTypes error, bool alwaysThrow = false)
         {
             string outputMessage = GlobalVariables.LineNumber is not null
                 ? $"{{Line {GlobalVariables.LineNumber}}} ({error.Code}) {error.Title} - {error.Message}"
                 : $"{{Unknown line}} ({error.Code}) {error.Title} - {error.Message}";
-            
+
             bool isError = error.AlwaysError || UserConfiguration.Errors.Contains(error.Code) || alwaysThrow;
 
             if (!isError)
@@ -39,7 +39,8 @@ namespace Aurora
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("[ERROR] " + outputMessage);
             Console.ResetColor();
-            
+            GlobalVariables.LOGGER.Warning(outputMessage);
+
             Environment.Exit(1);
         }
 
@@ -55,7 +56,7 @@ namespace Aurora
         public abstract string Title { get; }
         public abstract string Description { get; }
         public abstract string Message { get; }
-        public abstract string Code { get;  }
+        public abstract string Code { get; }
         public virtual bool AlwaysError => false;
     }
 
@@ -417,7 +418,7 @@ namespace Aurora
             this.Title = "File Not Found" + (user ? " (User)" : " (System)");
         }
     }
-    
+
     internal class InvalidAttributeError : ErrorTypes
     {
         public override string Title { get; }
