@@ -5,7 +5,8 @@ namespace Aurora;
 
 internal class CustomClass(string name)
 {
-    public delegate Token CustomMethod(List<Token> positionals, Dictionary<string, Token> keywords);
+    public delegate Token CustomMethod(List<Token> positionals, Dictionary<string, Token> keywords,
+        List<Ast> raw);
 
     public string Name { get; } = name;
     public Dictionary<string, Func<Token>> Attributes { get; } = new();
@@ -20,7 +21,7 @@ internal class CustomClass(string name)
     {
         Methods[name] = method;
     }
-    
+
     public bool HasAttribute(string name) => Attributes.ContainsKey(name);
     public bool HasMethod(string name) => Methods.ContainsKey(name);
 
@@ -32,7 +33,7 @@ internal class CustomClass(string name)
         return Errors.AlwaysThrow<Func<Token>>(
             new InvalidAttributeError($"Class '{this.Name}' has no attribute '{name}'"));
     }
-    
+
     public CustomMethod GetMethod(string name)
     {
         return this.HasMethod(name)

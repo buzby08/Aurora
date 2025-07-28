@@ -30,7 +30,7 @@ internal static class Variables
         }
     }
 
-    public static Token Create(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static Token Create(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Token?> arguments = Parsers.ParseArgs(positionals, keywords,
             new Dictionary<string, Type>() { { "type", typeof(WordToken) } },
@@ -76,12 +76,13 @@ internal static class Variables
         return new NullToken();
     }
 
-    public static Token Edit(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static Token Edit(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         if (keywords.Count > 0)
             Errors.RaiseError(new ArgumentSurplusError("Variables.edit does not take any keyword arguments"));
 
-        Token? name = positionals.ElementAtOrDefault(0);
+        Ast? nameAst = raw.ElementAtOrDefault(0);
+        Token? name = nameAst!.ItemValue;
         Token? value = positionals.ElementAtOrDefault(1);
 
         if (name is null)

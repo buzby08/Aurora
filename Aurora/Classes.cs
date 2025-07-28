@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Aurora.Commands;
+using Math = Aurora.Commands.Math;
 using String = System.String;
 
 namespace Aurora;
@@ -52,6 +53,12 @@ internal static class Classes
         boolean.AddMethod("create", Commands.Boolean.Create);
         boolean.AddMethod("toStyle", Commands.Boolean.ToStyle);
         SystemClasses.Add("Boolean", boolean);
+
+        CustomClass math = new CustomClass("Math");
+        math.AddMethod("pow", Math.Pow);
+        math.AddMethod("abs", Math.Abs);
+        math.AddMethod("round", Math.Round);
+        SystemClasses.Add("Math", math);
     }
 
     public static CustomClass GetClass(string name)
@@ -63,7 +70,7 @@ internal static class Classes
         throw new UnreachableException();
     }
 
-    public static Token CallClass(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static Token CallClass(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         if (CurrentSelectedClass is null)
         {
@@ -91,7 +98,7 @@ internal static class Classes
 
         CustomClass.CustomMethod currentMethod = currentClass.Methods[CurrentSelectedMethod];
 
-        return currentMethod(positionals, keywords);
+        return currentMethod(positionals, keywords, raw);
     }
 
     public static bool ClassExists(string name) => SystemClasses.ContainsKey(name) || UserClasses.ContainsKey(name);

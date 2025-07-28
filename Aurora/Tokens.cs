@@ -134,6 +134,8 @@ internal abstract class Token
         get => ThrowNotImplemented<bool>();
     }
 
+    public int ValueLength => ValueAsString?.Length ?? 0;
+
     public string AsString()
     {
         return $"Token ({this.GetType().Name}) - {this.Value}";
@@ -291,8 +293,12 @@ internal class BracketToken : Token
         return this;
     }
 
-    public static BracketToken OpenNormal = new BracketToken().Initialise('(');
-    public static BracketToken CloseNormal = new BracketToken().Initialise(')');
+    public static readonly BracketToken OpenNormal = new BracketToken().Initialise('(');
+    public static readonly BracketToken CloseNormal = new BracketToken().Initialise(')');
+    public static readonly BracketToken OpenSquare = new BracketToken().Initialise('[');
+    public static readonly BracketToken CloseSquare = new BracketToken().Initialise(']');
+    public static readonly BracketToken OpenCurly = new BracketToken().Initialise('{');
+    public static readonly BracketToken CloseCurly = new BracketToken().Initialise('}');
 }
 
 internal class StringToken : Token
@@ -320,7 +326,7 @@ internal class StringToken : Token
             this.StartChar = s[0];
             char endChar = s[^1];
 
-            if (!START_CHARS.Contains(this.StartChar))
+            if (!START_CHARS.Contains((char)this.StartChar!))
             {
                 throw new ArgumentException(
                     $"{GlobalVariables.ReprString(s)} does not start with a valid string starter");
@@ -333,7 +339,7 @@ internal class StringToken : Token
         }
     }
 
-    public new char StartChar { get; private set; }
+    public new char? StartChar { get; private set; }
 
     public static string ConvertEscapeSequence(string escapeSequence)
     {
@@ -389,7 +395,8 @@ internal class StringToken : Token
             {
                 trackVariableName = false;
                 interpreter.Text = variableName;
-                result += Evaluate.SingleLine(interpreter.GetAllTokens()).ValueAsString;
+                result += Evaluate.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
+                variableName = string.Empty;
                 continue;
             }
 
@@ -406,6 +413,7 @@ internal class StringToken : Token
     }
 
     public override string ValueAsString => _value;
+    public new int ValueLength => StartChar is not null ? 2 + ValueLength : base.ValueLength;
 
     public StringToken Initialise(string value, bool withoutQuotes = false, bool interpolate = true)
     {
@@ -473,9 +481,9 @@ internal class BooleanToken : Token
         set
         {
             var type = value?.GetType();
-            if (value is not string or bool)
+            if (value is not string && value is not bool)
                 throw new ArgumentException($"Boolean tokens must be strings or boolean objects, not {type}");
-            string actualValue = (string)value;
+            string actualValue = value is bool ? value.ToString()!.ToLower() : (string)value;
             if (!VARS.Contains(actualValue))
             {
                 throw new ArgumentException($"Value `{value}` is not a valid boolean token");
@@ -518,7 +526,8 @@ internal class FloatToken : Token
             {
                 string v => new CustomFloat(v),
                 CustomFloat f => f,
-                _ => throw new ArgumentException("Float Tokens must have a string or float value")
+                CustomInt f => new CustomFloat(f),
+                _ => throw new ArgumentException("Float Tokens must have a string, int, or float value")
             };
         }
     }

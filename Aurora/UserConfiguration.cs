@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 namespace Aurora;
 
 /// <summary>
@@ -32,16 +33,17 @@ internal static class UserConfiguration
         object warning = config.GetValueOrDefault("Warning", GlobalVariables.LOGGER.AllowWarning);
         object noConsole = config.GetValueOrDefault("NoConsole", GlobalVariables.LOGGER.NoConsole);
         object strict = config.GetValueOrDefault("Strict", GlobalVariables.StrictFlagMode);
+        object inlineStackTrace = config.GetValueOrDefault("InlineStackTrace", GlobalVariables.InlineStackTrace);
 
         if (maxExpressionDepth is not int)
             Aurora.Errors.RaiseError(new ConfigurationError("MaxExpressionDepth must be an integer"));
 
         if (showTimestamp is JsonElement showTimestampElement)
             showTimestamp = showTimestampElement.GetBoolean();
-        
+
         if (clearLogFile is JsonElement clearLogFileElement)
             clearLogFile = clearLogFileElement.GetBoolean();
-        
+
         if (debug is JsonElement debugElement)
             debug = debugElement.GetBoolean();
 
@@ -57,34 +59,43 @@ internal static class UserConfiguration
         if (strict is JsonElement strictElement)
             strict = strictElement.GetBoolean();
 
+        if (inlineStackTrace is JsonElement inlineStackTraceElement)
+            inlineStackTrace = inlineStackTraceElement.GetBoolean();
+
         if (showTimestamp is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("ShowTimestamp must be a boolean"));
-        
+
         if (clearLogFile is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("ClearLogFile must be a boolean"));
-        
+
         if (debug is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("Debug must be a boolean"));
-        
+
         if (verbose is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("Verbose must be a boolean"));
-        
+
         if (warning is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("Warning must be a boolean"));
-        
+
         if (noConsole is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("NoConsole must be a boolean"));
-        
+
         if (strict is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("StrictFlags must be a boolean"));
 
-        if ((errors is not List<object> errorList || errorList.All(item => item is string)) && errors is not List<string>)
+        if (inlineStackTrace is not bool)
+            Aurora.Errors.RaiseError(new ConfigurationError("InlineStackTrace must be a boolean"));
+
+        if ((errors is not List<object> errorList || errorList.All(item => item is string)) &&
+            errors is not List<string>)
             Aurora.Errors.RaiseError(new ConfigurationError("Errors must be a list of strings"));
 
-        if ((warnings is not List<object> warningList || warningList.All(item => item is string)) && warnings is not List<string>)
+        if ((warnings is not List<object> warningList || warningList.All(item => item is string)) &&
+            warnings is not List<string>)
             Aurora.Errors.RaiseError(new ConfigurationError("Warnings must be a list of strings"));
 
-        if ((ignore is not List<object> ignoreList || ignoreList.All(item => item is string)) && ignore is not List<string>)
+        if ((ignore is not List<object> ignoreList || ignoreList.All(item => item is string)) &&
+            ignore is not List<string>)
             Aurora.Errors.RaiseError(new ConfigurationError("Ignore must be a list of strings"));
 
         MaxExpressionDepth = (int)maxExpressionDepth;
@@ -94,13 +105,14 @@ internal static class UserConfiguration
 
         GlobalVariables.LOGGER.ShowTimestamp = (bool)showTimestamp;
         GlobalVariables.LOGGER.ClearFile = (bool)clearLogFile;
-        
+
         bool debugBool = GlobalVariables.LOGGER.AllowDebug || (bool)debug;
         bool verboseBool = GlobalVariables.LOGGER.AllowVerbose || (bool)verbose;
         bool warningBool = GlobalVariables.LOGGER.AllowWarning || (bool)warning;
         bool noConsoleBool = GlobalVariables.LOGGER.NoConsole || (bool)noConsole;
         bool strictBool = GlobalVariables.StrictFlagMode || (bool)strict;
-        
-        Program.ApplyOptions(noConsoleBool, debugBool, verboseBool, warningBool, strictBool);
+        bool inlineStackTraceBool = GlobalVariables.InlineStackTrace || (bool)inlineStackTrace;
+
+        Program.ApplyOptions(noConsoleBool, debugBool, verboseBool, warningBool, strictBool, inlineStackTraceBool);
     }
 }

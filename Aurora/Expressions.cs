@@ -99,7 +99,7 @@ internal class LiteralExpression(List<Token> value) : Expression
                 continue;
             }
 
-            total = Combine(total, operation, item);
+            total = CombineOperator(total, operation, item);
         }
 
         if (total is not null)
@@ -109,7 +109,20 @@ internal class LiteralExpression(List<Token> value) : Expression
         throw new UnreachableException();
     }
 
-    public static Token Combine(Token? left, char operation, Token right)
+    public static Token? CombineComparison(Token left, ComparisonToken comparison, Token right)
+    {
+        bool result = false;
+        if (comparison.IsEqualTo) result = left.ValueAsString == right.ValueAsString;
+        if (comparison.IsGreaterEqual) result = left.ValueAsFloat >= right.ValueAsFloat;
+        if (comparison.IsGreaterThan) result = left.ValueAsFloat > right.ValueAsFloat;
+        if (comparison.IsLessEqual) result = left.ValueAsFloat <= right.ValueAsFloat;
+        if (comparison.IsLessThan) result = left.ValueAsFloat < right.ValueAsFloat;
+        if (comparison.IsNotEqualTo) result = left.ValueAsString != right.ValueAsString;
+
+        return new BooleanToken().Initialise(result);
+    }
+
+    public static Token CombineOperator(Token? left, char operation, Token right)
     {
         switch (left, operation)
         {
@@ -121,6 +134,12 @@ internal class LiteralExpression(List<Token> value) : Expression
             case (_, _):
                 break;
         }
+
+        if (left.Type == WordToken.TokenType)
+            left = Variables.GetVariable(left.ValueAsString);
+
+        if (right.Type == WordToken.TokenType)
+            right = Variables.GetVariable(right.ValueAsString);
 
         bool validTypes = (left.Type, right.Type) switch
         {
@@ -189,6 +208,14 @@ internal class LiteralExpression(List<Token> value) : Expression
                     Errors.RaiseError(new DivisionByZeroError());
                     throw new UnreachableException();
                 }
+
+            case (IntegerToken.TokenType, IntegerToken.TokenType, '^'):
+                return new IntegerToken().Initialise(CustomInt.Pow(left.ValueAsInt, right.ValueAsInt));
+
+            case (IntegerToken.TokenType, FloatToken.TokenType, '^'):
+            case (FloatToken.TokenType, FloatToken.TokenType, '^'):
+            case (FloatToken.TokenType, IntegerToken.TokenType, '^'):
+                return new FloatToken().Initialise(CustomFloat.Pow(left.ValueAsFloat, right.ValueAsFloat));
 
             // Default case: unsupported operation
             default:

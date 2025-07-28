@@ -2,7 +2,7 @@ namespace Aurora.Commands;
 
 internal static class StringClass
 {
-    public static StringToken Create(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static StringToken Create(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Type> expectedArguments = new()
         {

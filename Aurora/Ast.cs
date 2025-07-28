@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Aurora;
 
 internal class Ast
@@ -9,9 +11,11 @@ internal class Ast
         ClassReference,
         AttributeAccess,
         MethodCall,
-        Expression,
+        ConditionAndBlock,
         Invalid
     }
+
+    public ImmutableArray<string> ValidConditionalMethods = ["if", "while", "else"];
 
     public AstItemTypes ItemType { get; private set; }
 
@@ -126,6 +130,42 @@ internal class Ast
         }
     }
 
+    private ComparisonToken? _comparisonToken;
+
+    public ComparisonToken? ComparisonToken
+    {
+        get => _comparisonToken;
+        set
+        {
+            _comparisonToken = value;
+            this.UpdateItemType();
+        }
+    }
+
+    private List<Token>? _condition;
+
+    public List<Token>? Condition
+    {
+        get => _condition;
+        set
+        {
+            _condition = value;
+            this.UpdateItemType();
+        }
+    }
+
+    private List<string>? _codeBlock;
+
+    public List<string>? CodeBlock
+    {
+        get => _codeBlock;
+        set
+        {
+            _codeBlock = value;
+            this.UpdateItemType();
+        }
+    }
+
     public int GetNullStates(params object?[] vars)
     {
         int mask = 0;
@@ -141,17 +181,19 @@ internal class Ast
     public void UpdateItemType()
     {
         int mask = GetNullStates(this._itemValue, this._className, this._classWaitingForAccess,
-            this._classAttributeName, this._classMethodName, this._classArguments, this._closeBracketFound);
+            this._classAttributeName, this._classMethodName, this._classArguments, this._closeBracketFound,
+            this._condition, this._codeBlock);
 
         string paddedBinaryMask = Convert.ToString(mask, 2).PadLeft(7, '0');
         GlobalVariables.LOGGER.Verbose($"Ast mask updated. New mask is {paddedBinaryMask}");
 
-        const int allNull = 0b0000000;
-        const int literal = 0b0000001;
-        const int onlyClassName = 0b0000101;
-        const int classAttributeOne = 0b0000110;
-        const int classAttributeTwo = 0b0001010;
-        const int classMethod = 0b1110010;
+        const int allNull = 0b000000000;
+        const int literal = 0b000000001;
+        const int onlyClassName = 0b000000101;
+        const int classAttributeOne = 0b000000110;
+        const int classAttributeTwo = 0b000001010;
+        const int classMethod = 0b001110010;
+        const int conditionAndBlock = 0b110000001;
 
         this.ItemType = mask switch
         {
@@ -160,6 +202,7 @@ internal class Ast
             onlyClassName => AstItemTypes.ClassReference,
             classAttributeOne or classAttributeTwo => AstItemTypes.AttributeAccess,
             classMethod => AstItemTypes.MethodCall,
+            conditionAndBlock => AstItemTypes.ConditionAndBlock,
             _ => AstItemTypes.Invalid
         };
 
@@ -178,9 +221,11 @@ internal class Ast
         CustomClass.CustomMethod currentMethod = this._customClass!.GetMethod(ClassMethodName!);
         List<Token> positionals = [];
         Dictionary<string, Token> keywords = [];
+        List<Ast> raw = [];
 
         foreach (Ast argumentAst in this.ClassArguments!)
         {
+            raw.Add(argumentAst);
             List<Token> evaluatedArg = argumentAst.EvaluateAsArgument();
             switch (evaluatedArg.Count)
             {
@@ -194,22 +239,14 @@ internal class Ast
                     break;
 
                 case 2:
-                    string? keyword = evaluatedArg[0].ValueAsString;
-
-                    if (keyword is null)
-                    {
-                        Errors.AlwaysThrow(
-                            new InvalidSyntaxError(
-                                "Keyword arguments must be a keyword, not any other token, such as string, integer, etc"));
-                        break;
-                    }
+                    string keyword = evaluatedArg[0].ValueAsString;
 
                     keywords[keyword] = evaluatedArg[1];
                     continue;
             }
         }
 
-        return currentMethod(positionals, keywords);
+        return currentMethod(positionals, keywords, raw);
     }
 
     private Token _evaluateLiteral()
@@ -230,7 +267,89 @@ internal class Ast
         return this.ItemValue;
     }
 
-    public Token Evaluate()
+    private Token? _evaluateIf()
+    {
+        Token? evaluatedCondition = this.Condition!.Count != 0
+            ? Aurora.Evaluate.SingleLine(this._condition!)
+            : new BooleanToken().Initialise(true);
+
+        if (evaluatedCondition is null || evaluatedCondition.Type != BooleanToken.TokenType)
+            Errors.AlwaysThrow(new InvalidSyntaxError("Conditional expressions must evaluate to a boolean!"));
+
+        if (this.ItemValue!.ValueAsString == "else" && GlobalVariables.PreviousIfIsTrue is null)
+        {
+            Errors.RaiseError(new InvalidSyntaxError("else statement not tied to an if statement is not allowed"));
+            return null;
+        }
+
+        if (this.ItemValue!.ValueAsString == "else" && GlobalVariables.PreviousIfIsTrue != false)
+        {
+            GlobalVariables.PreviousIfIsTrue = this._condition!.Count == 0
+                ? null
+                : GlobalVariables.PreviousIfIsTrue;
+            return null;
+        }
+
+        if (!evaluatedCondition.ValueAsBool)
+        {
+            GlobalVariables.PreviousIfIsTrue = false;
+            return null;
+        }
+
+        Aurora.Evaluate.AllCode(this._codeBlock!.ToArray());
+
+        if (this._condition!.Count == 0)
+        {
+            GlobalVariables.PreviousIfIsTrue = null;
+            return null;
+        }
+
+        GlobalVariables.PreviousIfIsTrue = true;
+        return null;
+    }
+
+    private Token? _evaluateWhile()
+    {
+        Token? evaluatedCondition = Aurora.Evaluate.SingleLine(this._condition!);
+
+        if (evaluatedCondition is null || evaluatedCondition.Type != BooleanToken.TokenType)
+            Errors.AlwaysThrow(new InvalidSyntaxError("Conditional expressions must evaluate to a boolean!"));
+
+        bool conditionIsTrue = evaluatedCondition.ValueAsBool;
+        int lineStartNumber = (int)GlobalVariables.LineNumber!;
+        while (conditionIsTrue)
+        {
+            GlobalVariables.LineNumber = lineStartNumber;
+            Aurora.Evaluate.AllCode(this._codeBlock!.ToArray());
+
+            Token? reEvaluatedCondition = Aurora.Evaluate.SingleLine(this._condition!);
+
+            if (reEvaluatedCondition is null || reEvaluatedCondition.Type != BooleanToken.TokenType)
+                Errors.AlwaysThrow(new InvalidSyntaxError("Conditional expressions must evaluate to a boolean!"));
+
+            conditionIsTrue = reEvaluatedCondition.ValueAsBool;
+        }
+
+        return null;
+    }
+
+    private Token? _evaluateConditionAndBlock()
+    {
+        if (!this.ValidConditionalMethods.Contains(this._itemValue!.ValueAsString))
+            Errors.AlwaysThrow(
+                new InvalidSyntaxError($"{this._itemValue!.ValueAsString} is not a valid conditional expression"));
+
+        return this._itemValue!.ValueAsString switch
+        {
+            "while" => this._evaluateWhile(),
+            "if" => this._evaluateIf(),
+            "else" => this._evaluateIf(),
+            _ => null
+        };
+    }
+
+
+    public Token? Evaluate()
     {
         return this.ItemType switch
         {
@@ -238,6 +357,7 @@ internal class Ast
             AstItemTypes.ClassReference => new WordToken().Initialise(ItemValue!.ValueAsString),
             AstItemTypes.AttributeAccess => this._customClass!.GetAttribute(ClassAttributeName!)(),
             AstItemTypes.MethodCall => this._callCustomMethod(),
+            AstItemTypes.ConditionAndBlock => this._evaluateConditionAndBlock(),
             _ => Errors.AlwaysThrow<Token>(new SystemError("The system tried to parse an invalid expression"))
         };
     }
@@ -250,10 +370,22 @@ internal class Ast
             return;
         }
 
-        if (this.OperatorToken is null)
+        if (this.OperatorToken is null && this.ComparisonToken is null)
             Errors.AlwaysThrow(new SystemError("The system tried to parse an invalid expression"));
 
-        this.ItemValue = LiteralExpression.Combine(this.Evaluate(), this.OperatorToken.ValueAsChar, other.Evaluate());
+        Token? currentEvaluated = this.Evaluate();
+        Token? otherEvaluated = other.Evaluate();
+        if (currentEvaluated is null || otherEvaluated is null)
+            Errors.AlwaysThrow(new SystemError("The system tried to parse an invalid expression"));
+        if (this.ComparisonToken is not null)
+            this.ItemValue =
+                LiteralExpression.CombineComparison(currentEvaluated, this.ComparisonToken, otherEvaluated);
+
+        if (this.OperatorToken is not null)
+            this.ItemValue =
+                LiteralExpression.CombineOperator(currentEvaluated, this.OperatorToken.ValueAsChar, otherEvaluated);
+
+        this.ComparisonToken = other.ComparisonToken;
         this.OperatorToken = other.OperatorToken;
     }
 

@@ -418,6 +418,33 @@ internal class CustomInt
         return (dynamic)a.Value < (dynamic)b.Value;
     }
 
+    public static CustomInt Pow(CustomInt a, CustomInt b)
+    {
+        if (a.Value is not int or long or BigInteger || b.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power int and int together that do not support powers"));
+
+        return new CustomInt((BigInteger)Math.Pow((dynamic)a.Value, (dynamic)b.Value));
+    }
+
+    public static CustomFloat Pow(CustomInt a, CustomFloat b)
+    {
+        if (a.Value is not int or long or BigInteger || b.Value is not float or double or decimal)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power int and float together that do not support powers"));
+
+        return new CustomFloat(Math.Pow((dynamic)a.Value, (dynamic)b.Value));
+    }
+
+    public static CustomFloat Pow(CustomFloat a, CustomInt b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power float and int together that do not support powers"));
+
+        return new CustomFloat(Math.Pow((dynamic)a.Value, (dynamic)b.Value));
+    }
+
     public override string ToString()
     {
         return this.Value?.ToString() ?? "null";
@@ -631,6 +658,87 @@ internal class CustomFloat
     public static explicit operator CustomFloat(CustomInt value)
     {
         return new CustomFloat((string)value.Value);
+    }
+
+    public static bool operator >=(CustomFloat a, CustomInt b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare int and float together that do not support comparison"));
+
+        return (dynamic)a.Value >= (dynamic)b.Value;
+    }
+
+    public static bool operator >=(CustomInt a, CustomFloat b)
+    {
+        if (b.Value is not float or double or decimal || a.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare float and int together that do not support comparison"));
+
+        return (dynamic)a.Value >= (dynamic)b.Value;
+    }
+
+    public static bool operator >=(CustomFloat a, CustomFloat b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not float or double or decimal)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare int and int together that do not support comparison"));
+
+        return (dynamic)a.Value >= (dynamic)b.Value;
+    }
+
+    public static bool operator <=(CustomFloat a, CustomInt b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare int and float together that do not support comparison"));
+
+        return (dynamic)a.Value <= (dynamic)b.Value;
+    }
+
+    public static bool operator <=(CustomInt a, CustomFloat b)
+    {
+        if (b.Value is not float or double or decimal || a.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare float and int together that do not support comparison"));
+
+        return (dynamic)a.Value <= (dynamic)b.Value;
+    }
+
+    public static bool operator <=(CustomFloat a, CustomFloat b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not float or double or decimal)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to compare int and int together that do not support comparison"));
+
+        return (dynamic)a.Value <= (dynamic)b.Value;
+    }
+
+    public static CustomFloat Pow(CustomFloat a, CustomFloat b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not float or double or decimal)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power float and float together that do not support powers"));
+
+        return new CustomFloat(Math.Pow((dynamic)a.Value, (dynamic)b.Value));
+    }
+
+    public static CustomFloat Pow(CustomInt a, CustomFloat b)
+    {
+        if (a.Value is not int or long or BigInteger || b.Value is not float or double or decimal)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power int and float together that do not support powers"));
+
+        return new CustomFloat(Math.Pow((dynamic)a.Value, (dynamic)b.Value));
+    }
+
+    public static CustomFloat Pow(CustomFloat a, CustomInt b)
+    {
+        if (a.Value is not float or double or decimal || b.Value is not int or long or BigInteger)
+            Errors.AlwaysThrow(
+                new SystemError("Attempting to power float and int together that do not support powers"));
+
+        return new CustomFloat(Math.Pow((dynamic)a.Value, (dynamic)b.Value));
     }
 
     public static bool operator >(CustomFloat a, CustomInt b)

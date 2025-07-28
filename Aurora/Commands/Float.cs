@@ -2,7 +2,7 @@ namespace Aurora.Commands;
 
 internal static class Float
 {
-    public static FloatToken Create(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static FloatToken Create(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Type> expectedArguments = new()
         {

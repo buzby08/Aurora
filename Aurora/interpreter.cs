@@ -1,12 +1,14 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+
 namespace Aurora;
 
 internal class Interpreter
 {
     private string _text = string.Empty;
-    public string Text 
+
+    public string Text
     {
         get => this._text;
         set
@@ -17,14 +19,14 @@ internal class Interpreter
         }
     }
 
-    public int Pos { get; private set;  } = 0;
+    public int Pos { get; private set; } = 0;
 
     public Token? CurrentToken { get; private set; }
     public static readonly ImmutableHashSet<string> SYMBOLS = ["!", "=", "&", "|", "<", ">"];
 
     public bool IsEof()
     {
-        return this.Pos > this._text.Length-1;
+        return this.Pos > this._text.Length - 1;
     }
 
     private void Advance()
@@ -48,9 +50,6 @@ internal class Interpreter
         string fullNum = string.Empty;
         char? currentChar = this.GetCurrentChar();
 
-        bool Condition(char x, bool firstItem = false) =>
-            char.IsDigit(x) || (x == '.' && !firstItem) || (x == '-' && firstItem);
-
         bool isFirstItem = true;
 
         if (currentChar is not null && !Condition((char)currentChar, firstItem: isFirstItem))
@@ -66,11 +65,14 @@ internal class Interpreter
             currentChar = this.GetCurrentChar();
         }
 
-        if (fullNum.Contains('.'))  return new FloatToken().Initialise(fullNum);
+        if (fullNum.Contains('.')) return new FloatToken().Initialise(fullNum);
 
         if (fullNum == "-") return new OperatorToken().Initialise('-');
 
         return new IntegerToken().Initialise(fullNum);
+
+        bool Condition(char x, bool firstItem = false) =>
+            char.IsDigit(x) || (x == '.' && !firstItem) || (x == '-' && firstItem);
     }
 
     private Token Word()
@@ -181,11 +183,11 @@ internal class Interpreter
         {
             char? currentChar = this.GetCurrentChar();
 
-            if (currentChar is null || this.IsEof()) return new EofToken(); 
-            
+            if (currentChar is null || this.IsEof()) return new EofToken();
+
             if (char.IsDigit((char)currentChar) || currentChar == '-') return this.Number();
 
-            if (char.IsLetter((char) currentChar)) return this.Word();
+            if (char.IsLetter((char)currentChar)) return this.Word();
 
             if (OperatorToken.OPERATORS.Contains((char)currentChar))
             {
@@ -193,7 +195,8 @@ internal class Interpreter
                 return new OperatorToken().Initialise((char)currentChar);
             }
 
-            if (BracketToken.OPEN_BRACKETS.Contains((char)currentChar) || BracketToken.CLOSED_BRACKETS.Contains((char)currentChar))
+            if (BracketToken.OPEN_BRACKETS.Contains((char)currentChar) ||
+                BracketToken.CLOSED_BRACKETS.Contains((char)currentChar))
             {
                 this.Advance();
                 return new BracketToken().Initialise((char)currentChar);
@@ -208,7 +211,7 @@ internal class Interpreter
             }
 
             if (SYMBOLS.Contains($"{currentChar}")) return this.Symbol();
-            
+
             if (char.IsWhiteSpace((char)currentChar))
             {
                 this.Advance();
@@ -232,7 +235,7 @@ internal class Interpreter
         }
 
         return allTokens;
-    } 
+    }
 
     [DoesNotReturn]
     public static void Error(string message)

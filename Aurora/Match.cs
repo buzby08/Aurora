@@ -1,4 +1,5 @@
 using System.Reflection;
+
 namespace Aurora;
 
 internal static class Match
@@ -14,9 +15,15 @@ internal static class Match
 
     public static bool CheckType(Token a, Type b)
     {
-        string? otherTokenType = b.GetField("TokenType", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as string;
+        string? otherTokenType =
+            b.GetField("TokenType", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as string;
         if (otherTokenType is null) throw new MissingFieldException("Other token does not have the required field");
         return a.Type == otherTokenType || otherTokenType == BaseToken.TokenType;
+    }
+
+    public static bool CheckType(Token a, List<Type> types)
+    {
+        return types.Aggregate(true, (current, t) => current && CheckType(a, t));
     }
 
     public static bool MatchTokens(List<Token> tokens, List<(List<Type>, int)> sequence)
@@ -54,7 +61,7 @@ internal static class Match
             {
                 int greedyStart = tokenIndex;
                 bool tokenIndexValid = tokenIndex < tokens.Count;
-                
+
                 while (
                     tokenIndexValid
                     && expected.Any(e => CheckType(tokens[tokenIndex], e))
@@ -67,7 +74,7 @@ internal static class Match
                 for (int backtrack = tokenIndex; backtrack > greedyStart; backtrack--)
                 {
                     List<Token> remainingTokens = tokens[backtrack..];
-                    List<(List<Type>, int)> remainingSequence = sequence[(sequenceIndex+1)..];
+                    List<(List<Type>, int)> remainingSequence = sequence[(sequenceIndex + 1)..];
 
                     if (MatchTokens(remainingTokens, remainingSequence)) return true;
                 }
@@ -88,11 +95,10 @@ internal static class Match
         {
             var currentToken = tokens[i];
             var expectedToken = expectedTokens[i];
-            
+
             if (!expectedToken.Equals(currentToken)) return false;
         }
-        
+
         return true;
     }
-    
 }

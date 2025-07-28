@@ -14,7 +14,8 @@ internal static class GlobalVariables
     public static int ExpressionDepth = 0;
     public const string ConfigFilePath = @"\mnt\CTRL-S\Aurora\auroraConfig.json";
     public static bool StrictFlagMode = false;
-    public static ParserResult<Options>? ParserResult;
+    public static bool InlineStackTrace = false;
+    public static bool? PreviousIfIsTrue = false;
 
     public static readonly Tuple<char, char> STRING_START_CHARS = new('"', '\'');
 

@@ -7,7 +7,7 @@ internal static class Terminal
     public static StringToken Color { get; private set; } =
         new StringToken().Initialise(Colors.White, withoutQuotes: true, interpolate: false);
 
-    public static Token Clear(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static Token Clear(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         if (positionals.Count > 0 || keywords.Count > 0)
             Errors.RaiseError(new ArgumentSurplusError("Terminal.clear does not take any arguments"));
@@ -18,7 +18,7 @@ internal static class Terminal
         return new NullToken();
     }
 
-    public static Token Write(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static Token Write(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Token endCharToken =
             keywords.GetValueOrDefault("end", new StringToken().Initialise("\n", withoutQuotes: true));
@@ -49,7 +49,7 @@ internal static class Terminal
         return new NullToken();
     }
 
-    public static StringToken Read(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static StringToken Read(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Token?> arguments = Parsers.ParseArgs(positionals, keywords,
             new Dictionary<string, Type> { { "message", typeof(StringToken) }, { "default", typeof(StringToken) } },
@@ -71,7 +71,7 @@ internal static class Terminal
         return new StringToken().Initialise(input, withoutQuotes: true, interpolate: false);
     }
 
-    public static IntegerToken ReadInt(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static IntegerToken ReadInt(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Token?> arguments = Parsers.ParseArgs(positionals, keywords,
             new Dictionary<string, Type>
@@ -133,7 +133,7 @@ internal static class Terminal
         return new IntegerToken().Initialise(result);
     }
 
-    public static FloatToken ReadFloat(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static FloatToken ReadFloat(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Token?> arguments = Parsers.ParseArgs(positionals, keywords,
             new Dictionary<string, Type>
@@ -195,7 +195,7 @@ internal static class Terminal
         return new FloatToken().Initialise(result);
     }
 
-    public static BooleanToken ReadBoolean(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static BooleanToken ReadBoolean(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Dictionary<string, Type> expectedArguments = new()
             { { "message", typeof(StringToken) }, { "optionStyle", typeof(StringToken) } };

@@ -6,7 +6,8 @@ internal static class Boolean
 {
     public static ImmutableList<string> ValidOptionStyles = ["word", "char", "number", "binary"];
 
-    public static BooleanToken Create(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static BooleanToken Create(List<Token> positionals, Dictionary<string, Token> keywords,
+        List<Ast> raw)
     {
         Dictionary<string, Type> expectedArguments = new()
         {
@@ -32,7 +33,8 @@ internal static class Boolean
         return variable;
     }
 
-    public static StringToken ToStyle(List<Token> positionals, Dictionary<string, Token> keywords)
+    public static StringToken ToStyle(List<Token> positionals, Dictionary<string, Token> keywords,
+        List<Ast> raw)
     {
         Dictionary<string, Type> expectedArguments = new()
         {

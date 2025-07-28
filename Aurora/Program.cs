@@ -27,7 +27,8 @@ public static class Program
         return File.ReadAllLines(filePath);
     }
 
-    public static void ApplyOptions(bool noConsole, bool debug, bool verbose, bool warning, bool strict)
+    public static void ApplyOptions(bool noConsole, bool debug, bool verbose, bool warning, bool strict,
+        bool inlineStackTrace)
     {
         if (noConsole)
         {
@@ -54,6 +55,12 @@ public static class Program
         {
             GlobalVariables.LOGGER.AllowWarning = true;
             GlobalVariables.LOGGER.Warning("Warning messages enabled");
+        }
+
+        if (inlineStackTrace)
+        {
+            GlobalVariables.InlineStackTrace = true;
+            GlobalVariables.LOGGER.Warning("Inline stack trace messages enabled");
         }
     }
 
@@ -96,7 +103,8 @@ public static class Program
             UserConfiguration.ApplyConfiguration(opts.ConfigFile);
         }
 
-        ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict);
+        ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict,
+            opts.InlineStackTrace);
     }
 
     private static void HandleParseError(IEnumerable<Error> errs)
@@ -178,7 +186,7 @@ public static class Program
 
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
-                new SystemError(e.Message));
+                new SystemError(GlobalVariables.InlineStackTrace ? fullError : e.Message));
         }
     }
 }

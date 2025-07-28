@@ -28,6 +28,9 @@ namespace Aurora
         [Option('s', "strict", Default = false, HelpText = "Only displays the log messages specified from flags")]
         public bool Strict { get; set; }
 
+        [Option("inline-stack-trace", Default = false, HelpText = "Prints inline stack traces for system errors")]
+        public bool InlineStackTrace { get; set; }
+
         [Option("config-file", Default = null, HelpText = "The config file for the aurora interpreter")]
         public string? ConfigFile { get; set; }
 
