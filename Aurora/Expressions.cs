@@ -428,13 +428,13 @@ internal class LiteralExpression(List<Token> value) : Expression
 //     {
 //         Interpreter interpreter = new();
 //         GlobalVariables.LineNumber = 0;
-//         Variables.SYSTEM_DEFINED.Add("__EXEC_START__", new IntegerToken().Initialise(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()));
+//         Variables.SystemDefined.Add("__EXEC_START__", new IntegerToken().Initialise(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()));
 //         
 //         foreach (var line in code)
 //         {
 //             GlobalVariables.ExpressionDepth = 0;
 //             GlobalVariables.LineNumber++;
-//             Variables.SYSTEM_DEFINED["__LINE_NUMBER__"] =
+//             Variables.SystemDefined["__LINE_NUMBER__"] =
 //                 new IntegerToken().Initialise(GlobalVariables.LineNumber.ToString());
 //             interpreter.Text = line;
 //             GlobalVariables.LOGGER.Verbose($"(Evaluating line {GlobalVariables.LineNumber}) {line}");

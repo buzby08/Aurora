@@ -22,7 +22,7 @@ namespace Aurora
         [Option("no-console", Default = false, HelpText = "Suppresses log messages to the terminal")]
         public bool NoConsole { get; set; }
 
-        [Option("logfile", Default = "aurora.LOG", HelpText = "The file to output the log messages to")]
+        [Option("logfile", HelpText = "The file to output the log messages to")]
         public string? LogFile { get; set; }
 
         [Option('s', "strict", Default = false, HelpText = "Only displays the log messages specified from flags")]
@@ -30,6 +30,10 @@ namespace Aurora
 
         [Option("inline-stack-trace", Default = false, HelpText = "Prints inline stack traces for system errors")]
         public bool InlineStackTrace { get; set; }
+
+        [Option("disable-easter-eggs", Default = false,
+            HelpText = "Disables the easter eggs hidden within the Aurora interpreter")]
+        public bool DisableEasterEggs { get; set; }
 
         [Option("config-file", Default = null, HelpText = "The config file for the aurora interpreter")]
         public string? ConfigFile { get; set; }

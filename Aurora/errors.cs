@@ -493,6 +493,36 @@ namespace Aurora
             this.Title = "Expression Depth Exceeded" + (user ? " (User)" : " (System)");
         }
     }
+    
+    internal class MaxRecursionDepthExceededError : ErrorTypes
+    {
+        public override string Title { get; }
+        public override string Description => "The system encountered its maximum recursion depth.";
+        public override string Message { get; }
+        public override string Code => "Aurora.RecursionDepthExceeded";
+        public override bool AlwaysError => true;
+
+        public MaxRecursionDepthExceededError(string? message = null, bool user = true)
+        {
+            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+            this.Title = "Recursion Depth Exceeded" + (user ? " (User)" : " (System)");
+        }
+    }
+
+    internal class MemoryError : ErrorTypes
+    {
+        public override string Title { get; }
+        public override string Description => "The system tried to use or access invalid memory.";
+        public override string Message { get; }
+        public override string Code => "Aurora.MemoryError";
+        public override bool AlwaysError => true;
+
+        public MemoryError(string? message = null, bool user = false)
+        {
+            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+            this.Title = "Memory Error" + (user ? " (User)" : " (System)");
+        }
+    }
 
     internal class SystemError : ErrorTypes
     {

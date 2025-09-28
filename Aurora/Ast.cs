@@ -269,8 +269,9 @@ internal class Ast
 
     private Token? _evaluateIf()
     {
+        Evaluate evaluator = new();
         Token? evaluatedCondition = this.Condition!.Count != 0
-            ? Aurora.Evaluate.SingleLine(this._condition!)
+            ? evaluator.SingleLine(this._condition!)
             : new BooleanToken().Initialise(true);
 
         if (evaluatedCondition is null || evaluatedCondition.Type != BooleanToken.TokenType)
@@ -296,7 +297,7 @@ internal class Ast
             return null;
         }
 
-        Aurora.Evaluate.AllCode(this._codeBlock!.ToArray());
+        evaluator.AllCode(this._codeBlock!.ToArray());
 
         if (this._condition!.Count == 0)
         {
@@ -310,7 +311,8 @@ internal class Ast
 
     private Token? _evaluateWhile()
     {
-        Token? evaluatedCondition = Aurora.Evaluate.SingleLine(this._condition!);
+        Evaluate evaluator = new();
+        Token? evaluatedCondition = evaluator.SingleLine(this._condition!);
 
         if (evaluatedCondition is null || evaluatedCondition.Type != BooleanToken.TokenType)
             Errors.AlwaysThrow(new InvalidSyntaxError("Conditional expressions must evaluate to a boolean!"));
@@ -320,9 +322,9 @@ internal class Ast
         while (conditionIsTrue)
         {
             GlobalVariables.LineNumber = lineStartNumber;
-            Aurora.Evaluate.AllCode(this._codeBlock!.ToArray());
+            evaluator.AllCode(this._codeBlock!.ToArray());
 
-            Token? reEvaluatedCondition = Aurora.Evaluate.SingleLine(this._condition!);
+            Token? reEvaluatedCondition = evaluator.SingleLine(this._condition!);
 
             if (reEvaluatedCondition is null || reEvaluatedCondition.Type != BooleanToken.TokenType)
                 Errors.AlwaysThrow(new InvalidSyntaxError("Conditional expressions must evaluate to a boolean!"));

@@ -2,12 +2,12 @@ using System.Diagnostics;
 
 namespace Aurora;
 
-internal static class Evaluate
+internal class Evaluate
 {
-    private static readonly Interpreter interpreter = new Interpreter();
-    private static string[]? _allCode;
+    private readonly Interpreter interpreter = new Interpreter();
+    private string[]? _allCode;
 
-    private static Ast ParseGroupedTokens(List<List<Token>> tokens)
+    private Ast ParseGroupedTokens(List<List<Token>> tokens)
     {
         List<Ast> asts = [];
         foreach (List<Token> tokenSet in tokens)
@@ -49,7 +49,7 @@ internal static class Evaluate
         return previousAst;
     }
 
-    private static List<List<Token>> SegmentTokens(List<Token> tokens)
+    private List<List<Token>> SegmentTokens(List<Token> tokens)
     {
         List<List<Token>> all = [];
         List<Token> current = [];
@@ -84,7 +84,7 @@ internal static class Evaluate
         return all;
     }
 
-    public static Token? SingleLine(List<Token> tokens, bool highestLevel = false)
+    public Token? SingleLine(List<Token> tokens, bool highestLevel = false)
     {
         string lineAsOutput = PrettyPrint.TokenList(tokens, output: false);
         GlobalVariables.LOGGER.Verbose($"Evaluating line: {lineAsOutput}");
@@ -96,7 +96,7 @@ internal static class Evaluate
         return ast.Evaluate();
     }
 
-    public static Ast GenerateAst(List<Token> tokens)
+    public Ast GenerateAst(List<Token> tokens)
     {
         Ast ast = new Ast();
 
@@ -201,7 +201,7 @@ internal static class Evaluate
         return ast;
     }
 
-    public static Ast ParseConditionalStatement(Ast ast, List<Token> tokens, int index)
+    public Ast ParseConditionalStatement(Ast ast, List<Token> tokens, int index)
     {
         int normalBracketIndex = 1;
         List<Token> condition = [];
@@ -292,7 +292,7 @@ internal static class Evaluate
         return ast;
     }
 
-    public static (List<List<Token>> allArgs, int endIndex) SeparateIntoArguments(List<Token> tokens, int index,
+    public (List<List<Token>> allArgs, int endIndex) SeparateIntoArguments(List<Token> tokens, int index,
         bool requireCloseBracket = true)
     {
         int bracketDepth = 1;
@@ -347,18 +347,18 @@ internal static class Evaluate
         throw new UnreachableException();
     }
 
-    public static string? GetCodeFromLine(int lineNumber)
+    public string? GetCodeFromLine(int lineNumber)
     {
         return _allCode?.ElementAtOrDefault(lineNumber - 1);
     }
 
-    public static List<Token> GetTokensFromCode(string code)
+    public List<Token> GetTokensFromCode(string code)
     {
         interpreter.Text = code;
         return interpreter.GetAllTokens();
     }
 
-    private static void MarkAsComment(int lineNumber)
+    private void MarkAsComment(int lineNumber)
     {
         if (_allCode is null) return;
         if (lineNumber - 1 > _allCode.Length) return;
@@ -366,7 +366,7 @@ internal static class Evaluate
         _allCode[lineNumber - 1] = "//" + _allCode[lineNumber - 1];
     }
 
-    private static string RemoveComments(string code)
+    private string RemoveComments(string code)
     {
         for (int i = 0; i < code.Length; i++)
         {
@@ -384,9 +384,9 @@ internal static class Evaluate
         return code;
     }
 
-    public static void AllCode(string[] code)
+    public void AllCode(string[] code)
     {
-        _allCode = code;
+        _allCode = code.ToArray();
 
         GlobalVariables.LineNumber = 0;
 
@@ -394,23 +394,28 @@ internal static class Evaluate
         while (index < _allCode.Length)
         {
             string line = _allCode[index];
-            GlobalVariables.LineNumber++;
+            GlobalVariables.LineNumber = index + 1;
             index++;
 
             string actualLine = RemoveComments(line);
 
+            if (GlobalVariables.LinesToDebug.Contains(GlobalVariables.LineNumber ?? 0))
+                Debugger.Break();
+
             if (actualLine == string.Empty) continue;
 
-            if (GlobalVariables.LineNumber == 42)
+            if (GlobalVariables.EasterEggs && GlobalVariables.LineNumber == 42)
             {
                 GlobalVariables.LOGGER.Debug("[Line 42] You have discovered the meaning of life. Use it wisely.");
             }
 
-            if (actualLine.Contains("if (life == hard)", StringComparison.CurrentCultureIgnoreCase))
+            if (GlobalVariables.EasterEggs &&
+                actualLine.Contains("if (life == hard)", StringComparison.CurrentCultureIgnoreCase))
                 GlobalVariables.LOGGER.ForceConsoleLog("Suggestion: Have you tried turning it off and on again",
                     addLineNumber: true);
 
             interpreter.Text = actualLine;
+
 
             SingleLine(interpreter.GetAllTokens(), highestLevel: true);
         }

@@ -3,6 +3,33 @@ using System.Diagnostics;
 
 namespace Aurora;
 
+internal struct Attribute
+{
+    public required string Name;
+    public bool IsStatic = false;
+    public bool IsConstant = false;
+    public bool IsPrivate = true;
+    public required string Type;
+    public required object? Value;
+
+    public Attribute()
+    {
+    }
+}
+
+internal struct Method
+{
+    public required string Name;
+    public bool IsStatic = false;
+    public bool IsPrivate = true;
+    public required string ReturnType;
+    public required string[] Code;
+
+    public Method()
+    {
+    }
+}
+
 internal class CustomClass(string name)
 {
     public delegate Token CustomMethod(List<Token> positionals, Dictionary<string, Token> keywords,

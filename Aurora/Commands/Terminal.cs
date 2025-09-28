@@ -7,7 +7,7 @@ internal static class Terminal
     public static StringToken Color { get; private set; } =
         new StringToken().Initialise(Colors.White, withoutQuotes: true, interpolate: false);
 
-    public static Token Clear(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
+    public static NullToken Clear(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         if (positionals.Count > 0 || keywords.Count > 0)
             Errors.RaiseError(new ArgumentSurplusError("Terminal.clear does not take any arguments"));
@@ -18,7 +18,7 @@ internal static class Terminal
         return new NullToken();
     }
 
-    public static Token Write(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
+    public static NullToken Write(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
         Token endCharToken =
             keywords.GetValueOrDefault("end", new StringToken().Initialise("\n", withoutQuotes: true));
@@ -135,11 +135,14 @@ internal static class Terminal
 
     public static FloatToken ReadFloat(List<Token> positionals, Dictionary<string, Token> keywords, List<Ast> raw)
     {
+        Dictionary<string, List<Type>> expectedArguments = new()
+        {
+            { "message", [typeof(StringToken)] }, { "min", [typeof(FloatToken), typeof(IntegerToken)] },
+            { "max", [typeof(FloatToken), typeof(IntegerToken)] }
+        };
+
         Dictionary<string, Token?> arguments = Parsers.ParseArgs(positionals, keywords,
-            new Dictionary<string, Type>
-            {
-                { "message", typeof(StringToken) }, { "min", typeof(FloatToken) }, { "max", typeof(FloatToken) }
-            },
+            expectedArguments,
             ["message", "min", "max"]);
 
         Token message = arguments.GetValueOrDefault("message") ??
@@ -149,11 +152,11 @@ internal static class Terminal
         Token? minimum = arguments.GetValueOrDefault("min");
         Token? maximum = arguments.GetValueOrDefault("max");
 
-        if (minimum is not null && minimum.Type != FloatToken.TokenType)
+        if (minimum is not null && (minimum.Type is not FloatToken.TokenType or IntegerToken.TokenType))
             Errors.AlwaysThrow(
                 new ArgumentTypeMismatchError($"Parameter min expected an Float, not `{minimum.Type}`"));
 
-        if (maximum is not null && maximum.Type != FloatToken.TokenType)
+        if (maximum is not null && (maximum.Type is not FloatToken.TokenType or IntegerToken.TokenType))
             Errors.AlwaysThrow(
                 new ArgumentTypeMismatchError($"Parameter min expected an Float, not `{maximum.Type}`"));
 
@@ -227,7 +230,7 @@ internal static class Terminal
         };
 
 
-        return new BooleanToken().Initialise(result.ToString().ToLower());
+        return new BooleanToken().Initialise(result);
     }
 
     private static bool ReadBoolOptionWord()

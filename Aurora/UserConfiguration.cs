@@ -34,6 +34,8 @@ internal static class UserConfiguration
         object noConsole = config.GetValueOrDefault("NoConsole", GlobalVariables.LOGGER.NoConsole);
         object strict = config.GetValueOrDefault("Strict", GlobalVariables.StrictFlagMode);
         object inlineStackTrace = config.GetValueOrDefault("InlineStackTrace", GlobalVariables.InlineStackTrace);
+        object disableEasterEggs = config.GetValueOrDefault("DisableEasterEggs", !GlobalVariables.EasterEggs);
+        object logFile = config.GetValueOrDefault("LogFile", "");
 
         if (maxExpressionDepth is not int)
             Aurora.Errors.RaiseError(new ConfigurationError("MaxExpressionDepth must be an integer"));
@@ -62,6 +64,12 @@ internal static class UserConfiguration
         if (inlineStackTrace is JsonElement inlineStackTraceElement)
             inlineStackTrace = inlineStackTraceElement.GetBoolean();
 
+        if (disableEasterEggs is JsonElement disableEasterEggsElement)
+            disableEasterEggs = disableEasterEggsElement.GetBoolean();
+
+        if (logFile is JsonElement logFileElement)
+            logFile = logFileElement.GetString() ?? "";
+
         if (showTimestamp is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("ShowTimestamp must be a boolean"));
 
@@ -85,6 +93,12 @@ internal static class UserConfiguration
 
         if (inlineStackTrace is not bool)
             Aurora.Errors.RaiseError(new ConfigurationError("InlineStackTrace must be a boolean"));
+
+        if (disableEasterEggs is not bool)
+            Aurora.Errors.RaiseError(new ConfigurationError("DisableEasterEggs must be a boolean"));
+
+        if (logFile is not string)
+            Aurora.Errors.RaiseError(new ConfigurationError("LogFile must be a string"));
 
         if ((errors is not List<object> errorList || errorList.All(item => item is string)) &&
             errors is not List<string>)
@@ -112,7 +126,10 @@ internal static class UserConfiguration
         bool noConsoleBool = GlobalVariables.LOGGER.NoConsole || (bool)noConsole;
         bool strictBool = GlobalVariables.StrictFlagMode || (bool)strict;
         bool inlineStackTraceBool = GlobalVariables.InlineStackTrace || (bool)inlineStackTrace;
+        bool disableEasterEggsBool = !GlobalVariables.EasterEggs || (bool)disableEasterEggs;
+        string logFileString = (string)logFile;
 
-        Program.ApplyOptions(noConsoleBool, debugBool, verboseBool, warningBool, strictBool, inlineStackTraceBool);
+        Program.ApplyOptions(noConsoleBool, debugBool, verboseBool, warningBool, strictBool, inlineStackTraceBool,
+            disableEasterEggsBool, logFileString);
     }
 }

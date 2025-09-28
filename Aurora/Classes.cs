@@ -2,22 +2,36 @@ using System;
 using System.Diagnostics;
 using Aurora.Commands;
 using Math = Aurora.Commands.Math;
-using String = System.String;
+using String = string;
 
 namespace Aurora;
 
 internal static class Classes
 {
-    public static string? CurrentSelectedClass = null;
-    public static string? CurrentSelectedMethod = null;
-    public static string? CurrentSelectedProperty = null;
+    private const String _owner = "Aurora.Classes";
 
-    public static Dictionary<string, CustomClass> SystemClasses { get; set; } = new();
-    public static Dictionary<string, CustomClass> UserClasses { get; set; } = new();
+    public static String? CurrentSelectedClass = null;
+    public static String? CurrentSelectedMethod = null;
+    public static String? CurrentSelectedProperty = null;
 
-    public static void RegisterClass(string name, CustomClass customClass)
+    public static Dictionary<String, CustomClass> SystemClasses =>
+        Memory.Get("SystemClasses", _owner)?.Value ?? new Dictionary<String, CustomClass>();
+
+    public static Dictionary<String, CustomClass> UserClasses =>
+        Memory.Get("UserClasses", _owner)?.Value ?? new Dictionary<String, CustomClass>();
+
+    private static void RegisterSystemClass(string name, CustomClass systemClass)
     {
-        UserClasses[name] = customClass;
+        Dictionary<String, CustomClass> systemClasses = SystemClasses;
+        systemClasses.Add(name, systemClass);
+        Memory.Update("SystemClasses", _owner, systemClasses);
+    }
+
+    public static void RegisterClass(String name, CustomClass customClass)
+    {
+        Dictionary<String, CustomClass> userClasses = UserClasses;
+        userClasses.Add(name, customClass);
+        Memory.Update("UserClasses", _owner, userClasses);
     }
 
     public static void RegisterSystemClasses()
@@ -30,35 +44,45 @@ internal static class Classes
         terminal.AddMethod("readBoolean", Terminal.ReadBoolean);
         terminal.AddMethod("clear", Terminal.Clear);
         terminal.AddAttribute("color", () => Terminal.Color);
-        SystemClasses.Add("Terminal", terminal);
+        RegisterSystemClass("Terminal", terminal);
 
         CustomClass variables = new CustomClass("Variables");
         variables.AddMethod("create", Commands.Variables.Create);
         variables.AddMethod("edit", Commands.Variables.Edit);
-        SystemClasses.Add("Variables", variables);
+        RegisterSystemClass("Variables", variables);
 
         CustomClass integer = new CustomClass("Integer");
         integer.AddMethod("create", Integer.Create);
-        SystemClasses.Add("Integer", integer);
+        RegisterSystemClass("Integer", integer);
 
         CustomClass floatClass = new CustomClass("Float");
         floatClass.AddMethod("create", Float.Create);
-        SystemClasses.Add("Float", floatClass);
+        RegisterSystemClass("Float", floatClass);
 
         CustomClass stringClass = new CustomClass("String");
         stringClass.AddMethod("create", StringClass.Create);
-        SystemClasses.Add("String", stringClass);
+        RegisterSystemClass("String", stringClass);
 
         CustomClass boolean = new CustomClass("Boolean");
         boolean.AddMethod("create", Commands.Boolean.Create);
         boolean.AddMethod("toStyle", Commands.Boolean.ToStyle);
-        SystemClasses.Add("Boolean", boolean);
+        boolean.AddAttribute("wordOptionStyle", () => Commands.Boolean.WordOptionStyle);
+        boolean.AddAttribute("numberOptionStyle", () => Commands.Boolean.NumberOptionStyle);
+        boolean.AddAttribute("binaryOptionStyle", () => Commands.Boolean.BinaryOptionStyle);
+        boolean.AddAttribute("charOptionStyle", () => Commands.Boolean.CharOptionStyle);
+        RegisterSystemClass("Boolean", boolean);
 
         CustomClass math = new CustomClass("Math");
         math.AddMethod("pow", Math.Pow);
         math.AddMethod("abs", Math.Abs);
         math.AddMethod("round", Math.Round);
-        SystemClasses.Add("Math", math);
+        RegisterSystemClass("Math", math);
+
+        CustomClass system = new CustomClass("System");
+        system.AddMethod("exit", SystemCommands.Exit);
+        system.AddMethod("restart", SystemCommands.Restart);
+        system.AddMethod("reload", SystemCommands.Reload);
+        RegisterSystemClass("System", system);
     }
 
     public static CustomClass GetClass(string name)
@@ -99,6 +123,27 @@ internal static class Classes
         CustomClass.CustomMethod currentMethod = currentClass.Methods[CurrentSelectedMethod];
 
         return currentMethod(positionals, keywords, raw);
+    }
+
+    public static void InitialiseClasses()
+    {
+        MemoryItem systemClasses = new MemoryItem
+        {
+            Owner = _owner,
+            Name = "SystemClasses",
+            Value = new Dictionary<string, CustomClass>()
+        };
+        MemoryItem userClasses = new MemoryItem
+        {
+            Owner = _owner,
+            Name = "UserClasses",
+            Value = new Dictionary<string, CustomClass>()
+        };
+
+        Memory.Save(systemClasses);
+        Memory.Save(userClasses);
+
+        RegisterSystemClasses();
     }
 
     public static bool ClassExists(string name) => SystemClasses.ContainsKey(name) || UserClasses.ContainsKey(name);

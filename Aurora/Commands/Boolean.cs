@@ -6,6 +6,11 @@ internal static class Boolean
 {
     public static ImmutableList<string> ValidOptionStyles = ["word", "char", "number", "binary"];
 
+    public static Token WordOptionStyle = new StringToken().Initialise("word", withoutQuotes: true);
+    public static Token CharOptionStyle = new StringToken().Initialise("char", withoutQuotes: true);
+    public static Token NumberOptionStyle = new StringToken().Initialise("number", withoutQuotes: true);
+    public static Token BinaryOptionStyle = new StringToken().Initialise("binary", withoutQuotes: true);
+
     public static BooleanToken Create(List<Token> positionals, Dictionary<string, Token> keywords,
         List<Ast> raw)
     {
@@ -38,22 +43,22 @@ internal static class Boolean
     {
         Dictionary<string, Type> expectedArguments = new()
         {
-            { "variable", typeof(WordToken) }, { "optionStyle", typeof(StringToken) }
+            { "value", typeof(WordToken) }, { "optionStyle", typeof(StringToken) }
         };
-        List<string> positionalOrder = ["variable", "optionStyle"];
+        List<string> positionalOrder = ["value", "optionStyle"];
         Dictionary<string, Token?> arguments =
             Parsers.ParseArgs(positionals, keywords, expectedArguments, positionalOrder);
 
-        Token? variable = arguments.GetValueOrDefault("variable");
+        Token? value = arguments.GetValueOrDefault("value");
         Token? optionStyle = arguments.GetValueOrDefault("optionStyle");
 
-        if (variable is null)
+        if (value is null)
             Errors.AlwaysThrow(new ArgumentDeficitError("Missing required argument 'variable' in Boolean.ToStyle"));
 
-        if (variable.Type != BooleanToken.TokenType)
+        if (value.Type != BooleanToken.TokenType)
             Errors.AlwaysThrow(
                 new ArgumentTypeMismatchError(
-                    $"Boolean.toStyle expected variable of type boolean, not {variable.Type}"));
+                    $"Boolean.toStyle expected variable of type boolean, not {value.Type}"));
 
         if (optionStyle is null)
             Errors.AlwaysThrow(new ArgumentDeficitError("Missing required argument 'optionStyle' in Boolean.ToStyle"));
@@ -66,10 +71,10 @@ internal static class Boolean
 
         string? initialiser = actualOptionStyle switch
         {
-            "word" => variable.ValueAsBool ? "true" : "false",
-            "char" => variable.ValueAsBool ? "y" : "n",
-            "number" => variable.ValueAsBool ? "1" : "2",
-            "binary" => variable.ValueAsBool ? "1" : "0",
+            "word" => value.ValueAsBool ? "true" : "false",
+            "char" => value.ValueAsBool ? "y" : "n",
+            "number" => value.ValueAsBool ? "1" : "2",
+            "binary" => value.ValueAsBool ? "1" : "0",
             _ => null
         };
 

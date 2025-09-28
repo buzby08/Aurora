@@ -220,6 +220,7 @@ internal class IntegerToken : Token
             {
                 string v => new CustomInt(v),
                 CustomInt i => i,
+                int ix => new CustomInt(ix),
                 _ => throw new ArgumentException($"Integer Tokens must have a string or int value, not {type}")
             };
         }
@@ -372,6 +373,7 @@ internal class StringToken : Token
     public static string InterpolateString(string value)
     {
         var interpreter = new Interpreter();
+        var evaluator = new Evaluate();
         string result = string.Empty;
         bool isBackslash = false;
         string variableName = string.Empty;
@@ -395,7 +397,7 @@ internal class StringToken : Token
             {
                 trackVariableName = false;
                 interpreter.Text = variableName;
-                result += Evaluate.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
+                result += evaluator.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
                 variableName = string.Empty;
                 continue;
             }
@@ -483,14 +485,19 @@ internal class BooleanToken : Token
             var type = value?.GetType();
             if (value is not string && value is not bool)
                 throw new ArgumentException($"Boolean tokens must be strings or boolean objects, not {type}");
-            string actualValue = value is bool ? value.ToString()!.ToLower() : (string)value;
-            if (!VARS.Contains(actualValue))
+            switch (value)
             {
-                throw new ArgumentException($"Value `{value}` is not a valid boolean token");
+                case string when !VARS.Contains(value):
+                    throw new ArgumentException($"Value `{value}` is not a valid boolean token");
+                case bool b:
+                    this._value = b;
+                    this.IsTrue = b;
+                    return;
+                default:
+                    this._value = (string)value == "true";
+                    this.IsTrue = (string)value == "true";
+                    break;
             }
-
-            this._value = actualValue == "true";
-            this.IsTrue = actualValue == "true";
         }
     }
 

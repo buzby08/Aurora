@@ -6,7 +6,7 @@ namespace Aurora;
 
 public static class Program
 {
-    private static string[] ReadCode(string filePath)
+    public static string[] ReadCode(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -23,12 +23,12 @@ public static class Program
             GlobalVariables.LOGGER.Warning("Aurora code should be written in an aurora file (ending with .aur).");
         }
 
-        Variables.SYSTEM_DEFINED.Add("__SCRIPT__", new StringToken().Initialise(filePath, withoutQuotes: true));
+        Variables.SystemDefined.TryAdd("__SCRIPT__", new StringToken().Initialise(filePath, withoutQuotes: true));
         return File.ReadAllLines(filePath);
     }
 
     public static void ApplyOptions(bool noConsole, bool debug, bool verbose, bool warning, bool strict,
-        bool inlineStackTrace)
+        bool inlineStackTrace, bool disableEasterEggs, string? logFile)
     {
         if (noConsole)
         {
@@ -62,6 +62,17 @@ public static class Program
             GlobalVariables.InlineStackTrace = true;
             GlobalVariables.LOGGER.Warning("Inline stack trace messages enabled");
         }
+
+        if (disableEasterEggs)
+        {
+            GlobalVariables.EasterEggs = false;
+            GlobalVariables.LOGGER.Warning("Easter eggs disabled");
+        }
+
+        if (!string.IsNullOrEmpty(logFile))
+        {
+            GlobalVariables.LOGGER.LogFilePath = logFile;
+        }
     }
 
     private static void RunOptionsAndReturnExitCode(Options opts)
@@ -93,10 +104,6 @@ public static class Program
         Errors.ConfigFilePath = string.IsNullOrEmpty(opts.ConfigFile) ? Errors.ConfigFilePath : opts.ConfigFile;
 
         GlobalVariables.StrictFlagMode = opts.Strict;
-        if (!string.IsNullOrEmpty(opts.LogFile))
-        {
-            GlobalVariables.LOGGER.LogFilePath = opts.LogFile;
-        }
 
         if (!string.IsNullOrEmpty(opts.ConfigFile))
         {
@@ -104,7 +111,7 @@ public static class Program
         }
 
         ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict,
-            opts.InlineStackTrace);
+            opts.InlineStackTrace, opts.DisableEasterEggs, opts.LogFile);
     }
 
     private static void HandleParseError(IEnumerable<Error> errs)
@@ -123,6 +130,13 @@ public static class Program
 
         Errors.RaiseError(new ConfigurationError("The system encountered an error it could not handle",
             user: false));
+    }
+
+    public static void InitialiseMembers()
+    {
+        Classes.InitialiseClasses();
+        Variables.InitialiseVariables();
+        GlobalVariables.InititaliseMembers();
     }
 
     public static void Main(string[] args)
@@ -162,17 +176,18 @@ public static class Program
             Environment.Exit(0);
         }
 
-
-        Classes.RegisterSystemClasses();
-
         try
         {
+            InitialiseMembers();
+
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(RunOptionsAndReturnExitCode)
                 .WithNotParsed(HandleParseError);
 
             string[] code = ReadCode(GlobalVariables.CodeFilePath);
-            Evaluate.AllCode(code);
+            GlobalVariables.Code = code;
+
+            GlobalVariables.Evaluator.AllCode(code);
         }
         catch (Exception e)
         {
