@@ -169,6 +169,27 @@ internal class BaseToken : Token
     }
 }
 
+internal class DotToken : Token
+{
+    public const string TokenType = "DOT";
+    public override string Type { get; } = TokenType;
+    private char _value = '.';
+    public override object? Value
+    {
+        get => this._value;
+        set => Errors.AlwaysThrow(new UnsupportedOperationError($"Cannot set a value to a dotToken", user: false));
+    }
+    
+    public DotToken()
+    {
+    }
+
+    public DotToken Initialise()
+    {
+        return this;
+    }
+}
+
 internal class WordToken : Token
 {
     public const string TokenType = "WORD";
@@ -330,7 +351,7 @@ internal class StringToken : Token
             if (!START_CHARS.Contains((char)this.StartChar!))
             {
                 throw new ArgumentException(
-                    $"{GlobalVariables.ReprString(s)} does not start with a valid string starter");
+                    $"{null/*GlobalVariables.ReprString(s)*/} does not start with a valid string starter");
             }
 
             if (this.StartChar != endChar)
@@ -356,70 +377,70 @@ internal class StringToken : Token
         return escapeSequences.GetValueOrDefault(escapeSequence, escapeSequence);
     }
 
-    private static string GetVariableTextValue(string name)
-    {
-        if (Variables.IsVariable(name))
-        {
-            string variableValue = Variables.GetVariable(name).ValueAsString;
-            GlobalVariables.LOGGER.Verbose($"Interpolating '{name}' as value '{variableValue}'");
-            return variableValue;
-        }
-
-        Errors.RaiseError(
-            new VarNotDefinedError($"The variable '{name}' is not defined. Using literal value instead"));
-        return $"{{{name}}}";
-    }
-
-    public static string InterpolateString(string value)
-    {
-        var interpreter = new Interpreter();
-        var evaluator = new Evaluate();
-        string result = string.Empty;
-        bool isBackslash = false;
-        string variableName = string.Empty;
-        bool trackVariableName = false;
-
-        foreach (char character in value)
-        {
-            if (character == '\\' && !isBackslash)
-            {
-                isBackslash = true;
-                continue;
-            }
-
-            if (!isBackslash && character == '{')
-            {
-                trackVariableName = true;
-                continue;
-            }
-
-            if (trackVariableName && character == '}')
-            {
-                trackVariableName = false;
-                interpreter.Text = variableName;
-                result += evaluator.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
-                variableName = string.Empty;
-                continue;
-            }
-
-            if (trackVariableName)
-            {
-                variableName += character;
-                continue;
-            }
-
-            result += character;
-        }
-
-        return result;
-    }
+    // private static string GetVariableTextValue(string name)
+    // {
+    //     if (Variables.IsVariable(name))
+    //     {
+    //         string variableValue = Variables.GetVariable(name).ValueAsString;
+    //         GlobalVariables.LOGGER.Verbose($"Interpolating '{name}' as value '{variableValue}'");
+    //         return variableValue;
+    //     }
+    //
+    //     Errors.RaiseError(
+    //         new VarNotDefinedError($"The variable '{name}' is not defined. Using literal value instead"));
+    //     return $"{{{name}}}";
+    // }
+    //
+    // public static string InterpolateString(string value)
+    // {
+    //     var interpreter = new Tokeniser();
+    //     var evaluator = new Evaluate();
+    //     string result = string.Empty;
+    //     bool isBackslash = false;
+    //     string variableName = string.Empty;
+    //     bool trackVariableName = false;
+    //
+    //     foreach (char character in value)
+    //     {
+    //         if (character == '\\' && !isBackslash)
+    //         {
+    //             isBackslash = true;
+    //             continue;
+    //         }
+    //
+    //         if (!isBackslash && character == '{')
+    //         {
+    //             trackVariableName = true;
+    //             continue;
+    //         }
+    //
+    //         if (trackVariableName && character == '}')
+    //         {
+    //             trackVariableName = false;
+    //             interpreter.Text = variableName;
+    //             result += evaluator.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
+    //             variableName = string.Empty;
+    //             continue;
+    //         }
+    //
+    //         if (trackVariableName)
+    //         {
+    //             variableName += character;
+    //             continue;
+    //         }
+    //
+    //         result += character;
+    //     }
+    //
+    //     return result;
+    // }
 
     public override string ValueAsString => _value;
     public new int ValueLength => StartChar is not null ? 2 + ValueLength : base.ValueLength;
 
     public StringToken Initialise(string value, bool withoutQuotes = false, bool interpolate = true)
     {
-        if (interpolate) value = InterpolateString(value);
+        // if (interpolate) value = InterpolateString(value);
 
         switch (withoutQuotes)
         {
@@ -602,7 +623,7 @@ internal class ComparisonToken : Token
             if (!VALUES.Contains(actualValue))
             {
                 throw new ArgumentException(
-                    $"{GlobalVariables.ReprString(actualValue)} is not a valid comparison token");
+                    $"{null/*GlobalVariables.ReprString(actualValue)*/} is not a valid comparison token");
             }
 
             this._value = actualValue;
@@ -659,7 +680,7 @@ internal class BinaryOperationToken : Token
             if (value is not string actualValue) throw new ArgumentException("BinaryOperation Tokens must be strings");
             if (!VALUES.Contains(actualValue))
             {
-                throw new ArgumentException($"{GlobalVariables.ReprString(actualValue)} is not a valid binary token");
+                throw new ArgumentException($"{null/*GlobalVariables.ReprString(actualValue)*/} is not a valid binary token");
             }
 
             this._value = actualValue;
@@ -689,7 +710,7 @@ internal class BinaryOperationToken : Token
 internal class SeparatorToken : Token
 {
     public const string TokenType = "SEPARATOR";
-    public readonly static ImmutableHashSet<char> VARS = ['.', ',', ';'];
+    public readonly static ImmutableHashSet<char> VARS = [',', ';'];
 
     public override string Type { get; } = TokenType;
 
@@ -722,7 +743,6 @@ internal class SeparatorToken : Token
         return this;
     }
 
-    public static SeparatorToken DotToken = new SeparatorToken().Initialise('.');
     public static SeparatorToken SemiColonToken = new SeparatorToken().Initialise(';');
 }
 

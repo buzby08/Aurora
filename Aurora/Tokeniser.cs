@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Aurora;
 
-internal class Interpreter
+internal class Tokeniser
 {
     private string _text = string.Empty;
 
@@ -210,6 +210,12 @@ internal class Interpreter
                 return new SeparatorToken().Initialise((char)currentChar);
             }
 
+            if ((char)currentChar == '.')
+            {
+                this.Advance();
+                return new DotToken().Initialise();
+            }
+
             if (SYMBOLS.Contains($"{currentChar}")) return this.Symbol();
 
             if (char.IsWhiteSpace((char)currentChar))
@@ -222,9 +228,9 @@ internal class Interpreter
         }
     }
 
-    public List<Token> GetAllTokens()
+    public TokenList GetAllTokens()
     {
-        List<Token> allTokens = [];
+        TokenList allTokens = new();
 
         Token currentToken = this.GetNextToken();
 
@@ -237,11 +243,85 @@ internal class Interpreter
         return allTokens;
     }
 
+    // Todo: Loop over all tokens, generate ast's as needed (method call ast, attribute ast). This should be done by the
+    //      evaluator
+    // Todo: Evaluate all Ast's
+    // Todo: Build all required classes (Variables, Int, Float, String, Boolean, Terminal, Logic)
+
+
+    private GetPatternResult GetMethodCall(List<Token> tokens)
+    {
+        return new GetPatternResult { Tokens = tokens, TokensSkipped = tokens.Count };
+        // List<Token> allTokens = this.GetAllTokens();
+        // List<Token> methodCallTokens = [];
+        //
+        // List<string> pattern = [DotToken.TokenType, WordToken.TokenType, BracketToken.TokenType];
+        //
+        // int patternIndex = 0;
+        // int bracketDepth = 0;
+        //
+        // foreach (Token token in allTokens)
+        // {
+        //     bool isInsideParenthesis = bracketDepth > 0;
+        //     bool isBracketToken = token is BracketToken;
+        //     bool matchesNextItemInPattern = pattern[patternIndex] == token.Type;
+        //     
+        //     if (isInsideParenthesis && !isBracketToken)
+        //     {
+        //         methodCallTokens.Add(token);
+        //         continue;
+        //     }
+        //     
+        //     if (!isBracketToken && matchesNextItemInPattern)
+        //     {
+        //         patternIndex++;
+        //         methodCallTokens.Add(token);
+        //         continue;
+        //     }
+        //     
+        //     if (patternIndex == 0) continue;
+        //
+        //     if (!isInsideParenthesis && token is BracketToken { IsClosed: true, IsNormal: true })
+        //     {
+        //         Logs.Warning($"Tokeniser.GetMethodCall - bracket depth is 0, and token is a close token, and is normal");
+        //         return null;
+        //     }
+        //
+        //     if (token is BracketToken { IsOpen: true, IsNormal: true })
+        //     {
+        //         bracketDepth++;
+        //         methodCallTokens.Add(token);
+        //     }
+        //     
+        //     if (bracketDepth > 1 && token is BracketToken { IsClosed: true, IsNormal: true })
+        //     {
+        //         bracketDepth--;
+        //         methodCallTokens.Add(token);
+        //     }
+        //     
+        //     if (bracketDepth == 1 && token is BracketToken { IsClosed: true, IsNormal: true })
+        //     {
+        //         methodCallTokens.Add(token);
+        //         return methodCallTokens;
+        //     }
+        //     
+        //     methodCallTokens.Add(token);
+        // }
+        //
+        // return null;
+    }
+
     [DoesNotReturn]
     public static void Error(string message)
     {
         Console.WriteLine("\n\nUnhandled exception:");
         Console.WriteLine(message);
         Environment.Exit(1);
+    }
+
+    private struct GetPatternResult(List<Token>? tokens, int tokensSkipped)
+    {
+        public required List<Token>? Tokens = tokens;
+        public required int TokensSkipped = tokensSkipped;
     }
 }

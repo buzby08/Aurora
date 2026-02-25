@@ -3,27 +3,27 @@ namespace Aurora;
 /// <summary>
 /// Allows easy logs to a log file
 /// </summary>
-internal class Logs
+internal static class Logs
 {
-    public bool AllowDebug = false;
-    public bool AllowVerbose = false;
-    public bool AllowWarning = false;
-    public bool NoConsole = false;
-    public bool ShowTimestamp = false;
-    public string LogFilePath = "aurora.LOG";
+    public static bool AllowDebug = false;
+    public static bool AllowVerbose = false;
+    public static bool AllowWarning = false;
+    public static bool NoConsole = false;
+    public static bool ShowTimestamp = false;
+    public static string LogFilePath = "aurora.LOG";
 
-    private bool _clearFile = true;
-    public bool ClearFile
+    private static bool _clearFile = true;
+    public static bool ClearFile
     {
         get => _clearFile;
         set
         {
-            this._clearFile = value;
-            this.ClearLogFile();
+            _clearFile = value;
+            ClearLogFile();
         }
     }
 
-    private void LogOutput(string message)
+    private static void LogOutput(string message)
     {
         message = message
             .Replace("\\", @"\\")
@@ -32,19 +32,19 @@ internal class Logs
             .Replace("\t", "\\t");
         
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        string fullMessage = this.ShowTimestamp ? $"{timestamp}: {message}" : message;
-        using StreamWriter writer = File.AppendText(this.LogFilePath);
+        string fullMessage = ShowTimestamp ? $"{timestamp}: {message}" : message;
+        using StreamWriter writer = File.AppendText(LogFilePath);
         writer.WriteLine(fullMessage);
 
-        if (this.NoConsole) { return; }
+        if (NoConsole) { return; }
 
         Console.WriteLine(message);
     }
 
-    private void ClearLogFile()
+    private static void ClearLogFile()
     {
-        if (this._clearFile)
-            File.WriteAllText(this.LogFilePath, string.Empty);
+        if (_clearFile)
+            File.WriteAllText(LogFilePath, string.Empty);
     }
 
     /// <summary>
@@ -52,9 +52,9 @@ internal class Logs
     /// log file specified in the LogFilePath attribute.
     /// </summary>
     /// <param name="message">The debug message to log.</param>
-    public void Debug(string message)
+    public static void Debug(string message)
     {
-        if (!this.AllowDebug) { return; }
+        if (!AllowDebug) { return; }
 
         Console.ForegroundColor = ConsoleColor.DarkMagenta;
         LogOutput($"[DEBUG] {message}");
@@ -66,9 +66,9 @@ internal class Logs
     /// the log file specified in the LogFilePath attribute.
     /// </summary>
     /// <param name="message">The verbose message to log.</param>
-    public void Verbose(string message)
+    public static void Verbose(string message)
     {
-        if (!this.AllowVerbose) { return; }
+        if (!AllowVerbose) { return; }
 
         Console.ForegroundColor = ConsoleColor.Cyan;
         LogOutput($"[VERBOSE] {message}");
@@ -80,9 +80,9 @@ internal class Logs
     /// the log file specified in the LogFilePath attribute.
     /// </summary>
     /// <param name="message">The warning message to log.</param>
-    public void Warning(string message)
+    public static void Warning(string message)
     {
-        if (!this.AllowWarning) { return; }
+        if (!AllowWarning) { return; }
 
         Console.ForegroundColor = ConsoleColor.Yellow;
         LogOutput($"[WARNING] {message}");
@@ -94,16 +94,16 @@ internal class Logs
     /// AllowDebug, or AllowWarning attributes.
     /// </summary>
     /// <param name="message"></param>
-    public void ForceLog(string message)
+    public static void ForceLog(string message)
     {
-        using StreamWriter writer = File.AppendText(this.LogFilePath);
+        using StreamWriter writer = File.AppendText(LogFilePath);
         writer.WriteLine(message);
     }
 
-    public void ForceConsoleLog(string message, bool addLineNumber = false)
+    public static void ForceConsoleLog(string message, bool addLineNumber = false)
     {
-        if (addLineNumber)
-            message = $"[Line {GlobalVariables.LineNumber}] " + message;
+        // if (addLineNumber)
+        //     message = $"[Line {GlobalVariables.LineNumber}] " + message;
         
         Console.WriteLine(message);
     }

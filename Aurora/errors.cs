@@ -15,38 +15,45 @@ namespace Aurora
         }
 
         [DoesNotReturn]
-        public static void AlwaysThrow(ErrorTypes error)
+        public static void AlwaysThrow(ErrorTypes error, int? position = null)
         {
-            RaiseError(error, alwaysThrow: true);
+            RaiseError(error, position, alwaysThrow: true);
             Environment.Exit(1);
             throw new UnreachableException();
         }
 
-        public static void RaiseError(ErrorTypes error, bool alwaysThrow = false)
+        public static void RaiseError(ErrorTypes error, int? position = null, bool alwaysThrow = false)
         {
-            string outputMessage = GlobalVariables.LineNumber is not null
-                ? $"{{Line {GlobalVariables.LineNumber}}} ({error.Code}) {error.Title} - {error.Message}"
-                : $"{{Unknown line}} ({error.Code}) {error.Title} - {error.Message}";
+            // Todo: ↓ get the actual current line number
+            int? lineNumber = Program.LineNumber;
+            string positionMessage = "Unknown line";
 
-            bool isError = error.AlwaysError || UserConfiguration.Errors.Contains(error.Code) || alwaysThrow;
+            if (lineNumber is not null && position is not null)
+                positionMessage = $"Line {lineNumber} : position {position}";
+
+            if (lineNumber is not null && position is null)
+                positionMessage = $"Line {lineNumber}";
+            string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
+
+            bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
 
             if (!isError)
             {
-                GlobalVariables.LOGGER.Warning(outputMessage);
+                Logs.Warning(outputMessage);
                 return;
             }
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("[ERROR] " + outputMessage);
             Console.ResetColor();
-            GlobalVariables.LOGGER.Warning(outputMessage);
+            Logs.Warning(outputMessage);
 
             Environment.Exit(1);
         }
 
         public static void Log(string title, string message)
         {
-            using var writer = File.AppendText(GlobalVariables.LOGGER.LogFilePath);
+            using var writer = File.AppendText(Logs.LogFilePath);
             writer.WriteLine($"Custom Log: {title} - {message}");
         }
     }
@@ -493,7 +500,7 @@ namespace Aurora
             this.Title = "Expression Depth Exceeded" + (user ? " (User)" : " (System)");
         }
     }
-    
+
     internal class MaxRecursionDepthExceededError : ErrorTypes
     {
         public override string Title { get; }
