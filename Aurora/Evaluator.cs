@@ -76,11 +76,6 @@ internal class Evaluator
 
         return asts;
     }
-
-    public void SetText(string text)
-    {
-        Tokeniser.Text = text;
-    }
     
     private Tokeniser Tokeniser { get; } = new Tokeniser();
 }
