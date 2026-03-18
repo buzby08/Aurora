@@ -18,23 +18,23 @@
 //     /// <param name="filePath">The file containing the user configuration in a JSON object</param>
 //     public static void ApplyConfiguration(string? filePath = null)
 //     {
-//         GlobalVariables.LOGGER.Verbose($"Applying configuration from Path: {filePath}");
-//         filePath = string.IsNullOrEmpty(filePath) ? GlobalVariables.ConfigFilePath : filePath;
+//         InternalVariables.LOGGER.Verbose($"Applying configuration from Path: {filePath}");
+//         filePath = string.IsNullOrEmpty(filePath) ? InternalVariables.ConfigFilePath : filePath;
 //         Dictionary<string, object> config = Json.ReadDict<object>(filePath);
 //
 //         object maxExpressionDepth = config.GetValueOrDefault("MaxExpressionDepth", MaxExpressionDepth);
 //         object errors = config.GetValueOrDefault("Errors", Errors);
 //         object warnings = config.GetValueOrDefault("Warnings", Warnings);
 //         object ignore = config.GetValueOrDefault("Ignore", Ignore);
-//         object showTimestamp = config.GetValueOrDefault("ShowTimestamp", GlobalVariables.LOGGER.ShowTimestamp);
-//         object clearLogFile = config.GetValueOrDefault("ClearLogFile", GlobalVariables.LOGGER.ClearFile);
-//         object debug = config.GetValueOrDefault("Debug", GlobalVariables.LOGGER.AllowDebug);
-//         object verbose = config.GetValueOrDefault("Verbose", GlobalVariables.LOGGER.AllowVerbose);
-//         object warning = config.GetValueOrDefault("Warning", GlobalVariables.LOGGER.AllowWarning);
-//         object noConsole = config.GetValueOrDefault("NoConsole", GlobalVariables.LOGGER.NoConsole);
-//         object strict = config.GetValueOrDefault("Strict", GlobalVariables.StrictFlagMode);
-//         object inlineStackTrace = config.GetValueOrDefault("InlineStackTrace", GlobalVariables.InlineStackTrace);
-//         object disableEasterEggs = config.GetValueOrDefault("DisableEasterEggs", !GlobalVariables.EasterEggs);
+//         object showTimestamp = config.GetValueOrDefault("ShowTimestamp", InternalVariables.LOGGER.ShowTimestamp);
+//         object clearLogFile = config.GetValueOrDefault("ClearLogFile", InternalVariables.LOGGER.ClearFile);
+//         object debug = config.GetValueOrDefault("Debug", InternalVariables.LOGGER.AllowDebug);
+//         object verbose = config.GetValueOrDefault("Verbose", InternalVariables.LOGGER.AllowVerbose);
+//         object warning = config.GetValueOrDefault("Warning", InternalVariables.LOGGER.AllowWarning);
+//         object noConsole = config.GetValueOrDefault("NoConsole", InternalVariables.LOGGER.NoConsole);
+//         object strict = config.GetValueOrDefault("Strict", InternalVariables.StrictFlagMode);
+//         object inlineStackTrace = config.GetValueOrDefault("InlineStackTrace", InternalVariables.InlineStackTrace);
+//         object disableEasterEggs = config.GetValueOrDefault("DisableEasterEggs", !InternalVariables.EasterEggs);
 //         object logFile = config.GetValueOrDefault("LogFile", "");
 //
 //         if (maxExpressionDepth is not int)
@@ -117,19 +117,20 @@
 //         Warnings = (List<string>)warnings;
 //         Ignore = (List<string>)ignore;
 //
-//         GlobalVariables.LOGGER.ShowTimestamp = (bool)showTimestamp;
-//         GlobalVariables.LOGGER.ClearFile = (bool)clearLogFile;
+//         InternalVariables.LOGGER.ShowTimestamp = (bool)showTimestamp;
+//         InternalVariables.LOGGER.ClearFile = (bool)clearLogFile;
 //
-//         bool debugBool = GlobalVariables.LOGGER.AllowDebug || (bool)debug;
-//         bool verboseBool = GlobalVariables.LOGGER.AllowVerbose || (bool)verbose;
-//         bool warningBool = GlobalVariables.LOGGER.AllowWarning || (bool)warning;
-//         bool noConsoleBool = GlobalVariables.LOGGER.NoConsole || (bool)noConsole;
-//         bool strictBool = GlobalVariables.StrictFlagMode || (bool)strict;
-//         bool inlineStackTraceBool = GlobalVariables.InlineStackTrace || (bool)inlineStackTrace;
-//         bool disableEasterEggsBool = !GlobalVariables.EasterEggs || (bool)disableEasterEggs;
+//         bool debugBool = InternalVariables.LOGGER.AllowDebug || (bool)debug;
+//         bool verboseBool = InternalVariables.LOGGER.AllowVerbose || (bool)verbose;
+//         bool warningBool = InternalVariables.LOGGER.AllowWarning || (bool)warning;
+//         bool noConsoleBool = InternalVariables.LOGGER.NoConsole || (bool)noConsole;
+//         bool strictBool = InternalVariables.StrictFlagMode || (bool)strict;
+//         bool inlineStackTraceBool = InternalVariables.InlineStackTrace || (bool)inlineStackTrace;
+//         bool disableEasterEggsBool = !InternalVariables.EasterEggs || (bool)disableEasterEggs;
 //         string logFileString = (string)logFile;
 //
 //         Program.ApplyOptions(noConsoleBool, debugBool, verboseBool, warningBool, strictBool, inlineStackTraceBool,
 //             disableEasterEggsBool, logFileString);
 //     }
 // }
+

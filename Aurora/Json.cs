@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 namespace Aurora;
 
 internal static class Json
@@ -20,7 +21,7 @@ internal static class Json
 
         return jsonObject;
     }
-    
+
     public static Dictionary<string, T> ReadDict<T>(string filePath)
     {
         if (!filePath.EndsWith(".json"))
@@ -53,4 +54,3 @@ internal static class Json
         r.Write(json);
     }
 }
-

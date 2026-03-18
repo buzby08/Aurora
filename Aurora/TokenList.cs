@@ -5,7 +5,7 @@ namespace Aurora;
 internal class TokenList : IEnumerable<TokenListItem>
 {
     private readonly List<TokenListItem> _data = [];
-    private int totalChars = 0;
+    private int totalChars;
 
     public int Count => _data.Count;
 

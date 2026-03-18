@@ -1,9 +1,12 @@
+using Aurora.Internals;
+
 namespace Aurora;
 
 internal class Ast
 {
     public enum AstStates
     {
+        Literal,
         MethodCall,
         AttributeAccess,
         PartialMethodCall,
@@ -15,9 +18,9 @@ internal class Ast
 
     public AstStates State => _state;
 
-    private string? _target { get; set; } = null;
+    private TokenListItem? _target { get; set; }
 
-    public string? Target
+    public TokenListItem? Target
     {
         get => _target;
         set
@@ -27,9 +30,21 @@ internal class Ast
         }
     }
 
-    private string? _name { get; set; } = null;
+    private bool _isALiteral { get; set; } = false;
 
-    public string? Name
+    public bool IsALiteral
+    {
+        get => _isALiteral;
+        set
+        {
+            _isALiteral = value;
+            this.UpdateState();
+        }
+    }
+
+    private TokenListItem? _name { get; set; }
+
+    public TokenListItem? Name
     {
         get => _name;
         set
@@ -39,7 +54,7 @@ internal class Ast
         }
     }
 
-    private List<Argument>? _arguments { get; set; } = null;
+    private List<Argument>? _arguments { get; set; }
 
     public List<Argument>? Arguments
     {
@@ -51,30 +66,80 @@ internal class Ast
         }
     }
 
-    public TokenListItem Evaluate()
+    public RuntimeObject Evaluate(RuntimeContext context, RuntimeObject? target = null)
     {
-        // Todo: Implement
+        bool isPartialOperation = this._state is AstStates.PartialAttributeAccess or AstStates.PartialMethodCall;
+        bool targetProvidedWhenNotNeeded = target is not null && !isPartialOperation;
+        bool targetNotProvidedWhenNeeded = target is null && isPartialOperation;
 
-        throw new NotImplementedException();
+        if (targetNotProvidedWhenNeeded || targetProvidedWhenNotNeeded)
+            Errors.AlwaysThrow(new SystemError($"Ast target state is invalid"));
+
+        if (this._state is AstStates.Literal)
+            return EvaluateLiteral(context);
+
+        if (target is null && this._target is null)
+            Errors.AlwaysThrow(new SystemError($"Ast target is null, and AST is not a literal"),
+                position: this._name?.StartCharPosition);
+
+        target ??= RuntimeObject.CreateFromToken(_target!.Value.Token, context);
+
+        return this._state switch
+        {
+            AstStates.MethodCall => EvaluateMethodCall(context, target),
+            AstStates.AttributeAccess => EvaluateAttributeAccess(context, target),
+            AstStates.PartialMethodCall => EvaluateMethodCall(context, target),
+            AstStates.PartialAttributeAccess => EvaluateAttributeAccess(context, target),
+            _ => Errors.AlwaysThrow<RuntimeObject>(new SystemError("Ast state is invalid")),
+        };
+    }
+
+    private RuntimeObject EvaluateMethodCall(RuntimeContext context, RuntimeObject target)
+    {
+        Method method = null!;
+        if (target is Internals.Type type)
+            method = type.GetStaticMethod(_name!.Value.AsString);
+
+        if (target is not Internals.Type)
+            method = target.Type.GetInstanceMethod(_name!.Value.AsString);
+
+        return method.Invoke(target, _arguments!, context);
+    }
+
+    private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
+    {
+        if (target is Internals.Type type)
+            return type.GetStaticAttribute(_name!.Value.AsString);
+
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString);
+    }
+
+    private RuntimeObject EvaluateLiteral(RuntimeContext context)
+    {
+        return RuntimeObject.CreateFromToken(this._name!.Value.Token, context);
     }
 
     private void UpdateState()
     {
         switch (this._target)
         {
-            case not null when _name is not null && _arguments is not null:
+            case null when this._name is not null && this._arguments is null && this._isALiteral:
+                this._state = AstStates.Literal;
+                return;
+
+            case not null when _name is not null && _arguments is not null && !this._isALiteral:
                 this._state = AstStates.MethodCall;
                 return;
 
-            case not null when _name is not null && _arguments is null:
+            case not null when _name is not null && _arguments is null && !this._isALiteral:
                 this._state = AstStates.AttributeAccess;
                 return;
 
-            case null when this._name is not null && this._arguments is not null:
+            case null when this._name is not null && this._arguments is not null && !this._isALiteral:
                 this._state = AstStates.PartialMethodCall;
                 return;
 
-            case null when this._name is not null && this._arguments is null:
+            case null when this._name is not null && this._arguments is null && !this._isALiteral:
                 this._state = AstStates.PartialAttributeAccess;
                 return;
 

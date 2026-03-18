@@ -4,7 +4,7 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
 {
     public TokenListItem? Keyword = keyword;
     public readonly TokenList Value = value ?? [];
-    private List<Ast>? _cachedAst = null;
+    private List<Ast>? _cachedAst;
 
     public List<Ast> ValueAsAsts()
     {
@@ -32,7 +32,7 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
     {
         if (argument.Value.Count == 0)
             Errors.AlwaysThrow(new UnexpectedTokenError(
-                    $"Unexpected token `;` - Missing argument - Expected expression before `;`"),
+                    "Unexpected token `;` - Missing argument - Expected expression before `;`"),
                 position: characterIndex);
     }
 
@@ -44,12 +44,12 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
         List<Argument> argumentsList = [];
 
         Argument currentArgument = new();
-        int finalTokenIndex = 0;
+        int numberOfTokensChecked = 0;
 
         foreach (TokenListItem tokenItem in tokens)
         {
-            finalTokenIndex = tokenItem.TokenIndex;
-            
+            numberOfTokensChecked++;
+
             if (bracketDepth > 1 && tokenItem.Token.ValueAsString != ")" && tokenItem.Token.ValueAsString != "(")
             {
                 currentArgument.Value.AddRaw(tokenItem);
@@ -62,7 +62,7 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
             {
                 argumentsList.Add(currentArgument);
                 currentArgument = new Argument();
-                continue;
+                break;
             }
 
             if (isEndOfExpression)
@@ -96,12 +96,12 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
             }
         }
 
-        return new ArgumentParsingReturnResult(finalTokenIndex, argumentsList);
+        return new ArgumentParsingReturnResult(numberOfTokensChecked, argumentsList);
     }
 }
 
-internal struct ArgumentParsingReturnResult(int endTokenIndex, List<Argument> arguments)
+internal struct ArgumentParsingReturnResult(int numberOfTokensChecked, List<Argument> arguments)
 {
     public List<Argument> Arguments = arguments;
-    public int EndTokenIndex = endTokenIndex;
+    public int NumberOfTokensChecked = numberOfTokensChecked;
 }

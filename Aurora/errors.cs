@@ -24,8 +24,7 @@ namespace Aurora
 
         public static void RaiseError(ErrorTypes error, int? position = null, bool alwaysThrow = false)
         {
-            // Todo: ↓ get the actual current line number
-            int? lineNumber = Program.LineNumber;
+            int? lineNumber = InternalVariables.LineNumber;
             string positionMessage = "Unknown line";
 
             if (lineNumber is not null && position is not null)
@@ -160,17 +159,20 @@ namespace Aurora
         }
     }
 
-    internal class VarNotDefinedError : ErrorTypes
+    internal class ObjectNotFoundError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Attempted to access a variable that has not been defined";
-        public override string Message { get; }
-        public override string Code => "Aurora.VarNotDefined";
 
-        public VarNotDefinedError(string? message = null, bool user = true)
+        public override string Description =>
+            "Attempted to access an object that does not exist in the current context";
+
+        public override string Message { get; }
+        public override string Code => "Aurora.ObjectNotFound";
+
+        public ObjectNotFoundError(string? message = null, bool user = true)
         {
             this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Variable Not Defined" + (user ? " (User)" : " (System)");
+            this.Title = "Object Not Found" + (user ? " (User)" : " (System)");
         }
     }
 
