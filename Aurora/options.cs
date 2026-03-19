@@ -37,9 +37,5 @@ namespace Aurora
 
         [Option("config-file", Default = null, HelpText = "The config file for the aurora interpreter")]
         public string? ConfigFile { get; set; }
-
-        public Options()
-        {
-        }
     }
 }

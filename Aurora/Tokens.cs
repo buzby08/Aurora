@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
 
 namespace Aurora;
 
@@ -163,9 +162,23 @@ internal class BaseToken : Token
         get => null;
         set { }
     }
+}
 
-    public BaseToken()
+internal class DotToken : Token
+{
+    public const string TokenType = "DOT";
+    public override string Type { get; } = TokenType;
+    private char _value = '.';
+
+    public override object? Value
     {
+        get => this._value;
+        set => Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false));
+    }
+
+    public DotToken Initialise()
+    {
+        return this;
     }
 }
 
@@ -192,48 +205,7 @@ internal class WordToken : Token
     // Public length property (derived from the value)
     public new int Length { get; private set; }
 
-    public WordToken()
-    {
-    }
-
     public WordToken Initialise(string value)
-    {
-        this.Value = value;
-        return this;
-    }
-}
-
-internal class IntegerToken : Token
-{
-    public const string TokenType = "INTEGER";
-    public override string Type { get; } = TokenType;
-
-    private CustomInt? _value;
-
-    public override object? Value
-    {
-        get => this._value?.Value ?? null;
-        set
-        {
-            Type? type = value?.GetType();
-            this._value = value switch
-            {
-                string v => new CustomInt(v),
-                CustomInt i => i,
-                int ix => new CustomInt(ix),
-                _ => throw new ArgumentException($"Integer Tokens must have a string or int value, not {type}")
-            };
-        }
-    }
-
-    public override CustomInt ValueAsInt => this._value ?? new CustomInt(_value);
-
-    public override CustomFloat ValueAsFloat => new(this._value?.Value.ToString() ?? "null");
-
-    public override string ValueAsString => this._value?.Value.ToString() ?? "null";
-
-
-    public IntegerToken Initialise(object value)
     {
         this.Value = value;
         return this;
@@ -284,10 +256,6 @@ internal class BracketToken : Token
     public new bool IsOpen { get; private set; }
     public new bool IsClosed { get; private set; }
 
-    public BracketToken()
-    {
-    }
-
     public BracketToken Initialise(char value)
     {
         this.Value = value;
@@ -330,7 +298,7 @@ internal class StringToken : Token
             if (!START_CHARS.Contains((char)this.StartChar!))
             {
                 throw new ArgumentException(
-                    $"{GlobalVariables.ReprString(s)} does not start with a valid string starter");
+                    $"{null /*GlobalVariables.ReprString(s)*/} does not start with a valid string starter");
             }
 
             if (this.StartChar != endChar)
@@ -342,84 +310,26 @@ internal class StringToken : Token
 
     public new char? StartChar { get; private set; }
 
-    public static string ConvertEscapeSequence(string escapeSequence)
-    {
-        Dictionary<string, string> escapeSequences = new()
-        {
-            { "\\\"", "\"" },
-            { "\\'", "'" },
-            { "\\n", "\n" },
-            { @"\\", @"\" },
-            { "\\t", "\t" }
-        };
-
-        return escapeSequences.GetValueOrDefault(escapeSequence, escapeSequence);
-    }
-
-    private static string GetVariableTextValue(string name)
-    {
-        if (Variables.IsVariable(name))
-        {
-            string variableValue = Variables.GetVariable(name).ValueAsString;
-            GlobalVariables.LOGGER.Verbose($"Interpolating '{name}' as value '{variableValue}'");
-            return variableValue;
-        }
-
-        Errors.RaiseError(
-            new VarNotDefinedError($"The variable '{name}' is not defined. Using literal value instead"));
-        return $"{{{name}}}";
-    }
-
-    public static string InterpolateString(string value)
-    {
-        var interpreter = new Interpreter();
-        var evaluator = new Evaluate();
-        string result = string.Empty;
-        bool isBackslash = false;
-        string variableName = string.Empty;
-        bool trackVariableName = false;
-
-        foreach (char character in value)
-        {
-            if (character == '\\' && !isBackslash)
-            {
-                isBackslash = true;
-                continue;
-            }
-
-            if (!isBackslash && character == '{')
-            {
-                trackVariableName = true;
-                continue;
-            }
-
-            if (trackVariableName && character == '}')
-            {
-                trackVariableName = false;
-                interpreter.Text = variableName;
-                result += evaluator.SingleLine(interpreter.GetAllTokens())?.ValueAsString ?? string.Empty;
-                variableName = string.Empty;
-                continue;
-            }
-
-            if (trackVariableName)
-            {
-                variableName += character;
-                continue;
-            }
-
-            result += character;
-        }
-
-        return result;
-    }
+    // public static string ConvertEscapeSequence(string escapeSequence)
+    // {
+    //     Dictionary<string, string> escapeSequences = new()
+    //     {
+    //         { "\\\"", "\"" },
+    //         { "\\'", "'" },
+    //         { "\\n", "\n" },
+    //         { @"\\", @"\" },
+    //         { "\\t", "\t" }
+    //     };
+    //
+    //     return escapeSequences.GetValueOrDefault(escapeSequence, escapeSequence);
+    // }
 
     public override string ValueAsString => _value;
     public new int ValueLength => StartChar is not null ? 2 + ValueLength : base.ValueLength;
 
-    public StringToken Initialise(string value, bool withoutQuotes = false, bool interpolate = true)
+    public StringToken Initialise(string value, bool withoutQuotes = false)
     {
-        if (interpolate) value = InterpolateString(value);
+        // if (interpolate) value = InterpolateString(value);
 
         switch (withoutQuotes)
         {
@@ -435,90 +345,9 @@ internal class StringToken : Token
     }
 }
 
-internal class OperatorToken : Token
+internal class NumberToken : Token
 {
-    public const string TokenType = "OPERATOR";
-    public static readonly ImmutableHashSet<char> OPERATORS = ['+', '-', '*', '/', '^'];
-
-    public override string Type { get; } = TokenType;
-
-    private char _value;
-
-    public override object? Value
-    {
-        get => this._value;
-        set
-        {
-            if (value is not char actualValue) throw new ArgumentException("Operators must be a character");
-            if (!OPERATORS.Contains(actualValue))
-            {
-                throw new ArgumentException($"'{actualValue}' is not a valid operator character");
-            }
-
-            this._value = actualValue;
-        }
-    }
-
-    public char ValueAsChar => this._value;
-
-    public OperatorToken Initialise(char value)
-    {
-        this.Value = value;
-        return this;
-    }
-}
-
-internal class BooleanToken : Token
-{
-    public const string TokenType = "BOOLEAN";
-    public static readonly ImmutableHashSet<string> VARS = ["true", "false"];
-
-    public override string Type { get; } = TokenType;
-
-    private bool _value;
-
-    public override object? Value
-    {
-        get => this._value;
-        set
-        {
-            var type = value?.GetType();
-            if (value is not string && value is not bool)
-                throw new ArgumentException($"Boolean tokens must be strings or boolean objects, not {type}");
-            switch (value)
-            {
-                case string when !VARS.Contains(value):
-                    throw new ArgumentException($"Value `{value}` is not a valid boolean token");
-                case bool b:
-                    this._value = b;
-                    this.IsTrue = b;
-                    return;
-                default:
-                    this._value = (string)value == "true";
-                    this.IsTrue = (string)value == "true";
-                    break;
-            }
-        }
-    }
-
-    public new bool IsTrue { get; private set; }
-
-    public override bool ValueAsBool => this._value;
-
-    public BooleanToken()
-    {
-    }
-
-    public BooleanToken Initialise(object? value)
-    {
-        this.Value = value;
-        return this;
-    }
-}
-
-internal class FloatToken : Token
-{
-    public const string TokenType = "FLOAT";
+    public const string TokenType = "NUMBER";
 
     public override string Type { get; } = TokenType;
 
@@ -543,7 +372,7 @@ internal class FloatToken : Token
 
     public override string ValueAsString => this._value?.Value.ToString() ?? "null";
 
-    public FloatToken Initialise(object value)
+    public NumberToken Initialise(object value)
     {
         this.Value = value;
         return this;
@@ -562,146 +391,27 @@ internal class EqualsToken : Token
         set => throw new ArgumentException("Cannot set a value to EqualsToken.Value");
     }
 
-    public EqualsToken()
-    {
-    }
-
     public static EqualsToken TokenEquals = new EqualsToken();
 }
 
-internal class ComparisonToken : Token
+internal class SymbolToken : Token
 {
-    public const string TokenType = "COMPARISON";
+    public const string TokenType = "SYMBOL";
 
-    public static readonly ImmutableHashSet<string> EQUAL = ["==", "Equal"];
-    public static readonly ImmutableHashSet<string> NOT_EQUAL = ["!=", "NotEqual"];
-    public static readonly ImmutableHashSet<string> GREATER = [">", "Greater"];
-    public static readonly ImmutableHashSet<string> LESS = ["<", "Less"];
-    public static readonly ImmutableHashSet<string> GREATER_OR_EQUAL = [">=", "GreaterOrEqual"];
-    public static readonly ImmutableHashSet<string> LESS_OR_EQUAL = ["<=", "LessOrEqual"];
-
-    public static readonly ImmutableHashSet<string> VALUES =
-        EQUAL
-            .Union(NOT_EQUAL)
-            .Union(GREATER)
-            .Union(LESS)
-            .Union(GREATER_OR_EQUAL)
-            .Union(LESS_OR_EQUAL);
+    public static readonly ImmutableHashSet<string> VARS =
+        [",", ";", "+", "-", "*", "/", "^", ">", "<", "!", "==", "!=", ">=", "<=", "||", "&&"];
 
     public override string Type { get; } = TokenType;
 
-    private string _value = string.Empty;
+    private string _value;
 
     public override object? Value
     {
         get => this._value;
         set
         {
-            if (value is not string actualValue)
-                throw new ArgumentException("Comparison tokens must have a string value");
-            if (!VALUES.Contains(actualValue))
-            {
-                throw new ArgumentException(
-                    $"{GlobalVariables.ReprString(actualValue)} is not a valid comparison token");
-            }
-
-            this._value = actualValue;
-            this.IsEqualTo = EQUAL.Contains(actualValue);
-            this.IsNotEqualTo = NOT_EQUAL.Contains(actualValue);
-            this.IsGreaterThan = GREATER.Contains(actualValue);
-            this.IsLessThan = LESS.Contains(actualValue);
-            this.IsGreaterThan = GREATER_OR_EQUAL.Contains(actualValue);
-            this.IsLessEqual = LESS_OR_EQUAL.Contains(actualValue);
-        }
-    }
-
-    public new bool IsEqualTo { get; private set; }
-    public new bool IsNotEqualTo { get; private set; }
-    public new bool IsGreaterThan { get; private set; }
-    public new bool IsLessThan { get; private set; }
-    public new bool IsGreaterEqual { get; private set; }
-    public new bool IsLessEqual { get; private set; }
-
-    public ComparisonToken()
-    {
-    }
-
-    public ComparisonToken Initialise(string value)
-    {
-        this.Value = value;
-        return this;
-    }
-}
-
-internal class BinaryOperationToken : Token
-{
-    public const string TokenType = "BINARY_OPERATION";
-    public static readonly ImmutableHashSet<string> OR = ["||", "Or"];
-    public static readonly ImmutableHashSet<string> AND = ["&&", "And"];
-    public static readonly ImmutableHashSet<string> NOT = ["!", "Not"];
-    public static readonly ImmutableHashSet<string> XOR = ["Xor"];
-
-    public static readonly ImmutableHashSet<string> VALUES =
-        OR
-            .Union(AND)
-            .Union(NOT)
-            .Union(XOR);
-
-    public override string Type { get; } = TokenType;
-
-    private string _value = string.Empty;
-
-    public override object? Value
-    {
-        get => this._value;
-        set
-        {
-            if (value is not string actualValue) throw new ArgumentException("BinaryOperation Tokens must be strings");
-            if (!VALUES.Contains(actualValue))
-            {
-                throw new ArgumentException($"{GlobalVariables.ReprString(actualValue)} is not a valid binary token");
-            }
-
-            this._value = actualValue;
-            this.IsOr = OR.Contains(actualValue);
-            this.IsAnd = AND.Contains(actualValue);
-            this.IsNot = NOT.Contains(actualValue);
-            this.IsXor = XOR.Contains(actualValue);
-        }
-    }
-
-    public new bool IsOr { get; private set; }
-    public new bool IsAnd { get; private set; }
-    public new bool IsNot { get; private set; }
-    public new bool IsXor { get; private set; }
-
-    public BinaryOperationToken()
-    {
-    }
-
-    public BinaryOperationToken Initialise(string value)
-    {
-        this.Value = value;
-        return this;
-    }
-}
-
-internal class SeparatorToken : Token
-{
-    public const string TokenType = "SEPARATOR";
-    public readonly static ImmutableHashSet<char> VARS = ['.', ',', ';'];
-
-    public override string Type { get; } = TokenType;
-
-    private char _value;
-
-    public override object? Value
-    {
-        get => this._value;
-        set
-        {
-            if (value is null or not char) throw new ArgumentException("Separator token must have a char value");
-            char actualValue = (char)value;
+            if (value is null or not string) throw new ArgumentException("Separator token must have a string value");
+            string actualValue = (string)value;
 
             if (!VARS.Contains(actualValue))
             {
@@ -712,30 +422,10 @@ internal class SeparatorToken : Token
         }
     }
 
-    public SeparatorToken()
-    {
-    }
-
-    public SeparatorToken Initialise(char value)
+    public SymbolToken Initialise(string value)
     {
         this.Value = value;
         return this;
-    }
-
-    public static SeparatorToken DotToken = new SeparatorToken().Initialise('.');
-    public static SeparatorToken SemiColonToken = new SeparatorToken().Initialise(';');
-}
-
-internal class NullToken : Token
-{
-    public const string TokenType = "NULL";
-
-    public override string Type { get; } = TokenType;
-
-    public override object? Value
-    {
-        get => null;
-        set => throw new ArgumentException($"Cannot set a value to NullToken.Value");
     }
 }
 

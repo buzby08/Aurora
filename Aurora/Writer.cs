@@ -14,7 +14,7 @@ internal static class Writer
         foreach (string message in Queue)
         {
             Console.Write(message);
-            GlobalVariables.LOGGER.Debug($"(Written To Stream) {message}");
+            Logs.Debug($"(Written To Stream) {message}");
         }
         
         Queue.Clear();
