@@ -14,16 +14,16 @@ internal class Type : RuntimeObject
     {
         this.Name = name;
         this.Type = type;
-
-        this.InstanceMethods = type.InstanceMethods.ToDictionary();
-        this.StaticMethods = type.StaticMethods.ToDictionary();
-        this.InstanceAttributes = type.InstanceAttributes.ToDictionary();
-        this.StaticAttributes = type.StaticAttributes.ToDictionary();
     }
 
     public Type(string name)
     {
         this.Name = name;
+    }
+
+    public bool IsSubclassOf(Type type)
+    {
+        return this == type || this.Type.IsSubclassOf(type);
     }
 
     public void AddStaticMethod(Method method)
@@ -46,43 +46,83 @@ internal class Type : RuntimeObject
         this.InstanceAttributes.Add(name, value);
     }
 
-    public Method GetStaticMethod(string name)
+    public Method GetStaticMethod(string name, int? position = null)
+    {
+        Method? method = this.GetStaticMethodOrDefault(name);
+
+        if (method is null)
+            Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no static method {name}"),
+                position: position);
+
+        return method;
+    }
+
+    public Method GetInstanceMethod(string name, int? position = null)
+    {
+        Method? method = this.GetInstanceMethodOrDefault(name);
+
+        if (method is null)
+            Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no instance method {name}"),
+                position: position);
+
+        return method;
+    }
+
+    public RuntimeObject GetStaticAttribute(string name, int? position = null)
+    {
+        RuntimeObject? attribute = this.GetStaticAttributeOrDefault(name);
+
+        if (attribute is null)
+            Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no static attribute {name}"),
+                position: position);
+
+        return attribute;
+    }
+
+    public RuntimeObject GetInstanceAttribute(string name, int? position = null)
+    {
+        RuntimeObject? attribute = this.GetInstanceAttributeOrDefault(name);
+
+        if (attribute is null)
+            Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no instance attribute {name}"),
+                position: position);
+
+        return attribute;
+    }
+
+    private Method? GetStaticMethodOrDefault(string name)
     {
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
-        if (method is null)
-            Errors.AlwaysThrow(new InvalidMethodError($"{this.Name} has no static method {name}"));
+        if (this == this.Type) return method;
 
-        return method;
+        return method ?? this.Type.GetStaticMethodOrDefault(name);
     }
 
-    public Method GetInstanceMethod(string name)
+    private Method? GetInstanceMethodOrDefault(string name)
     {
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
-        if (method is null)
-            Errors.AlwaysThrow(new InvalidMethodError($"{this.Name} has no instance method {name}"));
+        if (this == this.Type) return method;
 
-        return method;
+        return method ?? this.Type.GetInstanceMethodOrDefault(name);
     }
 
-    public RuntimeObject GetStaticAttribute(string name)
+    private RuntimeObject? GetStaticAttributeOrDefault(string name)
     {
         RuntimeObject? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
-        if (attribute is null)
-            Errors.AlwaysThrow(new InvalidAttributeError($"{this.Name} has no static attribute {name}"));
+        if (this == this.Type) return attribute;
 
-        return attribute;
+        return attribute ?? this.Type.GetStaticAttributeOrDefault(name);
     }
 
-    public RuntimeObject GetInstanceAttribute(string name)
+    private RuntimeObject? GetInstanceAttributeOrDefault(string name)
     {
         RuntimeObject? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
-        if (attribute is null)
-            Errors.AlwaysThrow(new InvalidAttributeError($"{this.Name} has no instance attribute {name}"));
+        if (this == this.Type) return attribute;
 
-        return attribute;
+        return attribute ?? this.Type.GetInstanceAttributeOrDefault(name);
     }
 }
