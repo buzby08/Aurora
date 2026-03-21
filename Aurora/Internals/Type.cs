@@ -3,6 +3,7 @@ namespace Aurora.Internals;
 internal class Type : RuntimeObject
 {
     public string Name { get; }
+    public bool CanAccessParentValues;
 
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
@@ -10,10 +11,11 @@ internal class Type : RuntimeObject
     public readonly Dictionary<string, RuntimeObject> InstanceAttributes = [];
     public readonly Dictionary<string, RuntimeObject> StaticAttributes = [];
 
-    public Type(string name, Type type)
+    public Type(string name, Type type, bool canAccessParentValues = true)
     {
         this.Name = name;
         this.Type = type;
+        this.CanAccessParentValues = canAccessParentValues;
     }
 
     public Type(string name)
@@ -96,6 +98,8 @@ internal class Type : RuntimeObject
 
         if (this == this.Type) return method;
 
+        if (!this.CanAccessParentValues) return method;
+
         return method ?? this.Type.GetStaticMethodOrDefault(name);
     }
 
@@ -104,6 +108,8 @@ internal class Type : RuntimeObject
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
         if (this == this.Type) return method;
+
+        if (!this.CanAccessParentValues) return method;
 
         return method ?? this.Type.GetInstanceMethodOrDefault(name);
     }
@@ -114,6 +120,8 @@ internal class Type : RuntimeObject
 
         if (this == this.Type) return attribute;
 
+        if (!this.CanAccessParentValues) return attribute;
+
         return attribute ?? this.Type.GetStaticAttributeOrDefault(name);
     }
 
@@ -122,6 +130,8 @@ internal class Type : RuntimeObject
         RuntimeObject? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
         if (this == this.Type) return attribute;
+
+        if (!this.CanAccessParentValues) return attribute;
 
         return attribute ?? this.Type.GetInstanceAttributeOrDefault(name);
     }
