@@ -98,7 +98,7 @@ internal class Ast
     {
         Method method = null!;
         if (target is Internals.Type type)
-            method = type.GetStaticMethod(_name!.Value.AsString);
+            method = type.GetStaticMethod(_name!.Value.AsString, _name?.StartCharPosition);
 
         if (target is not Internals.Type)
             method = target.Type.GetInstanceMethod(_name!.Value.AsString);
@@ -111,12 +111,12 @@ internal class Ast
         if (target is Internals.Type type)
             return type.GetStaticAttribute(_name!.Value.AsString);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString);
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition);
     }
 
     private RuntimeObject EvaluateLiteral(RuntimeContext context)
     {
-        return RuntimeObject.CreateFromToken(this._name!.Value.Token, context);
+        return RuntimeObject.CreateFromToken(this._name!.Value.Token, context, _name?.StartCharPosition);
     }
 
     private void UpdateState()
