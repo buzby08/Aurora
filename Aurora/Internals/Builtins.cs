@@ -20,33 +20,31 @@ internal static class Builtins
     {
         Type = new Type("Type");
         Type.Type = Type;
-
-        InitialiseTypeType();
-
+        
         Unit = new Type("Unit", type: Type);
 
         Int = new Type("Int", type: Type);
 
-        InitialiseIntType();
-
         Float = new Type("Float", type: Type);
 
-        InitialiseFloatType();
 
         String = new Type("String", type: Type);
 
-        InitialiseStringType();
 
         Boolean = new Type("Boolean", type: Type);
 
-        InitialiseBooleanType();
 
         Null = new Type("Null", type: Type);
 
-        InitialiseNullType();
 
         Terminal = new Type("Terminal", type: Type);
 
+        InitialiseTypeType();
+        InitialiseIntType();
+        InitialiseFloatType();
+        InitialiseStringType();
+        InitialiseBooleanType();
+        InitialiseNullType();
         InitialiseTerminalType();
 
         // Todo: Initialise all types
@@ -107,7 +105,13 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) => new StringObject($"{self.Type.Name}"));
+            body: (self, args, context) =>
+            {
+                if (self is Type selfType)
+                    return new StringObject($"<{self.Type.Name} {selfType.Name}>");
+                
+                return new StringObject($"Object<{self.Type.Name}>");
+            });
 
         Type.AddInstanceMethod(toString);
         Type.AddStaticMethod(toString);
@@ -277,7 +281,6 @@ internal static class Builtins
             unlimitedPositionalArgumentsType: Type,
             parameters:
             [
-                // Todo: Make use of new unlimitedPositionalArgs
                 // Todo: Change all SystemError calls to have a unique identifier, to find their location in the code.
                 new ParameterDefinition(name: "end", type: String, defaultValue: new StringObject("\n"))
             ],
@@ -287,8 +290,11 @@ internal static class Builtins
                 List<RuntimeObject> values = context.GetPositionalArgs();
                 string valueToOutput = string.Empty;
 
-                foreach (RuntimeObject value in values)
+                for (var index = 0; index < values.Count; index++)
                 {
+                    var value = values[index];
+                    if (index > 0)
+                        valueToOutput += " ";
                     valueToOutput += value.ConvertToCSharpString(context);
                 }
 
