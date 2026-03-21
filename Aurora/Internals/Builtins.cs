@@ -14,6 +14,11 @@ internal static class Builtins
     public static Type Unit;
     public static Type Terminal;
 
+    public static Type BooleanOutputStyles;
+    public static Type BooleanWordOutputStyle;
+    public static Type BooleanCharOutputStyle;
+    public static Type BooleanBinaryOutputStyle;
+
     public static RuntimeContext GlobalContext = new(null);
 
     public static void InitialiseTypes()
@@ -38,6 +43,11 @@ internal static class Builtins
 
 
         Terminal = new Type("Terminal", type: Type);
+        
+        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type, canAccessParentValues: false);
+        BooleanWordOutputStyle = new Type("WordStyle", type: BooleanOutputStyles);
+        BooleanCharOutputStyle = new Type("CharStyle", type: BooleanOutputStyles);
+        BooleanBinaryOutputStyle = new Type("BinaryStyle", type: BooleanOutputStyles);
 
         InitialiseTypeType();
         InitialiseIntType();
@@ -46,6 +56,7 @@ internal static class Builtins
         InitialiseBooleanType();
         InitialiseNullType();
         InitialiseTerminalType();
+        InitialiseBooleanOutputStylesType();
 
         // Todo: Initialise all types
     }
@@ -429,6 +440,13 @@ internal static class Builtins
         Boolean.AddInstanceMethod(toString);
 
         // Todo: Add more BooleanType methods
+    }
+
+    public static void InitialiseBooleanOutputStylesType()
+    {
+        BooleanOutputStyles.AddStaticAttribute("wordStyle", BooleanWordOutputStyle);
+        BooleanOutputStyles.AddStaticAttribute("charStyle", BooleanCharOutputStyle);
+        BooleanOutputStyles.AddStaticAttribute("binaryStyle", BooleanBinaryOutputStyle);
     }
 
     public static void InitialiseNullType()
