@@ -8,9 +8,9 @@ namespace Aurora
         public static string ConfigFilePath { get; set; } = "AuroraConfig.json";
 
         [DoesNotReturn]
-        public static T AlwaysThrow<T>(ErrorTypes error)
+        public static T AlwaysThrow<T>(ErrorTypes error, int? position = null)
         {
-            AlwaysThrow(error);
+            AlwaysThrow(error, position);
             throw new UnreachableException();
         }
 
