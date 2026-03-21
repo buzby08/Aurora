@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Aurora.BuiltinMethods;
 
 namespace Aurora.Internals;
 
@@ -47,6 +48,19 @@ internal class RuntimeContext(RuntimeContext? parent)
 
         Errors.AlwaysThrow(new ObjectNotFoundError($"Object `{name}` not found", user: false));
         throw new UnreachableException();
+    }
+
+    public List<RuntimeObject> GetPositionalArgs()
+    {
+        List<RuntimeObject> result = new(this._variables.Count);
+
+        foreach (KeyValuePair<string, RuntimeObject> pair in this._variables)
+        {
+            if (pair.Key.StartsWith("__POSITIONAL_ARG_", StringComparison.Ordinal))
+                result.Add(pair.Value);
+        }
+
+        return result;
     }
 
     public RuntimeObject GetParamOrDefault(string name, RuntimeObject defaultValue)
