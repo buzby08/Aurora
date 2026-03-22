@@ -15,9 +15,6 @@ internal static class Builtins
     public static Type Terminal;
 
     public static Type BooleanOutputStyles;
-    public static Type BooleanWordOutputStyle;
-    public static Type BooleanCharOutputStyle;
-    public static Type BooleanBinaryOutputStyle;
 
     public static RuntimeContext GlobalContext = new(null);
 
@@ -441,9 +438,9 @@ internal static class Builtins
 
     public static void InitialiseBooleanOutputStylesType()
     {
-        BooleanOutputStyles.AddStaticAttribute("wordStyle", BooleanWordOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("charStyle", BooleanCharOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("binaryStyle", BooleanBinaryOutputStyle);
+        BooleanOutputStyles.AddStaticAttribute("wordStyle", );
+        BooleanOutputStyles.AddStaticAttribute("charStyle", );
+        BooleanOutputStyles.AddStaticAttribute("binaryStyle", );
     }
 
     public static void InitialiseNullType()
