@@ -388,6 +388,42 @@ internal static class Builtins
             });
 
         Terminal.AddStaticMethod(readIntMethod);
+        
+        Method readBooleanMethod = new(
+            name: "readBoolean",
+            returnType: Boolean,
+            parameters:
+            [
+                new ParameterDefinition(name: "message", type: String),
+                new ParameterDefinition(
+                    name: "outputStyle",
+                    type: BooleanOutputStyles,
+                    defaultValue: new BooleanOutputStyleObject(BooleanOutputStyleObject.Style.Word)),
+                new ParameterDefinition(name: "immediate", type: Boolean, defaultValue: new BooleanObject(false))
+            ],
+            body: (self, args, context) =>
+            {
+                // Todo: figure out why this is being ran twice per call - check code.aur for more
+                StringObject message = (StringObject)context.GetParam("message");
+                BooleanOutputStyleObject outputStyle = (BooleanOutputStyleObject)context.GetParam("outputStyle");
+                BooleanObject immediate = (BooleanObject)context.GetParam("immediate");
+
+                Console.Write(message.Value);
+
+                bool result = outputStyle.Value switch
+                {
+                    BooleanOutputStyleObject.Style.Word => BooleanOutputStyleObject.ReadWordOption(),
+                    BooleanOutputStyleObject.Style.YesNo => BooleanOutputStyleObject.ReadYesNo(),
+                    BooleanOutputStyleObject.Style.Char => BooleanOutputStyleObject.ReadChar(immediate.Value),
+                    BooleanOutputStyleObject.Style.Binary => BooleanOutputStyleObject.ReadBinary(immediate.Value),
+                    BooleanOutputStyleObject.Style.OnOff => BooleanOutputStyleObject.ReadOnOff(),
+                    _ => Errors.AlwaysThrow<bool>(
+                        new SystemError("A statement was reached that was deemed unreachable"))
+                };
+                return new BooleanObject(result);
+            });
+
+        Terminal.AddStaticMethod(readBooleanMethod);
 
         // Todo: Add other TerminalType methods
     }
