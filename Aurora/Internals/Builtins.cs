@@ -438,9 +438,16 @@ internal static class Builtins
 
     public static void InitialiseBooleanOutputStylesType()
     {
-        BooleanOutputStyles.AddStaticAttribute("wordStyle", );
-        BooleanOutputStyles.AddStaticAttribute("charStyle", );
-        BooleanOutputStyles.AddStaticAttribute("binaryStyle", );
+        BooleanOutputStyleObject wordStyle = new(BooleanOutputStyleObject.Style.Word);
+        BooleanOutputStyleObject yesNoStyle = new(BooleanOutputStyleObject.Style.YesNo);
+        BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
+        BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
+        BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
+        BooleanOutputStyles.AddStaticAttribute("wordStyle", wordStyle);
+        BooleanOutputStyles.AddStaticAttribute("yesNoStyle", yesNoStyle);
+        BooleanOutputStyles.AddStaticAttribute("charStyle", charStyle);
+        BooleanOutputStyles.AddStaticAttribute("onOffStyle", onOffStyle);
+        BooleanOutputStyles.AddStaticAttribute("binaryStyle", binaryStyle);
     }
 
     public static void InitialiseNullType()
