@@ -144,6 +144,7 @@ public static class Program
         globalContext.Create("String", Builtins.String);
         globalContext.Create("Boolean", Builtins.Boolean);
         globalContext.Create("Terminal", Builtins.Terminal);
+        globalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
     }
 
     public static void Main(string[] args)

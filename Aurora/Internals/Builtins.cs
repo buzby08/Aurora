@@ -13,11 +13,7 @@ internal static class Builtins
     public static Type Null;
     public static Type Unit;
     public static Type Terminal;
-
     public static Type BooleanOutputStyles;
-    public static Type BooleanWordOutputStyle;
-    public static Type BooleanCharOutputStyle;
-    public static Type BooleanBinaryOutputStyle;
 
     public static RuntimeContext GlobalContext = new(null);
 
@@ -25,29 +21,22 @@ internal static class Builtins
     {
         Type = new Type("Type");
         Type.Type = Type;
-        
+
         Unit = new Type("Unit", type: Type);
 
         Int = new Type("Int", type: Type);
 
         Float = new Type("Float", type: Type);
 
-
         String = new Type("String", type: Type);
-
 
         Boolean = new Type("Boolean", type: Type);
 
-
         Null = new Type("Null", type: Type);
 
-
         Terminal = new Type("Terminal", type: Type);
-        
-        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type, canAccessParentValues: false);
-        BooleanWordOutputStyle = new Type("WordStyle", type: BooleanOutputStyles);
-        BooleanCharOutputStyle = new Type("CharStyle", type: BooleanOutputStyles);
-        BooleanBinaryOutputStyle = new Type("BinaryStyle", type: BooleanOutputStyles);
+
+        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
         InitialiseTypeType();
         InitialiseIntType();
@@ -120,7 +109,7 @@ internal static class Builtins
             {
                 if (self is Type selfType)
                     return new StringObject($"<{self.Type.Name} {selfType.Name}>");
-                
+
                 return new StringObject($"Object<{self.Type.Name}>");
             });
 
@@ -249,9 +238,9 @@ internal static class Builtins
                 // Todo: Get all positional args from context, and add to full string
                 string fullString = string.Empty;
 
-                foreach ((string key, List<Ast> value) in args)
+                foreach ((string key, AstList value) in args)
                 {
-                    RuntimeObject valueAsObject = Evaluator.EvaluateAstList(value, context.Parent!);
+                    RuntimeObject valueAsObject = value.Evaluate(context.Parent!);
                     StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context);
 
                     if (fullString != string.Empty)
@@ -399,6 +388,99 @@ internal static class Builtins
             });
 
         Terminal.AddStaticMethod(readIntMethod);
+        
+        Method readFloatMethod = new(
+            name: "readFloat",
+            returnType: Int,
+            parameters:
+            [
+                new ParameterDefinition(name: "message", type: String, defaultValue: new StringObject("")),
+                new ParameterDefinition(name: "min", type: Float, nullable: true, defaultValue: new NullObject()),
+                new ParameterDefinition(name: "max", type: Float, nullable: true, defaultValue: new NullObject())
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject message = (StringObject)context.GetParam("message");
+                RuntimeObject minObject = context.GetParam("min");
+                RuntimeObject maxObject = context.GetParam("max");
+
+                decimal? minValue = minObject is NullObject ? null : ((FloatObject)minObject!).Value;
+                decimal? maxValue = maxObject is NullObject ? null : ((FloatObject)maxObject!).Value;
+
+                while (true)
+                {
+                    Console.Write(message.Value);
+                    string? inputtedValue = Console.ReadLine();
+                    bool isAFloat = decimal.TryParse(inputtedValue, out decimal inputtedFloat);
+                    bool satisfiesMinRequirement = minValue is null || inputtedFloat >= minValue;
+                    bool satisfiesMaxRequirement = maxValue is null || inputtedFloat <= maxValue;
+
+                    if (isAFloat && satisfiesMaxRequirement && satisfiesMinRequirement)
+                        return new FloatObject(inputtedFloat);
+
+                    if (!isAFloat)
+                    {
+                        Console.WriteLine("Please input a float value");
+                        continue;
+                    }
+
+                    if (!satisfiesMaxRequirement && !satisfiesMinRequirement)
+                    {
+                        Console.WriteLine(
+                            $"Please input a value greater than or equal to {minValue} and less than or equal to {maxValue}");
+                        continue;
+                    }
+
+                    if (!satisfiesMaxRequirement)
+                    {
+                        Console.WriteLine($"Please enter a value less than or equal to {maxValue}");
+                        continue;
+                    }
+
+                    if (!satisfiesMinRequirement)
+                    {
+                        Console.WriteLine($"Please enter a value greater than or equal to {minValue}");
+                        continue;
+                    }
+                }
+            });
+
+        Terminal.AddStaticMethod(readFloatMethod);
+        
+        Method readBooleanMethod = new(
+            name: "readBoolean",
+            returnType: Boolean,
+            parameters:
+            [
+                new ParameterDefinition(name: "message", type: String),
+                new ParameterDefinition(
+                    name: "outputStyle",
+                    type: BooleanOutputStyles,
+                    defaultValue: new BooleanOutputStyleObject(BooleanOutputStyleObject.Style.Word)),
+                new ParameterDefinition(name: "immediate", type: Boolean, defaultValue: new BooleanObject(false))
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject message = (StringObject)context.GetParam("message");
+                BooleanOutputStyleObject outputStyle = (BooleanOutputStyleObject)context.GetParam("outputStyle");
+                BooleanObject immediate = (BooleanObject)context.GetParam("immediate");
+
+                Console.Write(message.Value);
+
+                bool result = outputStyle.Value switch
+                {
+                    BooleanOutputStyleObject.Style.Word => BooleanOutputStyleObject.ReadWordOption(),
+                    BooleanOutputStyleObject.Style.YesNo => BooleanOutputStyleObject.ReadYesNo(),
+                    BooleanOutputStyleObject.Style.Char => BooleanOutputStyleObject.ReadChar(immediate.Value),
+                    BooleanOutputStyleObject.Style.Binary => BooleanOutputStyleObject.ReadBinary(immediate.Value),
+                    BooleanOutputStyleObject.Style.OnOff => BooleanOutputStyleObject.ReadOnOff(),
+                    _ => Errors.AlwaysThrow<bool>(
+                        new SystemError("A statement was reached that was deemed unreachable"))
+                };
+                return new BooleanObject(result);
+            });
+
+        Terminal.AddStaticMethod(readBooleanMethod);
 
         // Todo: Add other TerminalType methods
     }
@@ -444,9 +526,16 @@ internal static class Builtins
 
     public static void InitialiseBooleanOutputStylesType()
     {
-        BooleanOutputStyles.AddStaticAttribute("wordStyle", BooleanWordOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("charStyle", BooleanCharOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("binaryStyle", BooleanBinaryOutputStyle);
+        BooleanOutputStyleObject wordStyle = new(BooleanOutputStyleObject.Style.Word);
+        BooleanOutputStyleObject yesNoStyle = new(BooleanOutputStyleObject.Style.YesNo);
+        BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
+        BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
+        BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
+        BooleanOutputStyles.AddStaticAttribute("wordStyle", wordStyle);
+        BooleanOutputStyles.AddStaticAttribute("yesNoStyle", yesNoStyle);
+        BooleanOutputStyles.AddStaticAttribute("charStyle", charStyle);
+        BooleanOutputStyles.AddStaticAttribute("onOffStyle", onOffStyle);
+        BooleanOutputStyles.AddStaticAttribute("binaryStyle", binaryStyle);
     }
 
     public static void InitialiseNullType()

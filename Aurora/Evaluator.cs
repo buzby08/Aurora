@@ -19,23 +19,23 @@ internal class Evaluator
                 continue;
             
             Evaluator evaluator = new(s);
-            List<Ast> astList = evaluator.ParseTokenList();
+            AstList astList = evaluator.ParseTokenList();
             EvaluateAstList(astList, context);
         }
     }
 
-    public List<Ast> ParseTokenList()
+    public AstList ParseTokenList()
     {
         TokenList tokens = this.Tokenizer.GetAllTokens();
 
         return ParseTokenList(tokens);
     }
 
-    public static List<Ast> ParseTokenList(TokenList tokens)
+    public static AstList ParseTokenList(TokenList tokens)
     {
         if (tokens.Count == 0) return [];
 
-        List<Ast> asts = [];
+        AstList asts = [];
 
         Ast currentAst = new()
         {
@@ -111,7 +111,7 @@ internal class Evaluator
         return asts;
     }
 
-    public static RuntimeObject EvaluateAstList(List<Ast> asts, RuntimeContext context)
+    public static RuntimeObject EvaluateAstList(AstList asts, RuntimeContext context)
     {
         RuntimeObject? result = null;
         foreach (Ast currentAst in asts)
