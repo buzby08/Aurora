@@ -21,21 +21,21 @@ internal static class Builtins
     {
         Type = new Type("Type");
         Type.Type = Type;
-        
+
         Unit = new Type("Unit", type: Type);
 
         Int = new Type("Int", type: Type);
 
         Float = new Type("Float", type: Type);
-        
+
         String = new Type("String", type: Type);
 
         Boolean = new Type("Boolean", type: Type);
-        
+
         Null = new Type("Null", type: Type);
-        
+
         Terminal = new Type("Terminal", type: Type);
-        
+
         BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
         InitialiseTypeType();
@@ -109,7 +109,7 @@ internal static class Builtins
             {
                 if (self is Type selfType)
                     return new StringObject($"<{self.Type.Name} {selfType.Name}>");
-                
+
                 return new StringObject($"Object<{self.Type.Name}>");
             });
 
@@ -238,9 +238,9 @@ internal static class Builtins
                 // Todo: Get all positional args from context, and add to full string
                 string fullString = string.Empty;
 
-                foreach ((string key, List<Ast> value) in args)
+                foreach ((string key, AstList value) in args)
                 {
-                    RuntimeObject valueAsObject = Evaluator.EvaluateAstList(value, context.Parent!);
+                    RuntimeObject valueAsObject = value.Evaluate(context.Parent!);
                     StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context);
 
                     if (fullString != string.Empty)

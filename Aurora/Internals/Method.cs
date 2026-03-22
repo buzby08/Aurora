@@ -55,7 +55,7 @@ internal class Method
     {
         RuntimeContext methodContext = new(parentContext);
 
-        Dictionary<string, List<Ast>> matchedArgs = MatchArgumentsToParameter(args);
+        Dictionary<string, AstList> matchedArgs = MatchArgumentsToParameter(args);
 
         bool doNotValidate = this.IsBuiltin && this.Parameters is null;
         if (doNotValidate)
@@ -96,7 +96,7 @@ internal class Method
     }
 
     public void ValidateArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, List<Ast>> matchedArgs,
+        Dictionary<string, AstList> matchedArgs,
         RuntimeContext context)
     {
         if (this.Parameters is null)
@@ -111,7 +111,7 @@ internal class Method
 
         foreach (var (key, value) in matchedArgs)
         {
-            RuntimeObject argObject = Evaluator.EvaluateAstList(value, context);
+            RuntimeObject argObject = value.Evaluate(context);
             ParameterDefinition? paramDefinition = this.Parameters.FirstOrDefault(x => x.Name == key);
 
             if (paramDefinition is null && this.UnlimitedKeywordArgumentsType is null && this.UnlimitedPositionalArgsType is null)
@@ -132,7 +132,7 @@ internal class Method
     }
 
     private void ValidateUnlimitedKeywordArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, List<Ast>> matchedArgs,
+        Dictionary<string, AstList> matchedArgs,
         RuntimeContext context)
     {
         if (this.UnlimitedKeywordArgumentsType is null)
@@ -140,9 +140,9 @@ internal class Method
                 new SystemError("Variadic (Unlimited) keyword arguments cannot be null after entering the " +
                                 "argument validator"));
         
-        foreach ((string key, List<Ast> value) in matchedArgs)
+        foreach ((string key, AstList value) in matchedArgs)
         {
-            RuntimeObject valueAsObject = Evaluator.EvaluateAstList(value, context);
+            RuntimeObject valueAsObject = value.Evaluate(context);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
@@ -153,7 +153,7 @@ internal class Method
     }
 
     private void ValidateUnlimitedPositionalArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, List<Ast>> matchedArgs,
+        Dictionary<string, AstList> matchedArgs,
         RuntimeContext context)
     {
         if (this.UnlimitedPositionalArgsType is null)
@@ -161,9 +161,9 @@ internal class Method
                 new SystemError("Variadic (Unlimited) positional arguments cannot be null after entering the " +
                                 "argument validator"));
         
-        foreach ((string key, List<Ast> value) in matchedArgs)
+        foreach ((string key, AstList value) in matchedArgs)
         {
-            RuntimeObject valueAsObject = Evaluator.EvaluateAstList(value, context);
+            RuntimeObject valueAsObject = value.Evaluate(context);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedPositionalArgsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
@@ -173,9 +173,9 @@ internal class Method
         }
     }
 
-    private Dictionary<string, List<Ast>> MatchArgumentsToParameter(List<Argument> arguments)
+    private Dictionary<string, AstList> MatchArgumentsToParameter(List<Argument> arguments)
     {
-        Dictionary<string, List<Ast>> matchedArgs = new();
+        Dictionary<string, AstList> matchedArgs = new();
 
         bool hasReachedKeywordArgument = false;
         int positionalIndex = 0;
@@ -224,7 +224,7 @@ internal class Method
         return matchedArgs;
     }
 
-    private void AddPositionalArg(Dictionary<string, List<Ast>> matchedArgs, string? key, List<Ast> value, int index)
+    private void AddPositionalArg(Dictionary<string, AstList> matchedArgs, string? key, AstList value, int index)
     {
         if (this.UnlimitedPositionalArgsType is not null)
         {
@@ -235,7 +235,7 @@ internal class Method
         matchedArgs[key!] = value;
     }
 
-    private void AddKeywordArgument(Dictionary<string, List<Ast>> matchedArgs, Argument arg)
+    private void AddKeywordArgument(Dictionary<string, AstList> matchedArgs, Argument arg)
     {
         if (this.UnlimitedKeywordArgumentsType is null)
         {
@@ -244,12 +244,12 @@ internal class Method
         }
     }
 
-    private Dictionary<string, List<Ast>> HandleNoValidationArgumentMatching(List<Argument> arguments)
+    private Dictionary<string, AstList> HandleNoValidationArgumentMatching(List<Argument> arguments)
     {
         if (!this.IsBuiltin)
             Errors.AlwaysThrow(new SystemError("Method parameters is unvalidated, for a non-builtin method."));
 
-        Dictionary<string, List<Ast>> matchedArgs = new();
+        Dictionary<string, AstList> matchedArgs = new();
 
         foreach (var arg in arguments)
         {

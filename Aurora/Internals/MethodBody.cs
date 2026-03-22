@@ -2,5 +2,5 @@ namespace Aurora.Internals;
 
 delegate RuntimeObject MethodBody(
     RuntimeObject self,
-    Dictionary<string, List<Ast>> args,
+    Dictionary<string, AstList> args,
     RuntimeContext context);

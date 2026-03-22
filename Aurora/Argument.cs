@@ -4,9 +4,9 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
 {
     public TokenListItem? Keyword = keyword;
     public readonly TokenList Value = value ?? [];
-    private List<Ast>? _cachedAst;
+    private AstList? _cachedAst;
 
-    public List<Ast> ValueAsAsts()
+    public AstList ValueAsAsts()
     {
         if (this._cachedAst is not null) return this._cachedAst;
 
