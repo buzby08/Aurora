@@ -134,16 +134,17 @@ public static class Program
             user: false));
     }
 
-    private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
+    private static void AttachBuiltinsToGlobalContext()
     {
-        globalContext.Create("Type", Builtins.Type);
-        globalContext.Create("Null", Builtins.Null);
-        globalContext.Create("Unit", Builtins.Unit);
-        globalContext.Create("Int", Builtins.Int);
-        globalContext.Create("Float", Builtins.Float);
-        globalContext.Create("String", Builtins.String);
-        globalContext.Create("Boolean", Builtins.Boolean);
-        globalContext.Create("Terminal", Builtins.Terminal);
+        InternalVariables.GlobalContext.Create("Type", Builtins.Type);
+        InternalVariables.GlobalContext.Create("Null", Builtins.Null);
+        InternalVariables.GlobalContext.Create("Unit", Builtins.Unit);
+        InternalVariables.GlobalContext.Create("Int", Builtins.Int);
+        InternalVariables.GlobalContext.Create("Float", Builtins.Float);
+        InternalVariables.GlobalContext.Create("String", Builtins.String);
+        InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
+        InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
+        InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
     }
 
     public static void Main(string[] args)
@@ -186,18 +187,17 @@ public static class Program
         try
         {
             Builtins.InitialiseTypes();
-            RuntimeContext globalContext = new RuntimeContext(null);
-            AttachBuiltinsToGlobalContext(globalContext);
+            AttachBuiltinsToGlobalContext();
 
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(RunOptionsAndReturnExitCode)
                 .WithNotParsed(HandleParseError);
 
-            string[] code = ReadCode(InternalVariables.CodeFilePath, globalContext);
+            string[] code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
             InternalVariables.Code = code;
 
             InternalVariables.LineNumber = 0;
-            Evaluator.EvaluateAllCode(code, globalContext);
+            Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
         }
         catch (Exception e)
         {

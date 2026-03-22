@@ -1,3 +1,4 @@
+using Aurora.Internals;
 using CommandLine;
 
 namespace Aurora;
@@ -8,6 +9,8 @@ namespace Aurora;
 internal static class InternalVariables
 {
     public static string CodeFilePath { get; set; } = string.Empty;
+
+    public static RuntimeContext GlobalContext = new(null);
 
     public static string[] Code { get; set; } = [];
 
