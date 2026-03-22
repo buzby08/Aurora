@@ -5,15 +5,15 @@ namespace Aurora.Internals;
 
 internal static class Builtins
 {
-    public static Type Type;
-    public static Type Int;
-    public static Type Float;
-    public static Type String;
-    public static Type Boolean;
-    public static Type Null;
-    public static Type Unit;
-    public static Type Terminal;
-    public static Type BooleanOutputStyles;
+    public static Type Type = null!;
+    public static Type Int = null!;
+    public static Type Float = null!;
+    public static Type String = null!;
+    public static Type Boolean = null!;
+    public static Type Null = null!;
+    public static Type Unit = null!;
+    public static Type Terminal = null!;
+    public static Type BooleanOutputStyles = null!;
     
     public static void InitialiseTypes()
     {
