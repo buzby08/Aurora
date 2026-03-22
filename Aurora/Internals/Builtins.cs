@@ -13,11 +13,7 @@ internal static class Builtins
     public static Type Null;
     public static Type Unit;
     public static Type Terminal;
-
     public static Type BooleanOutputStyles;
-    public static Type BooleanWordOutputStyle;
-    public static Type BooleanCharOutputStyle;
-    public static Type BooleanBinaryOutputStyle;
 
     public static RuntimeContext GlobalContext = new(null);
 
@@ -31,23 +27,16 @@ internal static class Builtins
         Int = new Type("Int", type: Type);
 
         Float = new Type("Float", type: Type);
-
-
+        
         String = new Type("String", type: Type);
 
-
         Boolean = new Type("Boolean", type: Type);
-
-
+        
         Null = new Type("Null", type: Type);
-
-
+        
         Terminal = new Type("Terminal", type: Type);
         
-        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type, canAccessParentValues: false);
-        BooleanWordOutputStyle = new Type("WordStyle", type: BooleanOutputStyles);
-        BooleanCharOutputStyle = new Type("CharStyle", type: BooleanOutputStyles);
-        BooleanBinaryOutputStyle = new Type("BinaryStyle", type: BooleanOutputStyles);
+        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
         InitialiseTypeType();
         InitialiseIntType();
@@ -444,9 +433,16 @@ internal static class Builtins
 
     public static void InitialiseBooleanOutputStylesType()
     {
-        BooleanOutputStyles.AddStaticAttribute("wordStyle", BooleanWordOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("charStyle", BooleanCharOutputStyle);
-        BooleanOutputStyles.AddStaticAttribute("binaryStyle", BooleanBinaryOutputStyle);
+        BooleanOutputStyleObject wordStyle = new(BooleanOutputStyleObject.Style.Word);
+        BooleanOutputStyleObject yesNoStyle = new(BooleanOutputStyleObject.Style.YesNo);
+        BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
+        BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
+        BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
+        BooleanOutputStyles.AddStaticAttribute("wordStyle", wordStyle);
+        BooleanOutputStyles.AddStaticAttribute("yesNoStyle", yesNoStyle);
+        BooleanOutputStyles.AddStaticAttribute("charStyle", charStyle);
+        BooleanOutputStyles.AddStaticAttribute("onOffStyle", onOffStyle);
+        BooleanOutputStyles.AddStaticAttribute("binaryStyle", binaryStyle);
     }
 
     public static void InitialiseNullType()
