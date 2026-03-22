@@ -14,9 +14,7 @@ internal static class Builtins
     public static Type Unit;
     public static Type Terminal;
     public static Type BooleanOutputStyles;
-
-    public static RuntimeContext GlobalContext = new(null);
-
+    
     public static void InitialiseTypes()
     {
         Type = new Type("Type");
