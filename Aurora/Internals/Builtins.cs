@@ -44,7 +44,7 @@ internal static class Builtins
 
         Terminal = new Type("Terminal", type: Type);
         
-        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type, canAccessParentValues: false);
+        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
         InitialiseTypeType();
         InitialiseIntType();
