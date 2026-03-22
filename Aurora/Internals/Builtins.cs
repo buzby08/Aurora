@@ -403,7 +403,6 @@ internal static class Builtins
             ],
             body: (self, args, context) =>
             {
-                // Todo: figure out why this is being ran twice per call - check code.aur for more
                 StringObject message = (StringObject)context.GetParam("message");
                 BooleanOutputStyleObject outputStyle = (BooleanOutputStyleObject)context.GetParam("outputStyle");
                 BooleanObject immediate = (BooleanObject)context.GetParam("immediate");
