@@ -13,7 +13,6 @@ internal static class Builtins
     public static Type Null;
     public static Type Unit;
     public static Type Terminal;
-
     public static Type BooleanOutputStyles;
 
     public static RuntimeContext GlobalContext = new(null);
@@ -28,17 +27,13 @@ internal static class Builtins
         Int = new Type("Int", type: Type);
 
         Float = new Type("Float", type: Type);
-
-
+        
         String = new Type("String", type: Type);
 
-
         Boolean = new Type("Boolean", type: Type);
-
-
+        
         Null = new Type("Null", type: Type);
-
-
+        
         Terminal = new Type("Terminal", type: Type);
         
         BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
