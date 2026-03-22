@@ -389,6 +389,64 @@ internal static class Builtins
 
         Terminal.AddStaticMethod(readIntMethod);
         
+        Method readFloatMethod = new(
+            name: "readFloat",
+            returnType: Int,
+            parameters:
+            [
+                new ParameterDefinition(name: "message", type: String, defaultValue: new StringObject("")),
+                new ParameterDefinition(name: "min", type: Float, nullable: true, defaultValue: new NullObject()),
+                new ParameterDefinition(name: "max", type: Float, nullable: true, defaultValue: new NullObject())
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject message = (StringObject)context.GetParam("message");
+                RuntimeObject minObject = context.GetParam("min");
+                RuntimeObject maxObject = context.GetParam("max");
+
+                decimal? minValue = minObject is NullObject ? null : ((FloatObject)minObject!).Value;
+                decimal? maxValue = maxObject is NullObject ? null : ((FloatObject)maxObject!).Value;
+
+                while (true)
+                {
+                    Console.Write(message.Value);
+                    string? inputtedValue = Console.ReadLine();
+                    bool isAFloat = decimal.TryParse(inputtedValue, out decimal inputtedFloat);
+                    bool satisfiesMinRequirement = minValue is null || inputtedFloat >= minValue;
+                    bool satisfiesMaxRequirement = maxValue is null || inputtedFloat <= maxValue;
+
+                    if (isAFloat && satisfiesMaxRequirement && satisfiesMinRequirement)
+                        return new FloatObject(inputtedFloat);
+
+                    if (!isAFloat)
+                    {
+                        Console.WriteLine("Please input a float value");
+                        continue;
+                    }
+
+                    if (!satisfiesMaxRequirement && !satisfiesMinRequirement)
+                    {
+                        Console.WriteLine(
+                            $"Please input a value greater than or equal to {minValue} and less than or equal to {maxValue}");
+                        continue;
+                    }
+
+                    if (!satisfiesMaxRequirement)
+                    {
+                        Console.WriteLine($"Please enter a value less than or equal to {maxValue}");
+                        continue;
+                    }
+
+                    if (!satisfiesMinRequirement)
+                    {
+                        Console.WriteLine($"Please enter a value greater than or equal to {minValue}");
+                        continue;
+                    }
+                }
+            });
+
+        Terminal.AddStaticMethod(readFloatMethod);
+        
         Method readBooleanMethod = new(
             name: "readBoolean",
             returnType: Boolean,
