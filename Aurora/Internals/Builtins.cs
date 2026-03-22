@@ -45,9 +45,6 @@ internal static class Builtins
         Terminal = new Type("Terminal", type: Type);
         
         BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type, canAccessParentValues: false);
-        BooleanWordOutputStyle = new Type("WordStyle", type: BooleanOutputStyles);
-        BooleanCharOutputStyle = new Type("CharStyle", type: BooleanOutputStyles);
-        BooleanBinaryOutputStyle = new Type("BinaryStyle", type: BooleanOutputStyles);
 
         InitialiseTypeType();
         InitialiseIntType();
