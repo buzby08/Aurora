@@ -14,7 +14,7 @@ internal static class Builtins
     public static Type Unit = null!;
     public static Type Terminal = null!;
     public static Type BooleanOutputStyles = null!;
-    
+
     public static void InitialiseTypes()
     {
         Type = new Type("Type");
@@ -386,7 +386,7 @@ internal static class Builtins
             });
 
         Terminal.AddStaticMethod(readIntMethod);
-        
+
         Method readFloatMethod = new(
             name: "readFloat",
             returnType: Int,
@@ -444,7 +444,7 @@ internal static class Builtins
             });
 
         Terminal.AddStaticMethod(readFloatMethod);
-        
+
         Method readBooleanMethod = new(
             name: "readBoolean",
             returnType: Boolean,
@@ -530,10 +530,10 @@ internal static class Builtins
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => wordStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => yesNoStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => charStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => onOffStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => binaryStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles, () => yesNoStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles, () => charStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles, () => onOffStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles, () => binaryStyle));
     }
 
     public static void InitialiseNullType()
