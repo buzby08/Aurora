@@ -8,8 +8,8 @@ internal class Type : RuntimeObject
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
 
-    public readonly Dictionary<string, RuntimeObject> InstanceAttributes = [];
-    public readonly Dictionary<string, RuntimeObject> StaticAttributes = [];
+    public readonly Dictionary<string, Attribute> InstanceAttributes = [];
+    public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
     public Type(string name, Type type, bool canAccessParentValues = true)
     {
@@ -38,14 +38,14 @@ internal class Type : RuntimeObject
         this.InstanceMethods.Add(method.Name, method);
     }
 
-    public void AddStaticAttribute(string name, RuntimeObject value)
+    public void AddStaticAttribute(Attribute value)
     {
-        this.StaticAttributes.Add(name, value);
+        this.StaticAttributes.Add(value.Name, value);
     }
 
-    public void AddInstanceAttribute(string name, RuntimeObject value)
+    public void AddInstanceAttribute(Attribute value)
     {
-        this.InstanceAttributes.Add(name, value);
+        this.InstanceAttributes.Add(value.Name, value);
     }
 
     public Method GetStaticMethod(string name, int? position = null)
@@ -70,9 +70,9 @@ internal class Type : RuntimeObject
         return method;
     }
 
-    public RuntimeObject GetStaticAttribute(string name, int? position = null)
+    public Attribute GetStaticAttribute(string name, int? position = null)
     {
-        RuntimeObject? attribute = this.GetStaticAttributeOrDefault(name);
+        Attribute? attribute = this.GetStaticAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no static attribute {name}"),
@@ -81,9 +81,9 @@ internal class Type : RuntimeObject
         return attribute;
     }
 
-    public RuntimeObject GetInstanceAttribute(string name, int? position = null)
+    public Attribute GetInstanceAttribute(string name, int? position = null)
     {
-        RuntimeObject? attribute = this.GetInstanceAttributeOrDefault(name);
+        Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no instance attribute {name}"),
@@ -114,9 +114,9 @@ internal class Type : RuntimeObject
         return method ?? this.Type.GetInstanceMethodOrDefault(name);
     }
 
-    private RuntimeObject? GetStaticAttributeOrDefault(string name)
+    private Attribute? GetStaticAttributeOrDefault(string name)
     {
-        RuntimeObject? attribute = this.StaticAttributes.GetValueOrDefault(name);
+        Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
         if (this == this.Type) return attribute;
 
@@ -125,9 +125,9 @@ internal class Type : RuntimeObject
         return attribute ?? this.Type.GetStaticAttributeOrDefault(name);
     }
 
-    private RuntimeObject? GetInstanceAttributeOrDefault(string name)
+    private Attribute? GetInstanceAttributeOrDefault(string name)
     {
-        RuntimeObject? attribute = this.InstanceAttributes.GetValueOrDefault(name);
+        Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
         if (this == this.Type) return attribute;
 
