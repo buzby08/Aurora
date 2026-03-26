@@ -268,6 +268,40 @@ internal static class Builtins
 
         String.AddInstanceMethod(instanceConcatMethod);
 
+        Method substringMethod = new(
+            name: "substring",
+            returnType: String,
+            parameters:
+            [
+                new ParameterDefinition(name: "start", type: Int),
+                new ParameterDefinition(name: "end", type: Int)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                IntObject start = (IntObject)context.Get("start");
+                IntObject end = (IntObject)context.Get("end");
+
+                int selfLength = selfAsString.Value.Length;
+
+                if (start.Value > end.Value)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"Start cannot be greater than end value ({start.Value} > {end.Value})"));
+
+                if (start.Value < 0)
+                    Errors.AlwaysThrow(new InvalidRangeError($"Start cannot be less than zero ({start.Value} < 0)"));
+
+                if (end.Value > selfLength)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"End cannot be greater than the string length ({end.Value} > {selfLength})"));
+
+                string substring = selfAsString.Value[start.Value..end.Value];
+                return new StringObject(substring);
+            });
+        String.AddInstanceMethod(substringMethod);
+
         // Todo: Add other StringType methods
     }
 
