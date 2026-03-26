@@ -26,7 +26,7 @@ internal class Method
         this.UnlimitedKeywordArgumentsType = unlimitedKeywordArgumentsType;
         this._builtinBody = body;
     }
-    
+
     public Method(string name, Type returnType, Type? unlimitedPositionalArgumentsType,
         Type? unlimitedKeywordArgumentsType, List<ParameterDefinition>? parameters, MethodBody body)
     {
@@ -114,8 +114,9 @@ internal class Method
             RuntimeObject argObject = value.Evaluate(context);
             ParameterDefinition? paramDefinition = this.Parameters.FirstOrDefault(x => x.Name == key);
 
-            if (paramDefinition is null && this.UnlimitedKeywordArgumentsType is null && this.UnlimitedPositionalArgsType is null)
-                Errors.AlwaysThrow(new SystemError("An unmatched parameter has been found"));
+            if (paramDefinition is null && this.UnlimitedKeywordArgumentsType is null &&
+                this.UnlimitedPositionalArgsType is null)
+                Errors.AlwaysThrow(new ArgumentDeficitError($"Method {this.Name} has no attribute `{key}`"));
 
             if (paramDefinition is not null && !argObject.Type.IsSubclassOf(paramDefinition.Type))
                 Errors.AlwaysThrow(
@@ -139,7 +140,7 @@ internal class Method
             Errors.AlwaysThrow(
                 new SystemError("Variadic (Unlimited) keyword arguments cannot be null after entering the " +
                                 "argument validator"));
-        
+
         foreach ((string key, AstList value) in matchedArgs)
         {
             RuntimeObject valueAsObject = value.Evaluate(context);
@@ -147,7 +148,7 @@ internal class Method
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
                     $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedKeywordArgumentsType.Name}"));
-            
+
             validatedArgs[key] = valueAsObject;
         }
     }
@@ -160,7 +161,7 @@ internal class Method
             Errors.AlwaysThrow(
                 new SystemError("Variadic (Unlimited) positional arguments cannot be null after entering the " +
                                 "argument validator"));
-        
+
         foreach ((string key, AstList value) in matchedArgs)
         {
             RuntimeObject valueAsObject = value.Evaluate(context);
