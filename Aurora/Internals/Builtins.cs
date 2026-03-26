@@ -480,6 +480,31 @@ internal static class Builtins
 
         Terminal.AddStaticMethod(readBooleanMethod);
 
+        Method readKeyMethod = new(
+            name: "readKey",
+            returnType: String,
+            parameters: [new ParameterDefinition(name: "message", type: String)],
+            body: (self, args, context) =>
+            {
+                StringObject message = (StringObject)context.GetParam("message");
+                Console.Write(message.Value);
+
+                ConsoleKeyInfo inputtedValue = Console.ReadKey();
+                return new StringObject(inputtedValue.KeyChar.ToString());
+            });
+        Terminal.AddStaticMethod(readKeyMethod);
+
+        Method clearMethod = new(
+            name: "clear",
+            returnType: Unit,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                Console.Clear();
+                return new UnitObject();
+            });
+        Terminal.AddStaticMethod(clearMethod);
+
         // Todo: Add other TerminalType methods
     }
 
