@@ -611,11 +611,16 @@ internal static class Builtins
         BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => wordStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles, () => yesNoStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles, () => charStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles, () => onOffStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles, () => binaryStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles,
+            (self, context) => wordStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles,
+            (self, context) => yesNoStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles,
+            (self, context) => charStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles,
+            (self, context) => onOffStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles,
+            (self, context) => binaryStyle));
     }
 
     public static void InitialiseNullType()
