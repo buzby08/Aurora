@@ -302,8 +302,8 @@ internal static class Builtins
             });
         String.AddInstanceMethod(substringMethod);
         
-        Method indexAtMethod = new(
-            name: "indexAt",
+        Method elementAtMethod = new(
+            name: "elementAt",
             returnType: String,
             parameters:
             [
@@ -327,7 +327,7 @@ internal static class Builtins
                 
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
-        String.AddInstanceMethod(indexAtMethod);
+        String.AddInstanceMethod(elementAtMethod);
         
         Method findMethod = new(
             name: "find",
