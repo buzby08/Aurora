@@ -2,15 +2,17 @@ using System.Diagnostics;
 
 namespace Aurora.Internals;
 
-internal class Attribute(string name, Type type, Func<RuntimeObject> valueGetter)
+internal class Attribute(string name, Type type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
 {
     public string Name = name;
     public Type Type = type;
-    public Func<RuntimeObject> ValueGetter = valueGetter;
+    public Func<RuntimeObject, RuntimeContext, RuntimeObject> ValueGetter = valueGetter;
 
-    public RuntimeObject GetValue()
+    public RuntimeObject GetValue(
+        RuntimeObject self,
+        RuntimeContext context)
     {
-        RuntimeObject value = this.ValueGetter();
+        RuntimeObject value = this.ValueGetter(self, context);
         if (value.Type.IsSubclassOf(this.Type))
             return value;
         
