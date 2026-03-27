@@ -301,6 +301,54 @@ internal static class Builtins
                 return new StringObject(substring);
             });
         String.AddInstanceMethod(substringMethod);
+        
+        Method indexAtMethod = new(
+            name: "indexAt",
+            returnType: String,
+            parameters:
+            [
+                new ParameterDefinition(name: "index", type: Int)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                int length = selfAsString.Value.Length;
+                
+                IntObject index = (IntObject)context.Get("index");
+
+                if (index.Value > length)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"Index cannot be greater than the string length ({index.Value} > {length})"));
+                
+                if (index.Value < 0)
+                    Errors.AlwaysThrow(new InvalidRangeError(
+                        $"Index cannot be less than zero ({index.Value} < 0)"));
+                
+                return new StringObject(selfAsString.Value[index.Value].ToString());
+            });
+        String.AddInstanceMethod(indexAtMethod);
+        
+        Method findMethod = new(
+            name: "find",
+            returnType: Int,
+            parameters:
+            [
+                new ParameterDefinition(name: "value", type: String)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                StringObject findValue = (StringObject)context.Get("value");
+                
+                int index = selfAsString.Value.IndexOf(findValue.Value, StringComparison.Ordinal);
+
+                if (selfAsString.Value.Length == 0)
+                    index = -1;
+                
+                return new IntObject(index);
+            });
+        String.AddInstanceMethod(findMethod);
 
         // Todo: Add other StringType methods
     }
