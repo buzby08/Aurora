@@ -350,6 +350,16 @@ internal static class Builtins
             });
         String.AddInstanceMethod(findMethod);
 
+        Attribute lengthAttribute = new(
+            name: "length",
+            type: Int,
+            valueGetter: (self, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                return new IntObject(selfAsString.Value.Length);
+            });
+        String.AddInstanceAttribute(lengthAttribute);
+
         // Todo: Add other StringType methods
     }
 
