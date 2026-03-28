@@ -14,6 +14,7 @@ internal static class Builtins
     public static Type Unit = null!;
     public static Type Terminal = null!;
     public static Type BooleanOutputStyles = null!;
+    public static Type Optional = null!;
 
     public static void InitialiseTypes()
     {
@@ -21,6 +22,8 @@ internal static class Builtins
         Type.Type = Type;
 
         Unit = new Type("Unit", type: Type);
+        
+        Optional = new Type("Optional", type: Type);
 
         Int = new Type("Int", type: Type);
 
@@ -113,6 +116,11 @@ internal static class Builtins
 
         Type.AddInstanceMethod(toString);
         Type.AddStaticMethod(toString);
+    }
+
+    public static void InitialiseOptionalType()
+    {
+        
     }
 
     public static void InitialiseIntType()
