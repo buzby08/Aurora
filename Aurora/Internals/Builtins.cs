@@ -130,6 +130,23 @@ internal static class Builtins
                 return new BooleanObject(selfAsOptional.HasValue);
             });
         Optional.AddInstanceAttribute(isEmptyAttribute);
+
+        Method createMethod = new(
+            name: "create",
+            returnType: Unit,
+            parameters: null,
+            body: (self, args, context) =>
+            {
+                foreach (var (key, variable) in args)
+                {
+                    RuntimeObject variableObject = Evaluator.EvaluateAstList(variable, context.Parent!);
+
+                    context.Parent!.Create(key, new OptionalObject(variableObject));
+                }
+
+                return new UnitObject();
+            });
+        Optional.AddStaticMethod(createMethod);
     }
 
     public static void InitialiseIntType()
