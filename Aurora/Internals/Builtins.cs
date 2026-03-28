@@ -147,6 +147,21 @@ internal static class Builtins
                 return new UnitObject();
             });
         Optional.AddStaticMethod(createMethod);
+
+        Attribute valueAttribute = new(
+            name: "value",
+            type: Type,
+            valueGetter: (self, context) =>
+            {
+                OptionalObject selfAsOptional = (OptionalObject)self;
+
+                if (!selfAsOptional.HasValue)
+                    Errors.AlwaysThrow(new UnsupportedOperationError(
+                        $"Cannot access the value from an optional type where the object does not contain a value"));
+
+                return selfAsOptional.Value;
+            });
+        Optional.AddInstanceAttribute(valueAttribute);
     }
 
     public static void InitialiseIntType()
