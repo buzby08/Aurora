@@ -350,6 +350,19 @@ internal static class Builtins
             });
         String.AddInstanceMethod(findMethod);
 
+        Method containsMethod = new(
+            name: "contains",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "substring", type: String)],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                StringObject containsValue = (StringObject)context.Get("substring");
+
+                return new BooleanObject(selfAsString.Value.Contains(containsValue.Value, StringComparison.Ordinal));
+            });
+        String.AddInstanceMethod(containsMethod);
+
         Attribute lengthAttribute = new(
             name: "length",
             type: Int,
