@@ -268,6 +268,88 @@ internal static class Builtins
 
         String.AddInstanceMethod(instanceConcatMethod);
 
+        Method substringMethod = new(
+            name: "substring",
+            returnType: String,
+            parameters:
+            [
+                new ParameterDefinition(name: "start", type: Int),
+                new ParameterDefinition(name: "end", type: Int)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                IntObject start = (IntObject)context.Get("start");
+                IntObject end = (IntObject)context.Get("end");
+
+                int selfLength = selfAsString.Value.Length;
+
+                if (start.Value > end.Value)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"Start cannot be greater than end value ({start.Value} > {end.Value})"));
+
+                if (start.Value < 0)
+                    Errors.AlwaysThrow(new InvalidRangeError($"Start cannot be less than zero ({start.Value} < 0)"));
+
+                if (end.Value > selfLength)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"End cannot be greater than the string length ({end.Value} > {selfLength})"));
+
+                string substring = selfAsString.Value[start.Value..end.Value];
+                return new StringObject(substring);
+            });
+        String.AddInstanceMethod(substringMethod);
+        
+        Method indexAtMethod = new(
+            name: "indexAt",
+            returnType: String,
+            parameters:
+            [
+                new ParameterDefinition(name: "index", type: Int)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                int length = selfAsString.Value.Length;
+                
+                IntObject index = (IntObject)context.Get("index");
+
+                if (index.Value > length)
+                    Errors.AlwaysThrow(
+                        new InvalidRangeError(
+                            $"Index cannot be greater than the string length ({index.Value} > {length})"));
+                
+                if (index.Value < 0)
+                    Errors.AlwaysThrow(new InvalidRangeError(
+                        $"Index cannot be less than zero ({index.Value} < 0)"));
+                
+                return new StringObject(selfAsString.Value[index.Value].ToString());
+            });
+        String.AddInstanceMethod(indexAtMethod);
+        
+        Method findMethod = new(
+            name: "find",
+            returnType: Int,
+            parameters:
+            [
+                new ParameterDefinition(name: "value", type: String)
+            ],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                StringObject findValue = (StringObject)context.Get("value");
+                
+                int index = selfAsString.Value.IndexOf(findValue.Value, StringComparison.Ordinal);
+
+                if (selfAsString.Value.Length == 0)
+                    index = -1;
+                
+                return new IntObject(index);
+            });
+        String.AddInstanceMethod(findMethod);
+
         // Todo: Add other StringType methods
     }
 
@@ -529,11 +611,16 @@ internal static class Builtins
         BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles, () => wordStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles, () => yesNoStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles, () => charStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles, () => onOffStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles, () => binaryStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles,
+            (self, context) => wordStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles,
+            (self, context) => yesNoStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles,
+            (self, context) => charStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles,
+            (self, context) => onOffStyle));
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles,
+            (self, context) => binaryStyle));
     }
 
     public static void InitialiseNullType()

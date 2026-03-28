@@ -190,6 +190,21 @@ namespace Aurora
         }
     }
 
+    internal class InvalidRangeError : ErrorTypes
+    {
+        public override string Title { get; }
+        public override string Description => "The provided range is invalid";
+        public override string Message { get; }
+        public override string Code => "Aurora.InvalidRange";
+        public override bool AlwaysError => false;
+
+        public InvalidRangeError(string? message = null, bool user = true)
+        {
+            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+            this.Title = "Invalid Range Error" + (user ? " (User)" : " (System)");
+        }
+    }
+
     internal class ImmutableVarModificationError : ErrorTypes
     {
         public override string Title { get; }
