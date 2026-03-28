@@ -204,6 +204,21 @@ namespace Aurora
             this.Title = "Invalid Range Error" + (user ? " (User)" : " (System)");
         }
     }
+    
+    internal class InvalidOperationError : ErrorTypes
+    {
+        public override string Title { get; }
+        public sealed override string Description => "An operation was attempted that was invalid";
+        public override string Message { get; }
+        public override string Code => "Aurora.InvalidOperation";
+        public override bool AlwaysError => false;
+
+        public InvalidOperationError(string? message = null, bool user = true)
+        {
+            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+            this.Title = "Invalid Operation Error" + (user ? " (User)" : " (System)");
+        }
+    }
 
     internal class ImmutableVarModificationError : ErrorTypes
     {
