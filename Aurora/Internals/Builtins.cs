@@ -120,7 +120,16 @@ internal static class Builtins
 
     public static void InitialiseOptionalType()
     {
-        
+        Attribute isEmptyAttribute = new(
+            name: "isEmpty",
+            type: Boolean,
+            valueGetter: (self, context) =>
+            {
+                OptionalObject selfAsOptional = (OptionalObject)self;
+
+                return new BooleanObject(selfAsOptional.HasValue);
+            });
+        Optional.AddInstanceAttribute(isEmptyAttribute);
     }
 
     public static void InitialiseIntType()
