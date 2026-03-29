@@ -162,6 +162,22 @@ internal static class Builtins
                 return selfAsOptional.Value;
             });
         Optional.AddInstanceAttribute(valueAttribute);
+
+        Method valueOrDefaultMethod = new(
+            name: "valueOrDefault",
+            returnType: Type,
+            parameters: [new ParameterDefinition(name: "default", type: Type)],
+            body: (self, args, context) =>
+            {
+                OptionalObject selfAsOptional = (OptionalObject)self;
+                RuntimeObject defaultObject = context.Get("default");
+
+                if (selfAsOptional.HasValue)
+                    return selfAsOptional.Value;
+
+                return defaultObject;
+            });
+        Optional.AddInstanceMethod(valueOrDefaultMethod);
     }
 
     public static void InitialiseIntType()
