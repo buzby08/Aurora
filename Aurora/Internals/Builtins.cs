@@ -178,6 +178,21 @@ internal static class Builtins
                 return defaultObject;
             });
         Optional.AddInstanceMethod(valueOrDefaultMethod);
+        
+        Method toStringMethod = new (
+            name: "toString",
+            returnType: String,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                OptionalObject selfAsOptional = (OptionalObject)self;
+
+                if (selfAsOptional.HasValue)
+                    return selfAsOptional.Value!.ConvertToStringObject(context);
+                
+                return new StringObject("<Optional: Empty>");
+            });
+        Optional.AddInstanceMethod(toStringMethod);
     }
 
     public static void InitialiseIntType()
