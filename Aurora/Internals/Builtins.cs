@@ -40,6 +40,7 @@ internal static class Builtins
         BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
         InitialiseTypeType();
+        InitialiseOptionalType();
         InitialiseIntType();
         InitialiseFloatType();
         InitialiseStringType();
