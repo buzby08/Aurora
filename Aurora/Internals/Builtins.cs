@@ -412,7 +412,7 @@ internal static class Builtins
         
         Method findMethod = new(
             name: "find",
-            returnType: Int, // Todo: make return optional
+            returnType: Optional,
             parameters:
             [
                 new ParameterDefinition(name: "value", type: String)
@@ -427,7 +427,10 @@ internal static class Builtins
                 if (selfAsString.Value.Length == 0)
                     index = -1;
 
-                return new IntObject(index);
+                if (index == -1)
+                    return new OptionalObject(null);
+
+                return new OptionalObject(new IntObject(index));
             });
         String.AddInstanceMethod(findMethod);
 
