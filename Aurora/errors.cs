@@ -70,7 +70,7 @@ namespace Aurora
     {
         public override string Title { get; }
 
-        public override string Description => "Too many arguments were provided for this method or operation";
+        public sealed override string Description => "Too many arguments were provided for this method or operation";
         public override string Message { get; }
 
         public override string Code => "Aurora.ArgSurplus";
@@ -85,7 +85,7 @@ namespace Aurora
     internal class ArgumentDeficitError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Not enough arguments were provided for this method or operation";
+        public sealed override string Description => "Not enough arguments were provided for this method or operation";
         public override string Message { get; }
         public override string Code => "Aurora.ArgDeficit";
 
@@ -102,7 +102,7 @@ namespace Aurora
     {
         public override string Title { get; }
 
-        public override string Description =>
+        public sealed override string Description =>
             "An argument was provided with a type that does not match the expected type";
 
         public override string Message { get; }
@@ -119,7 +119,7 @@ namespace Aurora
     internal class MissingRequiredArgError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A required argument is missing from this method call";
+        public sealed override string Description => "A required argument is missing from this method call";
         public override string Message { get; }
         public override string Code => "Aurora.MissingRequiredArg";
         public override bool AlwaysError => true;
@@ -134,7 +134,7 @@ namespace Aurora
     internal class UnexpectedKeywordArgError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "An unexpected keyword argument was supplied";
+        public sealed override string Description => "An unexpected keyword argument was supplied";
         public override string Message { get; }
         public override string Code => "Aurora.UnexpectedKeywordArg";
 
@@ -148,7 +148,7 @@ namespace Aurora
     internal class InvalidArgNameError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The provided argument name is invalid or reserved";
+        public sealed override string Description => "The provided argument name is invalid or reserved";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidArgName";
 
@@ -163,7 +163,7 @@ namespace Aurora
     {
         public override string Title { get; }
 
-        public override string Description =>
+        public sealed override string Description =>
             "Attempted to access an object that does not exist in the current context";
 
         public override string Message { get; }
@@ -179,7 +179,7 @@ namespace Aurora
     internal class VarAlreadyExistsError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A variable with the same name already exists";
+        public sealed override string Description => "A variable with the same name already exists";
         public override string Message { get; }
         public override string Code => "Aurora.VarAlreadyExists";
 
@@ -190,10 +190,25 @@ namespace Aurora
         }
     }
 
+    internal class InvalidRangeError : ErrorTypes
+    {
+        public override string Title { get; }
+        public sealed override string Description => "The provided range is invalid";
+        public override string Message { get; }
+        public override string Code => "Aurora.InvalidRange";
+        public override bool AlwaysError => false;
+
+        public InvalidRangeError(string? message = null, bool user = true)
+        {
+            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+            this.Title = "Invalid Range Error" + (user ? " (User)" : " (System)");
+        }
+    }
+
     internal class ImmutableVarModificationError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Attempted to modify a constant (immutable) variable";
+        public sealed override string Description => "Attempted to modify a constant (immutable) variable";
         public override string Message { get; }
         public override string Code => "Aurora.ImmutableVarModification";
         public override bool AlwaysError => true;
@@ -208,7 +223,7 @@ namespace Aurora
     internal class InvalidVarTypeError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The provided variable type is invalid or not recognised";
+        public sealed override string Description => "The provided variable type is invalid or not recognised";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidVarType";
         public override bool AlwaysError => true;
@@ -223,7 +238,7 @@ namespace Aurora
     internal class VarScopeViolationError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Access to a variable outside its defined scope";
+        public sealed override string Description => "Access to a variable outside its defined scope";
         public override string Message { get; }
         public override string Code => "Aurora.VarScopeViolation";
         public override bool AlwaysError => true;
@@ -238,7 +253,7 @@ namespace Aurora
     internal class TypeMismatchError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Operation cannot be performed due to incompatible data types";
+        public sealed override string Description => "Operation cannot be performed due to incompatible data types";
         public override string Message { get; }
         public override string Code => "Aurora.TypeMismatch";
 
@@ -252,7 +267,7 @@ namespace Aurora
     internal class UnsupportedOperationError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Operation cannot be performed due to incompatible data types";
+        public sealed override string Description => "Operation cannot be performed due to incompatible data types";
         public override string Message { get; }
         public override string Code => "Aurora.UnsupportedOperation";
         public override bool AlwaysError => true;
@@ -267,7 +282,7 @@ namespace Aurora
     internal class OutOfRangeError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A value is outside the allowed range";
+        public sealed override string Description => "A value is outside the allowed range";
         public override string Message { get; }
         public override string Code => "Aurora.OutOfRange";
         public override bool AlwaysError => true;
@@ -282,7 +297,7 @@ namespace Aurora
     internal class DivisionByZeroError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Attempted to divide by zero";
+        public sealed override string Description => "Attempted to divide by zero";
         public override string Message { get; }
         public override string Code => "Aurora.DivisionByZero";
         public override bool AlwaysError => true;
@@ -297,7 +312,7 @@ namespace Aurora
     internal class UnexpectedTokenError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "An unexpected token was encountered during parsing";
+        public sealed override string Description => "An unexpected token was encountered during parsing";
         public override string Message { get; }
         public override string Code => "Aurora.UnexpectedToken";
         public override bool AlwaysError => true;
@@ -312,7 +327,7 @@ namespace Aurora
     internal class InvalidSyntaxError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The syntax of this statement is invalid";
+        public sealed override string Description => "The syntax of this statement is invalid";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidSyntax";
         public override bool AlwaysError => true;
@@ -327,7 +342,7 @@ namespace Aurora
     internal class UnclosedDelimiterError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A delimiter (e.g. Parenthesis, brackets) was not closed";
+        public sealed override string Description => "A delimiter (e.g. Parenthesis, brackets) was not closed";
         public override string Message { get; }
         public override string Code => "Aurora.UnclosedDelimiter";
         public override bool AlwaysError => true;
@@ -342,7 +357,7 @@ namespace Aurora
     internal class MissingSeparatorError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A required separator (e.g. ';', '.') is missing";
+        public sealed override string Description => "A required separator (e.g. ';', '.') is missing";
         public override string Message { get; }
         public override string Code => "Aurora.MissingSeparator";
         public override bool AlwaysError => true;
@@ -357,7 +372,7 @@ namespace Aurora
     internal class UnreachableCodeError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Code exists after a return, halt, or exit point";
+        public sealed override string Description => "Code exists after a return, halt, or exit point";
         public override string Message { get; }
         public override string Code => "Aurora.UnreachableCode";
 
@@ -371,7 +386,7 @@ namespace Aurora
     internal class InvalidReturnTypeError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Returned value does not match the declared return type";
+        public sealed override string Description => "Returned value does not match the declared return type";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidReturnType";
         public override bool AlwaysError => true;
@@ -386,7 +401,7 @@ namespace Aurora
     internal class ModuleNotFoundError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The specified module could not be found";
+        public sealed override string Description => "The specified module could not be found";
         public override string Message { get; }
         public override string Code => "Aurora.ModuleNotFound";
         public override bool AlwaysError => true;
@@ -401,7 +416,7 @@ namespace Aurora
     internal class InvalidMethodError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The provided method could not be found";
+        public sealed override string Description => "The provided method could not be found";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidMethod";
         public override bool AlwaysError => true;
@@ -416,7 +431,7 @@ namespace Aurora
     internal class FileNotFoundError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The specified file could not be found";
+        public sealed override string Description => "The specified file could not be found";
         public override string Message { get; }
         public override string Code => "Aurora.FileNotFound";
         public override bool AlwaysError => true;
@@ -431,7 +446,7 @@ namespace Aurora
     internal class InvalidAttributeError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The provided attribute could not be found";
+        public sealed override string Description => "The provided attribute could not be found";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidAttribute";
         public override bool AlwaysError => true;
@@ -446,7 +461,7 @@ namespace Aurora
     internal class InvalidMemberAccessError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "Attempted to access an undefined or restricted class member";
+        public sealed override string Description => "Attempted to access an undefined or restricted class member";
         public override string Message { get; }
         public override string Code => "Aurora.InvalidMemberAccess";
         public override bool AlwaysError => true;
@@ -461,7 +476,7 @@ namespace Aurora
     internal class ConstantRedefinitionError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A constant cannot be redefined after initial assignment";
+        public sealed override string Description => "A constant cannot be redefined after initial assignment";
         public override string Message { get; }
         public override string Code => "Aurora.ConstantRedefinition";
         public override bool AlwaysError => true;
@@ -476,7 +491,7 @@ namespace Aurora
     internal class ConfigurationError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "A problem occured while loading or interpreting the configuration";
+        public sealed override string Description => "A problem occured while loading or interpreting the configuration";
         public override string Message { get; }
         public override string Code => "Aurora.Configuration";
         public override bool AlwaysError => true;
@@ -491,7 +506,7 @@ namespace Aurora
     internal class MaxExpressionDepthExceededError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The maximum number of expressions per line was exceeded";
+        public sealed override string Description => "The maximum number of expressions per line was exceeded";
         public override string Message { get; }
         public override string Code => "Aurora.ExpressionDepthExceeded";
         public override bool AlwaysError => true;
@@ -506,7 +521,7 @@ namespace Aurora
     internal class MaxRecursionDepthExceededError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The system encountered its maximum recursion depth.";
+        public sealed override string Description => "The system encountered its maximum recursion depth.";
         public override string Message { get; }
         public override string Code => "Aurora.RecursionDepthExceeded";
         public override bool AlwaysError => true;
@@ -521,7 +536,7 @@ namespace Aurora
     internal class MemoryError : ErrorTypes
     {
         public override string Title { get; }
-        public override string Description => "The system tried to use or access invalid memory.";
+        public sealed override string Description => "The system tried to use or access invalid memory.";
         public override string Message { get; }
         public override string Code => "Aurora.MemoryError";
         public override bool AlwaysError => true;
@@ -536,7 +551,7 @@ namespace Aurora
     internal class SystemError : ErrorTypes
     {
         public override string Title => "[SYSTEM]";
-        public override string Description => "The system encountered a problem it could not handle";
+        public sealed override string Description => "The system encountered a problem it could not handle";
         public override string Message { get; }
         public override string Code => "Aurora.System";
         public override bool AlwaysError => true;

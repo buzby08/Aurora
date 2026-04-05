@@ -109,9 +109,9 @@ internal class Ast
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString);
+            return type.GetStaticAttribute(_name!.Value.AsString).GetValue(target, context);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition);
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
     }
 
     private RuntimeObject EvaluateLiteral(RuntimeContext context)
