@@ -30,6 +30,8 @@ internal class Ast
         }
     }
 
+    public string? TargetAsString => _target?.AsString;
+
     private bool _isALiteral { get; set; } = false;
 
     public bool IsALiteral
@@ -53,6 +55,7 @@ internal class Ast
             this.UpdateState();
         }
     }
+    public string? NameAsString => _name?.AsString;
 
     private List<Argument>? _arguments { get; set; }
 

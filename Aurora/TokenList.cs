@@ -1,10 +1,22 @@
 using System.Collections;
+using System.Diagnostics;
 
 namespace Aurora;
 
 internal class TokenList : IEnumerable<TokenListItem>
 {
     private readonly List<TokenListItem> _data = [];
+
+    [DebuggerDisplay("tomato")] public List<string> DataAsString
+    {
+        get
+        {
+            List<string> all = [];
+            all.AddRange(this._data.Select(item => item.AsString));
+            return all;
+        }
+    }
+
     private int totalChars;
 
     public int Count => _data.Count;

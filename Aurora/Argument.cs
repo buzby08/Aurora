@@ -3,7 +3,9 @@ namespace Aurora;
 internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
 {
     public TokenListItem? Keyword = keyword;
+    public string? KeywordAsString => keyword?.AsString;
     public readonly TokenList Value = value ?? [];
+    public List<string> ValueAsString => this.Value.DataAsString;
     private AstList? _cachedAst;
 
     public AstList ValueAsAsts()

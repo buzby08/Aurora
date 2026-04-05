@@ -1,564 +1,575 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Aurora
+namespace Aurora;
+
+internal class Errors
 {
-    internal class Errors
+    public static string ConfigFilePath { get; set; } = "AuroraConfig.json";
+    public static List<string> Warnings = [];
+
+    [DoesNotReturn]
+    public static void OutputWarningsAndExit()
     {
-        public static string ConfigFilePath { get; set; } = "AuroraConfig.json";
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        foreach (string warning in Warnings)
+            Console.WriteLine(warning);
+        Console.ResetColor();
+    }
 
-        [DoesNotReturn]
-        public static T AlwaysThrow<T>(ErrorTypes error, int? position = null)
+    [DoesNotReturn]
+    public static T AlwaysThrow<T>(ErrorTypes error, int? position = null)
+    {
+        AlwaysThrow(error, position);
+        throw new UnreachableException();
+    }
+
+    [DoesNotReturn]
+    public static void AlwaysThrow(ErrorTypes error, int? position = null)
+    {
+        RaiseError(error, position, alwaysThrow: true);
+        Environment.Exit(1);
+        throw new UnreachableException();
+    }
+
+    public static void RaiseError(ErrorTypes error, int? position = null, bool alwaysThrow = false)
+    {
+        int? lineNumber = InternalVariables.LineNumber;
+        string positionMessage = "Unknown line";
+
+        if (lineNumber is not null && position is not null)
+            positionMessage = $"Line {lineNumber} : position {position}";
+
+        if (lineNumber is not null && position is null)
+            positionMessage = $"Line {lineNumber}";
+        string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
+
+        bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
+
+        if (!isError)
         {
-            AlwaysThrow(error, position);
-            throw new UnreachableException();
-        }
-
-        [DoesNotReturn]
-        public static void AlwaysThrow(ErrorTypes error, int? position = null)
-        {
-            RaiseError(error, position, alwaysThrow: true);
-            Environment.Exit(1);
-            throw new UnreachableException();
-        }
-
-        public static void RaiseError(ErrorTypes error, int? position = null, bool alwaysThrow = false)
-        {
-            int? lineNumber = InternalVariables.LineNumber;
-            string positionMessage = "Unknown line";
-
-            if (lineNumber is not null && position is not null)
-                positionMessage = $"Line {lineNumber} : position {position}";
-
-            if (lineNumber is not null && position is null)
-                positionMessage = $"Line {lineNumber}";
-            string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
-
-            bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
-
-            if (!isError)
-            {
-                Logs.Warning(outputMessage);
-                return;
-            }
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[ERROR] " + outputMessage);
-            Console.ResetColor();
             Logs.Warning(outputMessage);
-
-            Environment.Exit(1);
+            Warnings.Add("[WARNING]" + outputMessage);
+            return;
         }
 
-        public static void Log(string title, string message)
-        {
-            using var writer = File.AppendText(Logs.LogFilePath);
-            writer.WriteLine($"Custom Log: {title} - {message}");
-        }
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("[ERROR] " + outputMessage);
+        Console.ResetColor();
+        Logs.Warning(outputMessage);
+
+        Environment.Exit(1);
     }
 
-    internal abstract class ErrorTypes
+    public static void Log(string title, string message)
     {
-        public abstract string Title { get; }
-        public abstract string Description { get; }
-        public abstract string Message { get; }
-        public abstract string Code { get; }
-        public virtual bool AlwaysError => false;
+        using var writer = File.AppendText(Logs.LogFilePath);
+        writer.WriteLine($"Custom Log: {title} - {message}");
     }
+}
 
-    internal class ArgumentSurplusError : ErrorTypes
+internal abstract class ErrorTypes
+{
+    public abstract string Title { get; }
+    public abstract string Description { get; }
+    public abstract string Message { get; }
+    public abstract string Code { get; }
+    public virtual bool AlwaysError => false;
+}
+
+internal class ArgumentSurplusError : ErrorTypes
+{
+    public override string Title { get; }
+
+    public sealed override string Description => "Too many arguments were provided for this method or operation";
+    public override string Message { get; }
+
+    public override string Code => "Aurora.ArgSurplus";
+
+    public ArgumentSurplusError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-
-        public sealed override string Description => "Too many arguments were provided for this method or operation";
-        public override string Message { get; }
-
-        public override string Code => "Aurora.ArgSurplus";
-
-        public ArgumentSurplusError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Argument Surplus" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Argument Surplus" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ArgumentDeficitError : ErrorTypes
+internal class ArgumentDeficitError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Not enough arguments were provided for this method or operation";
+    public override string Message { get; }
+    public override string Code => "Aurora.ArgDeficit";
+
+    public override bool AlwaysError => true;
+
+    public ArgumentDeficitError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Not enough arguments were provided for this method or operation";
-        public override string Message { get; }
-        public override string Code => "Aurora.ArgDeficit";
-
-        public override bool AlwaysError => true;
-
-        public ArgumentDeficitError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Argument Deficit" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Argument Deficit" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ArgumentTypeMismatchError : ErrorTypes
+internal class ArgumentTypeMismatchError : ErrorTypes
+{
+    public override string Title { get; }
+
+    public sealed override string Description =>
+        "An argument was provided with a type that does not match the expected type";
+
+    public override string Message { get; }
+
+    public override string Code => "Aurora.ArgTypeMismatch";
+
+    public ArgumentTypeMismatchError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-
-        public sealed override string Description =>
-            "An argument was provided with a type that does not match the expected type";
-
-        public override string Message { get; }
-
-        public override string Code => "Aurora.ArgTypeMismatch";
-
-        public ArgumentTypeMismatchError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Argument Type Mismatch" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Argument Type Mismatch" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class MissingRequiredArgError : ErrorTypes
+internal class MissingRequiredArgError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A required argument is missing from this method call";
+    public override string Message { get; }
+    public override string Code => "Aurora.MissingRequiredArg";
+    public override bool AlwaysError => true;
+
+    public MissingRequiredArgError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A required argument is missing from this method call";
-        public override string Message { get; }
-        public override string Code => "Aurora.MissingRequiredArg";
-        public override bool AlwaysError => true;
-
-        public MissingRequiredArgError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Missing Required Argument" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Missing Required Argument" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class UnexpectedKeywordArgError : ErrorTypes
+internal class UnexpectedKeywordArgError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "An unexpected keyword argument was supplied";
+    public override string Message { get; }
+    public override string Code => "Aurora.UnexpectedKeywordArg";
+
+    public UnexpectedKeywordArgError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "An unexpected keyword argument was supplied";
-        public override string Message { get; }
-        public override string Code => "Aurora.UnexpectedKeywordArg";
-
-        public UnexpectedKeywordArgError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Unexpected Keyword Argument" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Unexpected Keyword Argument" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidArgNameError : ErrorTypes
+internal class InvalidArgNameError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The provided argument name is invalid or reserved";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidArgName";
+
+    public InvalidArgNameError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The provided argument name is invalid or reserved";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidArgName";
-
-        public InvalidArgNameError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Argument Name" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Argument Name" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ObjectNotFoundError : ErrorTypes
+internal class ObjectNotFoundError : ErrorTypes
+{
+    public override string Title { get; }
+
+    public sealed override string Description =>
+        "Attempted to access an object that does not exist in the current context";
+
+    public override string Message { get; }
+    public override string Code => "Aurora.ObjectNotFound";
+
+    public ObjectNotFoundError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-
-        public sealed override string Description =>
-            "Attempted to access an object that does not exist in the current context";
-
-        public override string Message { get; }
-        public override string Code => "Aurora.ObjectNotFound";
-
-        public ObjectNotFoundError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Object Not Found" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Object Not Found" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class VarAlreadyExistsError : ErrorTypes
+internal class VarAlreadyExistsError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A variable with the same name already exists";
+    public override string Message { get; }
+    public override string Code => "Aurora.VarAlreadyExists";
+
+    public VarAlreadyExistsError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A variable with the same name already exists";
-        public override string Message { get; }
-        public override string Code => "Aurora.VarAlreadyExists";
-
-        public VarAlreadyExistsError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Variable Already Exists" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Variable Already Exists" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidRangeError : ErrorTypes
+internal class InvalidRangeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The provided range is invalid";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidRange";
+    public override bool AlwaysError => false;
+
+    public InvalidRangeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The provided range is invalid";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidRange";
-        public override bool AlwaysError => false;
-
-        public InvalidRangeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Range Error" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Range Error" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ImmutableVarModificationError : ErrorTypes
+internal class ImmutableVarModificationError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Attempted to modify a constant (immutable) variable";
+    public override string Message { get; }
+    public override string Code => "Aurora.ImmutableVarModification";
+    public override bool AlwaysError => true;
+
+    public ImmutableVarModificationError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Attempted to modify a constant (immutable) variable";
-        public override string Message { get; }
-        public override string Code => "Aurora.ImmutableVarModification";
-        public override bool AlwaysError => true;
-
-        public ImmutableVarModificationError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Immutable Variable Modification" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Immutable Variable Modification" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidVarTypeError : ErrorTypes
+internal class InvalidVarTypeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The provided variable type is invalid or not recognised";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidVarType";
+    public override bool AlwaysError => true;
+
+    public InvalidVarTypeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The provided variable type is invalid or not recognised";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidVarType";
-        public override bool AlwaysError => true;
-
-        public InvalidVarTypeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Variable Type" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Variable Type" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class VarScopeViolationError : ErrorTypes
+internal class VarScopeViolationError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Access to a variable outside its defined scope";
+    public override string Message { get; }
+    public override string Code => "Aurora.VarScopeViolation";
+    public override bool AlwaysError => true;
+
+    public VarScopeViolationError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Access to a variable outside its defined scope";
-        public override string Message { get; }
-        public override string Code => "Aurora.VarScopeViolation";
-        public override bool AlwaysError => true;
-
-        public VarScopeViolationError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Variable Scope Violation" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Variable Scope Violation" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class TypeMismatchError : ErrorTypes
+internal class TypeMismatchError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Operation cannot be performed due to incompatible data types";
+    public override string Message { get; }
+    public override string Code => "Aurora.TypeMismatch";
+
+    public TypeMismatchError(string? message = null, bool user = true, bool alwaysError = false)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Operation cannot be performed due to incompatible data types";
-        public override string Message { get; }
-        public override string Code => "Aurora.TypeMismatch";
-
-        public TypeMismatchError(string? message = null, bool user = true, bool alwaysError = false)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Type Mismatch" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Type Mismatch" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class UnsupportedOperationError : ErrorTypes
+internal class UnsupportedOperationError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Operation cannot be performed due to incompatible data types";
+    public override string Message { get; }
+    public override string Code => "Aurora.UnsupportedOperation";
+    public override bool AlwaysError => true;
+
+    public UnsupportedOperationError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Operation cannot be performed due to incompatible data types";
-        public override string Message { get; }
-        public override string Code => "Aurora.UnsupportedOperation";
-        public override bool AlwaysError => true;
-
-        public UnsupportedOperationError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Unsupported Operation" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Unsupported Operation" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class OutOfRangeError : ErrorTypes
+internal class OutOfRangeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A value is outside the allowed range";
+    public override string Message { get; }
+    public override string Code => "Aurora.OutOfRange";
+    public override bool AlwaysError => true;
+
+    public OutOfRangeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A value is outside the allowed range";
-        public override string Message { get; }
-        public override string Code => "Aurora.OutOfRange";
-        public override bool AlwaysError => true;
-
-        public OutOfRangeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Out of Range" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Out of Range" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class DivisionByZeroError : ErrorTypes
+internal class DivisionByZeroError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Attempted to divide by zero";
+    public override string Message { get; }
+    public override string Code => "Aurora.DivisionByZero";
+    public override bool AlwaysError => true;
+
+    public DivisionByZeroError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Attempted to divide by zero";
-        public override string Message { get; }
-        public override string Code => "Aurora.DivisionByZero";
-        public override bool AlwaysError => true;
-
-        public DivisionByZeroError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Division by Zero" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Division by Zero" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class UnexpectedTokenError : ErrorTypes
+internal class UnexpectedTokenError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "An unexpected token was encountered during parsing";
+    public override string Message { get; }
+    public override string Code => "Aurora.UnexpectedToken";
+    public override bool AlwaysError => true;
+
+    public UnexpectedTokenError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "An unexpected token was encountered during parsing";
-        public override string Message { get; }
-        public override string Code => "Aurora.UnexpectedToken";
-        public override bool AlwaysError => true;
-
-        public UnexpectedTokenError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Unexpected Token" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Unexpected Token" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidSyntaxError : ErrorTypes
+internal class InvalidSyntaxError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The syntax of this statement is invalid";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidSyntax";
+    public override bool AlwaysError => true;
+
+    public InvalidSyntaxError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The syntax of this statement is invalid";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidSyntax";
-        public override bool AlwaysError => true;
-
-        public InvalidSyntaxError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Syntax" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Syntax" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class UnclosedDelimiterError : ErrorTypes
+internal class UnclosedDelimiterError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A delimiter (e.g. Parenthesis, brackets) was not closed";
+    public override string Message { get; }
+    public override string Code => "Aurora.UnclosedDelimiter";
+    public override bool AlwaysError => true;
+
+    public UnclosedDelimiterError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A delimiter (e.g. Parenthesis, brackets) was not closed";
-        public override string Message { get; }
-        public override string Code => "Aurora.UnclosedDelimiter";
-        public override bool AlwaysError => true;
-
-        public UnclosedDelimiterError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Unclosed Delimiter" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Unclosed Delimiter" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class MissingSeparatorError : ErrorTypes
+internal class MissingSeparatorError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A required separator (e.g. ';', '.') is missing";
+    public override string Message { get; }
+    public override string Code => "Aurora.MissingSeparator";
+    public override bool AlwaysError => true;
+
+    public MissingSeparatorError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A required separator (e.g. ';', '.') is missing";
-        public override string Message { get; }
-        public override string Code => "Aurora.MissingSeparator";
-        public override bool AlwaysError => true;
-
-        public MissingSeparatorError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Missing Separator" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Missing Separator" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class UnreachableCodeError : ErrorTypes
+internal class UnreachableCodeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Code exists after a return, halt, or exit point";
+    public override string Message { get; }
+    public override string Code => "Aurora.UnreachableCode";
+
+    public UnreachableCodeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Code exists after a return, halt, or exit point";
-        public override string Message { get; }
-        public override string Code => "Aurora.UnreachableCode";
-
-        public UnreachableCodeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Unreachable Code" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Unreachable Code" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidReturnTypeError : ErrorTypes
+internal class InvalidReturnTypeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Returned value does not match the declared return type";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidReturnType";
+    public override bool AlwaysError => true;
+
+    public InvalidReturnTypeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Returned value does not match the declared return type";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidReturnType";
-        public override bool AlwaysError => true;
-
-        public InvalidReturnTypeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid ReturnType" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid ReturnType" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ModuleNotFoundError : ErrorTypes
+internal class ModuleNotFoundError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The specified module could not be found";
+    public override string Message { get; }
+    public override string Code => "Aurora.ModuleNotFound";
+    public override bool AlwaysError => true;
+
+    public ModuleNotFoundError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The specified module could not be found";
-        public override string Message { get; }
-        public override string Code => "Aurora.ModuleNotFound";
-        public override bool AlwaysError => true;
-
-        public ModuleNotFoundError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Module Not Found" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Module Not Found" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidMethodError : ErrorTypes
+internal class InvalidMethodError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The provided method could not be found";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidMethod";
+    public override bool AlwaysError => true;
+
+    public InvalidMethodError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The provided method could not be found";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidMethod";
-        public override bool AlwaysError => true;
-
-        public InvalidMethodError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Method" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Method" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class FileNotFoundError : ErrorTypes
+internal class FileNotFoundError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The specified file could not be found";
+    public override string Message { get; }
+    public override string Code => "Aurora.FileNotFound";
+    public override bool AlwaysError => true;
+
+    public FileNotFoundError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The specified file could not be found";
-        public override string Message { get; }
-        public override string Code => "Aurora.FileNotFound";
-        public override bool AlwaysError => true;
-
-        public FileNotFoundError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "File Not Found" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "File Not Found" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidAttributeError : ErrorTypes
+internal class InvalidAttributeError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The provided attribute could not be found";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidAttribute";
+    public override bool AlwaysError => true;
+
+    public InvalidAttributeError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The provided attribute could not be found";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidAttribute";
-        public override bool AlwaysError => true;
-
-        public InvalidAttributeError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Attribute" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Attribute" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class InvalidMemberAccessError : ErrorTypes
+internal class InvalidMemberAccessError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "Attempted to access an undefined or restricted class member";
+    public override string Message { get; }
+    public override string Code => "Aurora.InvalidMemberAccess";
+    public override bool AlwaysError => true;
+
+    public InvalidMemberAccessError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "Attempted to access an undefined or restricted class member";
-        public override string Message { get; }
-        public override string Code => "Aurora.InvalidMemberAccess";
-        public override bool AlwaysError => true;
-
-        public InvalidMemberAccessError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Invalid Member Access" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Invalid Member Access" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ConstantRedefinitionError : ErrorTypes
+internal class ConstantRedefinitionError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A constant cannot be redefined after initial assignment";
+    public override string Message { get; }
+    public override string Code => "Aurora.ConstantRedefinition";
+    public override bool AlwaysError => true;
+
+    public ConstantRedefinitionError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A constant cannot be redefined after initial assignment";
-        public override string Message { get; }
-        public override string Code => "Aurora.ConstantRedefinition";
-        public override bool AlwaysError => true;
-
-        public ConstantRedefinitionError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Constant Redefinition" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Constant Redefinition" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class ConfigurationError : ErrorTypes
+internal class ConfigurationError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A problem occured while loading or interpreting the configuration";
+    public override string Message { get; }
+    public override string Code => "Aurora.Configuration";
+    public override bool AlwaysError => true;
+
+    public ConfigurationError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "A problem occured while loading or interpreting the configuration";
-        public override string Message { get; }
-        public override string Code => "Aurora.Configuration";
-        public override bool AlwaysError => true;
-
-        public ConfigurationError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Configuration Error" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Configuration Error" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class MaxExpressionDepthExceededError : ErrorTypes
+internal class MaxExpressionDepthExceededError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The maximum number of expressions per line was exceeded";
+    public override string Message { get; }
+    public override string Code => "Aurora.ExpressionDepthExceeded";
+    public override bool AlwaysError => true;
+
+    public MaxExpressionDepthExceededError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The maximum number of expressions per line was exceeded";
-        public override string Message { get; }
-        public override string Code => "Aurora.ExpressionDepthExceeded";
-        public override bool AlwaysError => true;
-
-        public MaxExpressionDepthExceededError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Expression Depth Exceeded" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Expression Depth Exceeded" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class MaxRecursionDepthExceededError : ErrorTypes
+internal class MaxRecursionDepthExceededError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The system encountered its maximum recursion depth.";
+    public override string Message { get; }
+    public override string Code => "Aurora.RecursionDepthExceeded";
+    public override bool AlwaysError => true;
+
+    public MaxRecursionDepthExceededError(string? message = null, bool user = true)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The system encountered its maximum recursion depth.";
-        public override string Message { get; }
-        public override string Code => "Aurora.RecursionDepthExceeded";
-        public override bool AlwaysError => true;
-
-        public MaxRecursionDepthExceededError(string? message = null, bool user = true)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Recursion Depth Exceeded" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Recursion Depth Exceeded" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class MemoryError : ErrorTypes
+internal class MemoryError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "The system tried to use or access invalid memory.";
+    public override string Message { get; }
+    public override string Code => "Aurora.MemoryError";
+    public override bool AlwaysError => true;
+
+    public MemoryError(string? message = null, bool user = false)
     {
-        public override string Title { get; }
-        public sealed override string Description => "The system tried to use or access invalid memory.";
-        public override string Message { get; }
-        public override string Code => "Aurora.MemoryError";
-        public override bool AlwaysError => true;
-
-        public MemoryError(string? message = null, bool user = false)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-            this.Title = "Memory Error" + (user ? " (User)" : " (System)");
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Memory Error" + (user ? " (User)" : " (System)");
     }
+}
 
-    internal class SystemError : ErrorTypes
+internal class SystemError : ErrorTypes
+{
+    public override string Title => "[SYSTEM]";
+    public sealed override string Description => "The system encountered a problem it could not handle";
+    public override string Message { get; }
+    public override string Code => "Aurora.System";
+    public override bool AlwaysError => true;
+
+    public SystemError(string? message = null)
     {
-        public override string Title => "[SYSTEM]";
-        public sealed override string Description => "The system encountered a problem it could not handle";
-        public override string Message { get; }
-        public override string Code => "Aurora.System";
-        public override bool AlwaysError => true;
-
-        public SystemError(string? message = null)
-        {
-            this.Message = string.IsNullOrEmpty(message) ? this.Description : this.Description + "\n" + message;
-        }
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : this.Description + "\n" + message;
     }
 }

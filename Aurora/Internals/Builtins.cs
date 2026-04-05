@@ -189,7 +189,7 @@ internal static class Builtins
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
                 if (selfAsOptional.HasValue)
-                    return selfAsOptional.Value!.ConvertToStringObject(context);
+                    return new StringObject($"<Optional: {selfAsOptional.Value!.ConvertToCSharpString(context)}>");
 
                 return new StringObject("<Optional: Empty>");
             });
@@ -382,7 +382,7 @@ internal static class Builtins
                 return new StringObject(substring);
             });
         String.AddInstanceMethod(substringMethod);
-        
+
         Method elementAtMethod = new(
             name: "elementAt",
             returnType: String,
@@ -409,7 +409,7 @@ internal static class Builtins
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
         String.AddInstanceMethod(elementAtMethod);
-        
+
         Method findMethod = new(
             name: "find",
             returnType: Optional,
@@ -468,6 +468,7 @@ internal static class Builtins
             unlimitedPositionalArgumentsType: Type,
             parameters:
             [
+                new ParameterDefinition(name: "separator", type: String, defaultValue: new StringObject(" ")),
                 // Todo: Change all SystemError calls to have a unique identifier, to find their location in the code.
                 new ParameterDefinition(name: "end", type: String, defaultValue: new StringObject("\n"))
             ],
@@ -475,13 +476,14 @@ internal static class Builtins
             body: (self, args, context) =>
             {
                 List<RuntimeObject> values = context.GetPositionalArgs();
+                StringObject separatorObject = (StringObject)context.Get("separator");
                 string valueToOutput = string.Empty;
 
                 for (var index = 0; index < values.Count; index++)
                 {
                     var value = values[index];
                     if (index > 0)
-                        valueToOutput += " ";
+                        valueToOutput += separatorObject.Value;
                     valueToOutput += value.ConvertToCSharpString(context);
                 }
 
