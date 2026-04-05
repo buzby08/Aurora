@@ -382,9 +382,9 @@ internal static class Builtins
                 return new StringObject(substring);
             });
         String.AddInstanceMethod(substringMethod);
-
-        Method indexAtMethod = new(
-            name: "indexAt",
+        
+        Method elementAtMethod = new(
+            name: "elementAt",
             returnType: String,
             parameters:
             [
@@ -408,8 +408,8 @@ internal static class Builtins
 
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
-        String.AddInstanceMethod(indexAtMethod);
-
+        String.AddInstanceMethod(elementAtMethod);
+        
         Method findMethod = new(
             name: "find",
             returnType: Int, // Todo: make return optional
@@ -430,6 +430,29 @@ internal static class Builtins
                 return new IntObject(index);
             });
         String.AddInstanceMethod(findMethod);
+
+        Method containsMethod = new(
+            name: "contains",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "substring", type: String)],
+            body: (self, args, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                StringObject containsValue = (StringObject)context.Get("substring");
+
+                return new BooleanObject(selfAsString.Value.Contains(containsValue.Value, StringComparison.Ordinal));
+            });
+        String.AddInstanceMethod(containsMethod);
+
+        Attribute lengthAttribute = new(
+            name: "length",
+            type: Int,
+            valueGetter: (self, context) =>
+            {
+                StringObject selfAsString = (StringObject)self;
+                return new IntObject(selfAsString.Value.Length);
+            });
+        String.AddInstanceAttribute(lengthAttribute);
 
         // Todo: Add other StringType methods
     }
