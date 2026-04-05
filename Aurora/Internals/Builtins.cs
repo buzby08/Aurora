@@ -22,7 +22,7 @@ internal static class Builtins
         Type.Type = Type;
 
         Unit = new Type("Unit", type: Type);
-        
+
         Optional = new Type("Optional", type: Type);
 
         Int = new Type("Int", type: Type);
@@ -179,8 +179,8 @@ internal static class Builtins
                 return defaultObject;
             });
         Optional.AddInstanceMethod(valueOrDefaultMethod);
-        
-        Method toStringMethod = new (
+
+        Method toStringMethod = new(
             name: "toString",
             returnType: String,
             parameters: [],
@@ -190,7 +190,7 @@ internal static class Builtins
 
                 if (selfAsOptional.HasValue)
                     return selfAsOptional.Value!.ConvertToStringObject(context);
-                
+
                 return new StringObject("<Optional: Empty>");
             });
         Optional.AddInstanceMethod(toStringMethod);
@@ -382,7 +382,7 @@ internal static class Builtins
                 return new StringObject(substring);
             });
         String.AddInstanceMethod(substringMethod);
-        
+
         Method indexAtMethod = new(
             name: "indexAt",
             returnType: String,
@@ -394,25 +394,25 @@ internal static class Builtins
             {
                 StringObject selfAsString = (StringObject)self;
                 int length = selfAsString.Value.Length;
-                
+
                 IntObject index = (IntObject)context.Get("index");
 
                 if (index.Value > length)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
                             $"Index cannot be greater than the string length ({index.Value} > {length})"));
-                
+
                 if (index.Value < 0)
                     Errors.AlwaysThrow(new InvalidRangeError(
                         $"Index cannot be less than zero ({index.Value} < 0)"));
-                
+
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
         String.AddInstanceMethod(indexAtMethod);
-        
+
         Method findMethod = new(
             name: "find",
-            returnType: Int,
+            returnType: Int, // Todo: make return optional
             parameters:
             [
                 new ParameterDefinition(name: "value", type: String)
@@ -421,12 +421,12 @@ internal static class Builtins
             {
                 StringObject selfAsString = (StringObject)self;
                 StringObject findValue = (StringObject)context.Get("value");
-                
+
                 int index = selfAsString.Value.IndexOf(findValue.Value, StringComparison.Ordinal);
 
                 if (selfAsString.Value.Length == 0)
                     index = -1;
-                
+
                 return new IntObject(index);
             });
         String.AddInstanceMethod(findMethod);
