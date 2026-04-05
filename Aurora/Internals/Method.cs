@@ -179,7 +179,6 @@ internal class Method
         Dictionary<string, AstList> matchedArgs = new();
 
         bool hasReachedKeywordArgument = false;
-        int positionalIndex = 0;
 
         bool requiresNoValidation = this.Parameters is null
                                     && this.UnlimitedKeywordArgumentsType is null
@@ -205,7 +204,7 @@ internal class Method
                 continue;
             }
 
-            ParameterDefinition? param = this.Parameters!.ElementAtOrDefault(positionalIndex);
+            ParameterDefinition? param = this.Parameters!.ElementAtOrDefault(i);
             if (param is null && this.UnlimitedPositionalArgsType is null)
             {
                 Errors.RaiseError(new ArgumentSurplusError(

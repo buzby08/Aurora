@@ -198,6 +198,8 @@ public static class Program
 
             InternalVariables.LineNumber = 0;
             Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
+            
+            Errors.OutputWarningsAndExit();
         }
         catch (Exception e)
         {

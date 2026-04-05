@@ -30,6 +30,8 @@ internal class Ast
         }
     }
 
+    public string? TargetAsString => _target?.AsString;
+
     private bool _isALiteral { get; set; } = false;
 
     public bool IsALiteral
@@ -53,6 +55,7 @@ internal class Ast
             this.UpdateState();
         }
     }
+    public string? NameAsString => _name?.AsString;
 
     private List<Argument>? _arguments { get; set; }
 
@@ -109,9 +112,9 @@ internal class Ast
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString).GetValue();
+            return type.GetStaticAttribute(_name!.Value.AsString).GetValue(target, context);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue();
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
     }
 
     private RuntimeObject EvaluateLiteral(RuntimeContext context)

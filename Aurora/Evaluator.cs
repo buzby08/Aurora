@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aurora.Internals;
 
 namespace Aurora;
@@ -14,6 +15,9 @@ internal class Evaluator
         foreach (string s in code)
         {
             InternalVariables.LineNumber += 1;
+            
+            if (InternalVariables.LinesToDebug.Contains<int>((int)InternalVariables.LineNumber!))
+                Debugger.Break();
             
             if (string.IsNullOrWhiteSpace(s))
                 continue;
