@@ -55,7 +55,7 @@ internal class Method
     {
         RuntimeContext methodContext = new(parentContext);
 
-        Dictionary<string, AstList> matchedArgs = MatchArgumentsToParameter(args);
+        Dictionary<string, RawMethodArgument> matchedArgs = MatchArgumentsToParameter(args);
 
         bool doNotValidate = this.IsBuiltin && this.Parameters is null;
         if (doNotValidate)
@@ -96,7 +96,7 @@ internal class Method
     }
 
     public void ValidateArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, AstList> matchedArgs,
+        Dictionary<string, RawMethodArgument> matchedArgs,
         RuntimeContext context)
     {
         if (this.Parameters is null)
@@ -109,9 +109,9 @@ internal class Method
             validatedArgs[parameter.Name] = parameter.DefaultValue;
         }
 
-        foreach (var (key, value) in matchedArgs)
+        foreach (var (key, rawArg) in matchedArgs)
         {
-            RuntimeObject argObject = value.Evaluate(context);
+            RuntimeObject argObject = rawArg.Value.Evaluate(context);
             ParameterDefinition? paramDefinition = this.Parameters.FirstOrDefault(x => x.Name == key);
 
             if (paramDefinition is null && this.UnlimitedKeywordArgumentsType is null &&
@@ -133,7 +133,7 @@ internal class Method
     }
 
     private void ValidateUnlimitedKeywordArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, AstList> matchedArgs,
+        Dictionary<string, RawMethodArgument> matchedArgs,
         RuntimeContext context)
     {
         if (this.UnlimitedKeywordArgumentsType is null)
@@ -141,9 +141,9 @@ internal class Method
                 new SystemError("Variadic (Unlimited) keyword arguments cannot be null after entering the " +
                                 "argument validator"));
 
-        foreach ((string key, AstList value) in matchedArgs)
+        foreach ((string key, RawMethodArgument rawArg) in matchedArgs)
         {
-            RuntimeObject valueAsObject = value.Evaluate(context);
+            RuntimeObject valueAsObject = rawArg.Value.Evaluate(context);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
@@ -154,7 +154,7 @@ internal class Method
     }
 
     private void ValidateUnlimitedPositionalArguments(Dictionary<string, RuntimeObject> validatedArgs,
-        Dictionary<string, AstList> matchedArgs,
+        Dictionary<string, RawMethodArgument> matchedArgs,
         RuntimeContext context)
     {
         if (this.UnlimitedPositionalArgsType is null)
@@ -162,9 +162,9 @@ internal class Method
                 new SystemError("Variadic (Unlimited) positional arguments cannot be null after entering the " +
                                 "argument validator"));
 
-        foreach ((string key, AstList value) in matchedArgs)
+        foreach ((string key, RawMethodArgument rawArg) in matchedArgs)
         {
-            RuntimeObject valueAsObject = value.Evaluate(context);
+            RuntimeObject valueAsObject = rawArg.Value.Evaluate(context);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedPositionalArgsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
@@ -174,9 +174,9 @@ internal class Method
         }
     }
 
-    private Dictionary<string, AstList> MatchArgumentsToParameter(List<Argument> arguments)
+    private Dictionary<string, RawMethodArgument> MatchArgumentsToParameter(List<Argument> arguments)
     {
-        Dictionary<string, AstList> matchedArgs = new();
+        Dictionary<string, RawMethodArgument> matchedArgs = new();
 
         bool hasReachedKeywordArgument = false;
 
@@ -214,7 +214,9 @@ internal class Method
 
             if (param is null && this.UnlimitedPositionalArgsType is not null)
             {
-                matchedArgs[$"__POSITIONAL_ARG_{i}"] = arg.ValueAsAsts();
+                matchedArgs[$"__POSITIONAL_ARG_{i}"] = new RawMethodArgument(
+                    name: $"__POSITIONAL_ARG_{i}", 
+                    value: arg.ValueAsAsts());
                 continue;
             }
 
@@ -224,36 +226,47 @@ internal class Method
         return matchedArgs;
     }
 
-    private void AddPositionalArg(Dictionary<string, AstList> matchedArgs, string? key, AstList value, int index)
+    private void AddPositionalArg(Dictionary<string, RawMethodArgument> matchedArgs, string? key, AstList value, int index)
     {
         if (this.UnlimitedPositionalArgsType is not null)
         {
-            matchedArgs[$"__POSITIONAL_ARG_{index}"] = value;
+            matchedArgs[$"__POSITIONAL_ARG_{index}"] = new RawMethodArgument(
+                name: $"__POSITIONAL_ARG_{index}",
+                value: value);
             return;
         }
 
-        matchedArgs[key!] = value;
+        matchedArgs[key!] = new RawMethodArgument(
+            name: key!,
+            value: value);
     }
 
-    private void AddKeywordArgument(Dictionary<string, AstList> matchedArgs, Argument arg)
+    private void AddKeywordArgument(Dictionary<string, RawMethodArgument> matchedArgs, Argument arg)
     {
         if (this.UnlimitedKeywordArgumentsType is null)
         {
-            matchedArgs[arg.Keyword!.Value.AsString] = arg.ValueAsAsts();
-            return;
+            matchedArgs[arg.Keyword!.Value.AsString] = new RawMethodArgument(
+                name: arg.Keyword!.Value.AsString,
+                value: arg.ValueAsAsts(),
+                keywordPosition: arg.KeywordPosition);
         }
     }
 
-    private Dictionary<string, AstList> HandleNoValidationArgumentMatching(List<Argument> arguments)
+    private Dictionary<string, RawMethodArgument> HandleNoValidationArgumentMatching(List<Argument> arguments)
     {
         if (!this.IsBuiltin)
             Errors.AlwaysThrow(new SystemError("Method parameters is unvalidated, for a non-builtin method."));
 
-        Dictionary<string, AstList> matchedArgs = new();
+        Dictionary<string, RawMethodArgument> matchedArgs = new();
 
         foreach (var arg in arguments)
         {
-            matchedArgs.Add(arg.Keyword?.AsString ?? Guid.NewGuid().ToString(), arg.ValueAsAsts());
+            string keyword = arg.Keyword?.AsString ?? Guid.NewGuid().ToString();
+            
+            matchedArgs.Add(keyword, new RawMethodArgument(
+                name: keyword,
+                value: arg.ValueAsAsts(),
+                keywordPosition: arg.KeywordPosition));
         }
 
         return matchedArgs;

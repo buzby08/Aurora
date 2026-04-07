@@ -145,6 +145,7 @@ public static class Program
         InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
         InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
         InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
+        InternalVariables.GlobalContext.Create("Optional", Builtins.Optional);
     }
 
     public static void Main(string[] args)
@@ -198,7 +199,7 @@ public static class Program
 
             InternalVariables.LineNumber = 0;
             Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
-            
+
             Errors.OutputWarningsAndExit();
         }
         catch (Exception e)

@@ -7,6 +7,7 @@ internal class AstList : IEnumerable<Ast>
 {
     public readonly List<Ast> Data = [];
     public int Count => this.Data.Count;
+    public int? Position => this.Data.ElementAtOrDefault(0)?.Position;
 
     public void Add(Ast item)
     {

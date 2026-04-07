@@ -62,16 +62,17 @@ internal static class Builtins
             {
                 var targetType = (Type)self;
 
-                foreach (var (key, variable) in args)
+                foreach (var (key, rawVar) in args)
                 {
-                    RuntimeObject variableObject = Evaluator.EvaluateAstList(variable, context.Parent!);
+                    RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
 
                     if (variableObject.Type != targetType)
                         Errors.AlwaysThrow(
                             new TypeMismatchError(
-                                $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"));
+                                $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
+                            position: rawVar.ValuePosition);
 
-                    context.Parent!.Create(key, variableObject);
+                    context.Parent!.Create(rawVar.Name, variableObject);
                 }
 
                 return new UnitObject();
@@ -87,15 +88,16 @@ internal static class Builtins
             {
                 var targetType = (Type)self;
 
-                foreach (var (key, variable) in args)
+                foreach (var (key, rawVar) in args)
                 {
-                    RuntimeObject variableObject = Evaluator.EvaluateAstList(variable, context.Parent!);
+                    RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
                     if (variableObject.Type != targetType)
                         Errors.AlwaysThrow(
                             new TypeMismatchError(
-                                $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"));
+                                $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
+                            position: rawVar.ValuePosition);
 
-                    context.Set(key, variableObject);
+                    context.Set(rawVar.Name, variableObject);
                 }
 
                 return new UnitObject();
@@ -132,22 +134,23 @@ internal static class Builtins
             });
         Optional.AddInstanceAttribute(isEmptyAttribute);
 
-        Method createMethod = new(
-            name: "create",
-            returnType: Unit,
-            parameters: null,
+        Method fromMethod = new(
+            name: "of",
+            returnType: Optional,
+            parameters: [new ParameterDefinition(name: "value", type: Type)],
             body: (self, args, context) =>
             {
-                foreach (var (key, variable) in args)
-                {
-                    RuntimeObject variableObject = Evaluator.EvaluateAstList(variable, context.Parent!);
-
-                    context.Parent!.Create(key, new OptionalObject(variableObject));
-                }
-
-                return new UnitObject();
+                RuntimeObject valueObject = context.Get("value");
+                return new OptionalObject(valueObject);
             });
-        Optional.AddStaticMethod(createMethod);
+        Optional.AddStaticMethod(fromMethod);
+
+        Method emptyOptionalMethod = new(
+            name: "empty",
+            returnType: Optional,
+            parameters: [],
+            body: (self, args, context) => new OptionalObject(null));
+        Optional.AddStaticMethod(emptyOptionalMethod);
 
         Attribute valueAttribute = new(
             name: "value",
@@ -189,9 +192,9 @@ internal static class Builtins
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
                 if (selfAsOptional.HasValue)
-                    return new StringObject($"<Optional: {selfAsOptional.Value!.ConvertToCSharpString(context)}>");
+                    return new StringObject($"Optional({selfAsOptional.Value!.ConvertToCSharpString(context)})");
 
-                return new StringObject("<Optional: Empty>");
+                return new StringObject("Optional(Empty)");
             });
         Optional.AddInstanceMethod(toStringMethod);
     }
@@ -317,9 +320,9 @@ internal static class Builtins
                 // Todo: Get all positional args from context, and add to full string
                 string fullString = string.Empty;
 
-                foreach ((string key, AstList value) in args)
+                foreach ((string key, RawMethodArgument rawArg) in args)
                 {
-                    RuntimeObject valueAsObject = value.Evaluate(context.Parent!);
+                    RuntimeObject valueAsObject = rawArg.Value.Evaluate(context.Parent!);
                     StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context);
 
                     if (fullString != string.Empty)

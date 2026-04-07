@@ -220,27 +220,16 @@ internal class Tokenizer
     {
         if (this.IsEof()) return new EofToken();
 
-        string fullSymbol = string.Empty;
         char? currentChar = this.GetCurrentChar();
+        this.Advance();
 
-        if (currentChar is null ||
-            (!SymbolToken.VARS.Contains($"{currentChar}") && currentChar != '.' && currentChar != '='))
-        {
-            this.Error($"Error - is not symbol character - '{currentChar}'");
-        }
+        if (currentChar == '=')
+            return new EqualsToken();
 
-        while (currentChar is not null &&
-               (SymbolToken.VARS.Contains($"{currentChar}") || currentChar == '.' || currentChar == '='))
-        {
-            fullSymbol += currentChar;
-            this.Advance();
-            currentChar = this.GetCurrentChar();
-        }
+        if (currentChar == '.')
+            return new DotToken();
 
-        if ("=" == fullSymbol) return new EqualsToken();
-        if ("." == fullSymbol) return new DotToken().Initialise();
-
-        return new SymbolToken().Initialise(fullSymbol);
+        return new SymbolToken().Initialise(currentChar!.Value.ToString());
     }
 
     /// <summary>

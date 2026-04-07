@@ -20,6 +20,7 @@ internal class TokenList : IEnumerable<TokenListItem>
     private int totalChars;
 
     public int Count => _data.Count;
+    public int? Position => this._data.ElementAtOrDefault(0).StartCharPosition;
 
     public void Add(Token token)
     {

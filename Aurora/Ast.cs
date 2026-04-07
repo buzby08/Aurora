@@ -69,6 +69,17 @@ internal class Ast
         }
     }
 
+    public int? Position
+    {
+        get
+        {
+            if (this._target is not null)
+                return this._target!.Value.StartCharPosition;
+
+            return this._name?.StartCharPosition;
+        }
+    }
+
     public RuntimeObject Evaluate(RuntimeContext context, RuntimeObject? target = null)
     {
         bool isPartialOperation = this._state is AstStates.PartialAttributeAccess or AstStates.PartialMethodCall;
