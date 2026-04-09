@@ -15,6 +15,7 @@ internal static class Builtins
     public static Type Terminal = null!;
     public static Type BooleanOutputStyles = null!;
     public static Type Optional = null!;
+    public static Type Math = null!;
 
     public static void InitialiseTypes()
     {
@@ -39,6 +40,8 @@ internal static class Builtins
 
         BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
 
+        Math = new Type("Math", type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -48,6 +51,7 @@ internal static class Builtins
         InitialiseNullType();
         InitialiseTerminalType();
         InitialiseBooleanOutputStylesType();
+        InitialiseMathType();
 
         // Todo: Initialise all types
     }
@@ -163,7 +167,7 @@ internal static class Builtins
                     Errors.AlwaysThrow(new UnsupportedOperationError(
                         $"Cannot access the value from an optional type where the object does not contain a value"));
 
-                return selfAsOptional.Value;
+                return selfAsOptional.Value!;
             });
         Optional.AddInstanceAttribute(valueAttribute);
 
@@ -177,7 +181,7 @@ internal static class Builtins
                 RuntimeObject defaultObject = context.Get("default");
 
                 if (selfAsOptional.HasValue)
-                    return selfAsOptional.Value;
+                    return selfAsOptional.Value!;
 
                 return defaultObject;
             });
@@ -771,5 +775,28 @@ internal static class Builtins
         Null.AddInstanceMethod(toString);
 
         // Todo: Add more NullType methods
+    }
+
+    public static void InitialiseMathType()
+    {
+        Method truncateMethod = new(
+            name: "truncate",
+            returnType: Float,
+            parameters: [
+                new ParameterDefinition(name: "value", type: Float),
+                new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0))
+            ],
+            body: (self, args, context) => MathFunctions.Truncate(context));
+        Math.AddStaticMethod(truncateMethod);
+        
+        Method roundMethod = new(
+            name: "round",
+            returnType: Float,
+            parameters: [
+                new ParameterDefinition(name: "value", type: Float),
+                new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0))
+            ],
+            body: (self, args, context) => MathFunctions.Round(context));
+        Math.AddStaticMethod(roundMethod);
     }
 }

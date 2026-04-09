@@ -23,7 +23,7 @@ internal class FloatObject : RuntimeObject
         bool isAFloatValue = decimal.TryParse(value, out decimal floatValue);
 
         if (!isAFloatValue)
-            Errors.AlwaysThrow(new SystemError($"`{value}` is not a valid float."));
+            Errors.AlwaysThrow(new SystemError($"SE_002 `{value}` is not a valid float."));
 
         Value = floatValue;
 

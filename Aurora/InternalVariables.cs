@@ -30,6 +30,8 @@ internal static class InternalVariables
 
     public static bool EasterEggs = true;
 
+    public static bool DisableErrors = false;
+
     public static int[] LinesToDebug = [4];
 
     /// <summary>

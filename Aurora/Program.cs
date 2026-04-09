@@ -146,6 +146,7 @@ public static class Program
         InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
         InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
         InternalVariables.GlobalContext.Create("Optional", Builtins.Optional);
+        InternalVariables.GlobalContext.Create("Math", Builtins.Math);
     }
 
     public static void Main(string[] args)
@@ -214,7 +215,7 @@ public static class Program
 
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
-                new SystemError(InternalVariables.InlineStackTrace ? fullError : e.Message));
+                new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)));
         }
     }
 }

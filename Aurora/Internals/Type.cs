@@ -25,6 +25,7 @@ internal class Type : RuntimeObject
 
     public bool IsSubclassOf(Type type)
     {
+        if (this.Type == this && this != type) return false;
         return this == type || this.Type.IsSubclassOf(type);
     }
 

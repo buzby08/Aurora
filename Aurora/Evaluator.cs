@@ -18,11 +18,18 @@ internal class Evaluator
             
             if (InternalVariables.LinesToDebug.Contains<int>((int)InternalVariables.LineNumber!))
                 Debugger.Break();
+
+            int commentStart = s.IndexOf("//", StringComparison.Ordinal);
             
-            if (string.IsNullOrWhiteSpace(s))
+            string line = s;
+            
+            if (commentStart != -1)
+                line = s[0..commentStart];
+            
+            if (string.IsNullOrWhiteSpace(line))
                 continue;
             
-            Evaluator evaluator = new(s);
+            Evaluator evaluator = new(line);
             AstList astList = evaluator.ParseTokenList();
             EvaluateAstList(astList, context);
         }

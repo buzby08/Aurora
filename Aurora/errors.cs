@@ -29,6 +29,9 @@ internal class Errors
     public static void AlwaysThrow(ErrorTypes error, int? position = null)
     {
         RaiseError(error, position, alwaysThrow: true);
+        
+        if (InternalVariables.DisableErrors)
+            return;
         Environment.Exit(1);
         throw new UnreachableException();
     }
@@ -47,17 +50,14 @@ internal class Errors
 
         bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
 
-        if (!isError)
+        if (!isError || InternalVariables.DisableErrors)
         {
             Logs.Warning(outputMessage);
             Warnings.Add("[WARNING]" + outputMessage);
             return;
         }
-
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("[ERROR] " + outputMessage);
-        Console.ResetColor();
-        Logs.Warning(outputMessage);
+        
+        Logs.Error(outputMessage);
 
         Environment.Exit(1);
     }

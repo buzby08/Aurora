@@ -115,7 +115,7 @@ internal class Ast
             method = type.GetStaticMethod(_name!.Value.AsString, _name?.StartCharPosition);
 
         if (target is not Internals.Type)
-            method = target.Type.GetInstanceMethod(_name!.Value.AsString);
+            method = target.Type.GetInstanceMethod(_name!.Value.AsString, _name?.StartCharPosition);
 
         return method.Invoke(target, _arguments!, context);
     }
@@ -123,7 +123,7 @@ internal class Ast
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString).GetValue(target, context);
+            return type.GetStaticAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
 
         return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
     }

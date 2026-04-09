@@ -7,9 +7,9 @@ internal static class Logs
 {
     public static bool AllowDebug = false;
     public static bool AllowVerbose = false;
-    public static bool AllowWarning = false;
+    public static bool AllowWarning = true;
     public static bool NoConsole = false;
-    public static bool ShowTimestamp = false;
+    public static bool ShowTimestamp = true;
     public static string LogFilePath = "aurora.LOG";
 
     private static bool _clearFile = true;
@@ -25,20 +25,23 @@ internal static class Logs
 
     private static void LogOutput(string message)
     {
-        message = message
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        string fullMessage = ShowTimestamp ? $"{timestamp}: {message}" : message;
+        
+        if (!NoConsole)
+            Console.WriteLine(message);
+        
+        fullMessage = fullMessage
             .Replace("\\", @"\\")
             .Replace("\n", "\\n")
             .Replace("\r", "\\r")
             .Replace("\t", "\\t");
         
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        string fullMessage = ShowTimestamp ? $"{timestamp}: {message}" : message;
+        if (!File.Exists(LogFilePath))
+            File.Create(LogFilePath).Dispose();
+        
         using StreamWriter writer = File.AppendText(LogFilePath);
         writer.WriteLine(fullMessage);
-
-        if (NoConsole) { return; }
-
-        Console.WriteLine(message);
     }
 
     private static void ClearLogFile()
@@ -86,6 +89,13 @@ internal static class Logs
 
         Console.ForegroundColor = ConsoleColor.Yellow;
         LogOutput($"[WARNING] {message}");
+        Console.ResetColor();
+    }
+
+    public static void Error(string message)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        LogOutput($"[ERROR] {message}");
         Console.ResetColor();
     }
 
