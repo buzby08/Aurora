@@ -223,6 +223,8 @@ internal class BracketToken : Token
         { "normal", ImmutableHashSet.Create('(', ')') }
     };
 
+    public static readonly char[] VALUES = ['(', ')', '[', ']', '{', '}'];
+
     public static readonly ImmutableHashSet<char> OPEN_BRACKETS = ImmutableHashSet.Create('(', '[', '{');
     public static readonly ImmutableHashSet<char> CLOSED_BRACKETS = ImmutableHashSet.Create(')', ']', '}');
 
