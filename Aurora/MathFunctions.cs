@@ -30,7 +30,7 @@ internal static class MathFunctions
 
         bool isPositivePlaces = places > 0;
         bool valueAfterDecimalLengthValid = valueAfterDecimalString.Length > places;
-        bool valueBeforeDecimalLengthValid = valueBeforeDecimalString.Length > places*-1;
+        bool valueBeforeDecimalLengthValid = valueBeforeDecimalString.Length > places * -1;
 
         if (isPositivePlaces && valueAfterDecimalLengthValid)
         {
@@ -39,7 +39,7 @@ internal static class MathFunctions
             return valueBeforeDecimalString + '.' + right;
         }
 
-        if (!isPositivePlaces &&valueBeforeDecimalLengthValid)
+        if (!isPositivePlaces && valueBeforeDecimalLengthValid)
         {
             char[] left = valueBeforeDecimalString.ToArray();
             int indexToKeep = valueBeforeDecimalString.Length - 1 + places;
@@ -58,7 +58,7 @@ internal static class MathFunctions
 
         if (isPositivePlaces && !valueAfterDecimalLengthValid)
             return value.ToString(CultureInfo.InvariantCulture);
-        
+
         throw new UnreachableException();
     }
 }
