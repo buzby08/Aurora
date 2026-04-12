@@ -61,37 +61,4 @@ internal static class MathFunctions
         
         throw new UnreachableException();
     }
-
-    public static FloatObject Round(RuntimeContext context)
-    {
-        IntObject placesObject = (IntObject)context.GetParam("places");
-        FloatObject valueObject = (FloatObject)context.GetParam("value");
-        
-        return new FloatObject(Round(placesObject.Value, valueObject.Value));
-    }
-
-    public static string Round(int places, decimal value)
-    {
-        string valueAsString = value.ToString(CultureInfo.InvariantCulture);
-
-        if (!valueAsString.Contains('.'))
-            valueAsString += ".0";
-
-        string[] parts = valueAsString.Split('.');
-        string valueBeforeDecimalString = parts[0];
-        char[] left = valueBeforeDecimalString.ToCharArray();
-        string valueAfterDecimalString = parts[1];
-        char[] right = valueAfterDecimalString.ToCharArray();
-
-        bool isPositivePlaces = places > 0;
-        bool placesTooLarge = places >= right.Length;
-        bool placesTooSmall = places * -1 > left.Length;
-
-        if (placesTooLarge) return valueAsString;
-        if (placesTooSmall) return "0";
-
-        int placesFromStart = left.Length - 1 + places;
-
-        int decimalLocation = left.Length;
-    }
 }
