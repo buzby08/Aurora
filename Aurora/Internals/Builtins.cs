@@ -789,15 +789,5 @@ internal static class Builtins
             ],
             body: (self, args, context) => MathFunctions.Truncate(context));
         Math.AddStaticMethod(truncateMethod);
-        
-        Method roundMethod = new(
-            name: "round",
-            returnType: Float,
-            parameters: [
-                new ParameterDefinition(name: "value", type: Float),
-                new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0))
-            ],
-            body: (self, args, context) => MathFunctions.Round(context));
-        Math.AddStaticMethod(roundMethod);
     }
 }
