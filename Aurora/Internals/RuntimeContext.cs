@@ -3,11 +3,13 @@ using Aurora.BuiltinMethods;
 
 namespace Aurora.Internals;
 
-internal class RuntimeContext(RuntimeContext? parent)
+internal class RuntimeContext(string fileName, int lineNumber, RuntimeContext? parent = null)
 {
     private readonly Dictionary<string, RuntimeObject> _variables = [];
 
     public RuntimeContext? Parent { get; } = parent;
+    public string FileName { get; } = fileName;
+    public int LineNumber { get; } = lineNumber;
 
     private RuntimeObject? GetOrNull(string name)
     {
