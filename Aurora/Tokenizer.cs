@@ -229,6 +229,9 @@ internal class Tokenizer
         if (currentChar == '.')
             return new DotToken();
 
+        if (BracketToken.VALUES.Contains((char)currentChar!))
+            return new BracketToken().Initialise((char)currentChar);
+
         return new SymbolToken().Initialise(currentChar!.Value.ToString());
     }
 
