@@ -782,7 +782,8 @@ internal static class Builtins
         Method truncateMethod = new(
             name: "truncate",
             returnType: Float,
-            parameters: [
+            parameters:
+            [
                 new ParameterDefinition(name: "value", type: Float),
                 new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0))
             ],
