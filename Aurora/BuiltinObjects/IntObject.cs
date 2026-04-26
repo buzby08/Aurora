@@ -18,7 +18,7 @@ internal class IntObject : RuntimeObject
     {
         bool isAnInt = int.TryParse(value, out int intValue);
         if (!isAnInt)
-            Errors.AlwaysThrow(new SystemError($"`{value}` is not an integer."));
+            Errors.AlwaysThrow(new SystemError($"`{value}` is not an integer."), null);
 
         Value = intValue;
         Type = Builtins.Int;
