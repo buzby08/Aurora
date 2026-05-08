@@ -56,7 +56,7 @@ internal static class Builtins
         // Todo: Initialise all types
     }
 
-    public static void InitialiseTypeType()
+    private static void InitialiseTypeType()
     {
         Method typeCreateMethod = new(
             name: "create",
@@ -64,9 +64,9 @@ internal static class Builtins
             parameters: null,
             body: (self, args, context) =>
             {
-                var targetType = (Type)self;
+                Type targetType = (Type)self;
 
-                foreach (var (key, rawVar) in args)
+                foreach (var (_, rawVar) in args)
                 {
                     RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
 
@@ -74,7 +74,7 @@ internal static class Builtins
                         Errors.AlwaysThrow(
                             new TypeMismatchError(
                                 $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                            position: rawVar.ValuePosition);
+                            context, position: rawVar.ValuePosition);
 
                     context.Parent!.Create(rawVar.Name, variableObject);
                 }
@@ -90,16 +90,16 @@ internal static class Builtins
             parameters: null,
             body: (self, args, context) =>
             {
-                var targetType = (Type)self;
+                Type targetType = (Type)self;
 
-                foreach (var (key, rawVar) in args)
+                foreach (var (_, rawVar) in args)
                 {
                     RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
                     if (variableObject.Type != targetType)
                         Errors.AlwaysThrow(
                             new TypeMismatchError(
                                 $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                            position: rawVar.ValuePosition);
+                            context, position: rawVar.ValuePosition);
 
                     context.Set(rawVar.Name, variableObject);
                 }
@@ -113,7 +113,7 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, _) =>
             {
                 if (self is Type selfType)
                     return new StringObject($"<{self.Type.Name} {selfType.Name}>");
@@ -125,12 +125,12 @@ internal static class Builtins
         Type.AddStaticMethod(toString);
     }
 
-    public static void InitialiseOptionalType()
+    private static void InitialiseOptionalType()
     {
         Attribute isEmptyAttribute = new(
             name: "isEmpty",
             type: Boolean,
-            valueGetter: (self, context) =>
+            valueGetter: (self, _) =>
             {
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
@@ -141,8 +141,8 @@ internal static class Builtins
         Method fromMethod = new(
             name: "of",
             returnType: Optional,
-            parameters: [new ParameterDefinition(name: "value", type: Type)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "value", type: Type),],
+            body: (_, _, context) =>
             {
                 RuntimeObject valueObject = context.Get("value");
                 return new OptionalObject(valueObject);
@@ -153,7 +153,7 @@ internal static class Builtins
             name: "empty",
             returnType: Optional,
             parameters: [],
-            body: (self, args, context) => new OptionalObject(null));
+            body: (_, _, _) => new OptionalObject(null));
         Optional.AddStaticMethod(emptyOptionalMethod);
 
         Attribute valueAttribute = new(
@@ -165,7 +165,8 @@ internal static class Builtins
 
                 if (!selfAsOptional.HasValue)
                     Errors.AlwaysThrow(new UnsupportedOperationError(
-                        $"Cannot access the value from an optional type where the object does not contain a value"));
+                            "Cannot access the value from an optional type where the object does not contain a value"),
+                        context);
 
                 return selfAsOptional.Value!;
             });
@@ -174,8 +175,8 @@ internal static class Builtins
         Method valueOrDefaultMethod = new(
             name: "valueOrDefault",
             returnType: Type,
-            parameters: [new ParameterDefinition(name: "default", type: Type)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "default", type: Type),],
+            body: (self, _, context) =>
             {
                 OptionalObject selfAsOptional = (OptionalObject)self;
                 RuntimeObject defaultObject = context.Get("default");
@@ -191,7 +192,7 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, context) =>
             {
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
@@ -203,13 +204,13 @@ internal static class Builtins
         Optional.AddInstanceMethod(toStringMethod);
     }
 
-    public static void InitialiseIntType()
+    private static void InitialiseIntType()
     {
         Method addMethod = new(
             name: "add",
             returnType: Int,
-            parameters: [new ParameterDefinition(name: "other", type: Int)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
                 IntObject right = (IntObject)context.Get("other");
@@ -223,8 +224,8 @@ internal static class Builtins
         Method subtractMethod = new(
             name: "subtract",
             returnType: Int,
-            parameters: [new ParameterDefinition(name: "other", type: Int)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
                 IntObject right = (IntObject)context.Get("other");
@@ -238,8 +239,8 @@ internal static class Builtins
         Method multiplyByMethod = new(
             name: "multiplyBy",
             returnType: Int,
-            parameters: [new ParameterDefinition(name: "other", type: Int)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
                 IntObject right = (IntObject)context.Get("other");
@@ -253,8 +254,8 @@ internal static class Builtins
         Method divideByMethod = new(
             name: "divideBy",
             returnType: Float,
-            parameters: [new ParameterDefinition(name: "other", type: Int)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
                 IntObject right = (IntObject)context.Get("other");
@@ -269,7 +270,7 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, _) =>
             {
                 IntObject selfAsInt = (IntObject)self;
 
@@ -281,13 +282,13 @@ internal static class Builtins
         // Todo: Add other IntType methods
     }
 
-    public static void InitialiseStringType()
+    private static void InitialiseStringType()
     {
         Method stringAddMethod = new(
             name: "add",
             returnType: String,
-            parameters: [new ParameterDefinition(name: "other", type: String)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: String),],
+            body: (self, _, context) =>
             {
                 StringObject left = (StringObject)self;
                 StringObject right = (StringObject)context.Get("other");
@@ -304,7 +305,7 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, _) =>
             {
                 StringObject selfAsString = (StringObject)self;
 
@@ -318,13 +319,13 @@ internal static class Builtins
             returnType: String,
             unlimitedPositionalArgumentsType: Type,
             unlimitedKeywordArgumentsType: null,
-            body: (self, args, context) =>
+            body: (_, args, context) =>
             {
                 // Todo: Change how positional args stored in context (naming)
                 // Todo: Get all positional args from context, and add to full string
                 string fullString = string.Empty;
 
-                foreach ((string key, RawMethodArgument rawArg) in args)
+                foreach ((string _, RawMethodArgument rawArg) in args)
                 {
                     RuntimeObject valueAsObject = rawArg.Value.Evaluate(context.Parent!);
                     StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context);
@@ -343,8 +344,8 @@ internal static class Builtins
         Method instanceConcatMethod = new(
             name: "concat",
             returnType: String,
-            parameters: [new ParameterDefinition(name: "other", type: Type)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "other", type: Type),],
+            body: (self, _, context) =>
             {
                 StringObject left = (StringObject)self;
 
@@ -362,9 +363,9 @@ internal static class Builtins
             parameters:
             [
                 new ParameterDefinition(name: "start", type: Int),
-                new ParameterDefinition(name: "end", type: Int)
+                new ParameterDefinition(name: "end", type: Int),
             ],
-            body: (self, args, context) =>
+            body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
                 IntObject start = (IntObject)context.Get("start");
@@ -375,15 +376,18 @@ internal static class Builtins
                 if (start.Value > end.Value)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
-                            $"Start cannot be greater than end value ({start.Value} > {end.Value})"));
+                            $"Start cannot be greater than end value ({start.Value} > {end.Value})"),
+                        context);
 
                 if (start.Value < 0)
-                    Errors.AlwaysThrow(new InvalidRangeError($"Start cannot be less than zero ({start.Value} < 0)"));
+                    Errors.AlwaysThrow(new InvalidRangeError($"Start cannot be less than zero ({start.Value} < 0)"),
+                        context);
 
                 if (end.Value > selfLength)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
-                            $"End cannot be greater than the string length ({end.Value} > {selfLength})"));
+                            $"End cannot be greater than the string length ({end.Value} > {selfLength})"),
+                        context);
 
                 string substring = selfAsString.Value[start.Value..end.Value];
                 return new StringObject(substring);
@@ -395,9 +399,9 @@ internal static class Builtins
             returnType: String,
             parameters:
             [
-                new ParameterDefinition(name: "index", type: Int)
+                new ParameterDefinition(name: "index", type: Int),
             ],
-            body: (self, args, context) =>
+            body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
                 int length = selfAsString.Value.Length;
@@ -407,11 +411,13 @@ internal static class Builtins
                 if (index.Value > length)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
-                            $"Index cannot be greater than the string length ({index.Value} > {length})"));
+                            $"Index cannot be greater than the string length ({index.Value} > {length})"),
+                        context);
 
                 if (index.Value < 0)
                     Errors.AlwaysThrow(new InvalidRangeError(
-                        $"Index cannot be less than zero ({index.Value} < 0)"));
+                            $"Index cannot be less than zero ({index.Value} < 0)"),
+                        context);
 
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
@@ -422,9 +428,9 @@ internal static class Builtins
             returnType: Optional,
             parameters:
             [
-                new ParameterDefinition(name: "value", type: String)
+                new ParameterDefinition(name: "value", type: String),
             ],
-            body: (self, args, context) =>
+            body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
                 StringObject findValue = (StringObject)context.Get("value");
@@ -444,8 +450,8 @@ internal static class Builtins
         Method containsMethod = new(
             name: "contains",
             returnType: Boolean,
-            parameters: [new ParameterDefinition(name: "substring", type: String)],
-            body: (self, args, context) =>
+            parameters: [new ParameterDefinition(name: "substring", type: String),],
+            body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
                 StringObject containsValue = (StringObject)context.Get("substring");
@@ -457,7 +463,7 @@ internal static class Builtins
         Attribute lengthAttribute = new(
             name: "length",
             type: Int,
-            valueGetter: (self, context) =>
+            valueGetter: (self, _) =>
             {
                 StringObject selfAsString = (StringObject)self;
                 return new IntObject(selfAsString.Value.Length);
@@ -467,7 +473,7 @@ internal static class Builtins
         // Todo: Add other StringType methods
     }
 
-    public static void InitialiseTerminalType()
+    private static void InitialiseTerminalType()
     {
         Method writeMethod = new(
             name: "writeLine",
@@ -477,29 +483,10 @@ internal static class Builtins
             [
                 new ParameterDefinition(name: "separator", type: String, defaultValue: new StringObject(" ")),
                 // Todo: Change all SystemError calls to have a unique identifier, to find their location in the code.
-                new ParameterDefinition(name: "end", type: String, defaultValue: new StringObject("\n"))
+                new ParameterDefinition(name: "end", type: String, defaultValue: new StringObject("\n")),
             ],
             unlimitedKeywordArgumentsType: null,
-            body: (self, args, context) =>
-            {
-                List<RuntimeObject> values = context.GetPositionalArgs();
-                StringObject separatorObject = (StringObject)context.Get("separator");
-                string valueToOutput = string.Empty;
-
-                for (var index = 0; index < values.Count; index++)
-                {
-                    var value = values[index];
-                    if (index > 0)
-                        valueToOutput += separatorObject.Value;
-                    valueToOutput += value.ConvertToCSharpString(context);
-                }
-
-                StringObject defaultParam = (StringObject)context.GetParam("end");
-
-                Console.Write(valueToOutput + defaultParam.Value);
-
-                return new UnitObject();
-            });
+            body: (_, _, context) => InternalMethods.Terminal.WriteLine(context));
 
         Terminal.AddStaticMethod(writeMethod);
 
@@ -509,21 +496,9 @@ internal static class Builtins
             parameters:
             [
                 new ParameterDefinition(name: "message", type: String, defaultValue: new StringObject("")),
-                new ParameterDefinition(name: "default", type: String, nullable: true, defaultValue: new NullObject())
+                new ParameterDefinition(name: "default", type: String, nullable: true, defaultValue: new NullObject()),
             ],
-            body: (self, args, context) =>
-            {
-                StringObject message = (StringObject)context.GetParam("message");
-                RuntimeObject defaultValueObject = context.GetParam("default");
-
-                Console.Write(message.Value);
-                string? inputtedValue = Console.ReadLine();
-
-                if (defaultValueObject is not NullObject && string.IsNullOrWhiteSpace(inputtedValue))
-                    return (StringObject)defaultValueObject;
-
-                return new StringObject(inputtedValue ?? string.Empty);
-            });
+            body: (_, _, context) => InternalMethods.Terminal.ReadLine(context));
 
         Terminal.AddStaticMethod(readMethod);
 
@@ -534,54 +509,9 @@ internal static class Builtins
             [
                 new ParameterDefinition(name: "message", type: String, defaultValue: new StringObject("")),
                 new ParameterDefinition(name: "min", type: Int, nullable: true, defaultValue: new NullObject()),
-                new ParameterDefinition(name: "max", type: Int, nullable: true, defaultValue: new NullObject())
+                new ParameterDefinition(name: "max", type: Int, nullable: true, defaultValue: new NullObject()),
             ],
-            body: (self, args, context) =>
-            {
-                StringObject message = (StringObject)context.GetParam("message");
-                RuntimeObject minObject = context.GetParam("min");
-                RuntimeObject maxObject = context.GetParam("max");
-
-                int? minValue = minObject is NullObject ? null : ((IntObject)minObject!).Value;
-                int? maxValue = maxObject is NullObject ? null : ((IntObject)maxObject!).Value;
-
-                while (true)
-                {
-                    Console.Write(message.Value);
-                    string? inputtedValue = Console.ReadLine();
-                    bool isAnInt = int.TryParse(inputtedValue, out int inputtedInt);
-                    bool satisfiesMinRequirement = minValue is null || inputtedInt >= minValue;
-                    bool satisfiesMaxRequirement = maxValue is null || inputtedInt <= maxValue;
-
-                    if (isAnInt && satisfiesMaxRequirement && satisfiesMinRequirement)
-                        return new IntObject(inputtedInt);
-
-                    if (!isAnInt)
-                    {
-                        Console.WriteLine("Please input an integer value");
-                        continue;
-                    }
-
-                    if (!satisfiesMaxRequirement && !satisfiesMinRequirement)
-                    {
-                        Console.WriteLine(
-                            $"Please input a value greater than or equal to {minValue} and less than or equal to {maxValue}");
-                        continue;
-                    }
-
-                    if (!satisfiesMaxRequirement)
-                    {
-                        Console.WriteLine($"Please enter a value less than or equal to {maxValue}");
-                        continue;
-                    }
-
-                    if (!satisfiesMinRequirement)
-                    {
-                        Console.WriteLine($"Please enter a value greater than or equal to {minValue}");
-                        continue;
-                    }
-                }
-            });
+            body: (_, _, context) => InternalMethods.Terminal.ReadInteger(context));
 
         Terminal.AddStaticMethod(readIntMethod);
 
@@ -592,54 +522,9 @@ internal static class Builtins
             [
                 new ParameterDefinition(name: "message", type: String, defaultValue: new StringObject("")),
                 new ParameterDefinition(name: "min", type: Float, nullable: true, defaultValue: new NullObject()),
-                new ParameterDefinition(name: "max", type: Float, nullable: true, defaultValue: new NullObject())
+                new ParameterDefinition(name: "max", type: Float, nullable: true, defaultValue: new NullObject()),
             ],
-            body: (self, args, context) =>
-            {
-                StringObject message = (StringObject)context.GetParam("message");
-                RuntimeObject minObject = context.GetParam("min");
-                RuntimeObject maxObject = context.GetParam("max");
-
-                decimal? minValue = minObject is NullObject ? null : ((FloatObject)minObject!).Value;
-                decimal? maxValue = maxObject is NullObject ? null : ((FloatObject)maxObject!).Value;
-
-                while (true)
-                {
-                    Console.Write(message.Value);
-                    string? inputtedValue = Console.ReadLine();
-                    bool isAFloat = decimal.TryParse(inputtedValue, out decimal inputtedFloat);
-                    bool satisfiesMinRequirement = minValue is null || inputtedFloat >= minValue;
-                    bool satisfiesMaxRequirement = maxValue is null || inputtedFloat <= maxValue;
-
-                    if (isAFloat && satisfiesMaxRequirement && satisfiesMinRequirement)
-                        return new FloatObject(inputtedFloat);
-
-                    if (!isAFloat)
-                    {
-                        Console.WriteLine("Please input a float value");
-                        continue;
-                    }
-
-                    if (!satisfiesMaxRequirement && !satisfiesMinRequirement)
-                    {
-                        Console.WriteLine(
-                            $"Please input a value greater than or equal to {minValue} and less than or equal to {maxValue}");
-                        continue;
-                    }
-
-                    if (!satisfiesMaxRequirement)
-                    {
-                        Console.WriteLine($"Please enter a value less than or equal to {maxValue}");
-                        continue;
-                    }
-
-                    if (!satisfiesMinRequirement)
-                    {
-                        Console.WriteLine($"Please enter a value greater than or equal to {minValue}");
-                        continue;
-                    }
-                }
-            });
+            body: (_, _, context) => InternalMethods.Terminal.ReadFloat(context));
 
         Terminal.AddStaticMethod(readFloatMethod);
 
@@ -653,66 +538,34 @@ internal static class Builtins
                     name: "outputStyle",
                     type: BooleanOutputStyles,
                     defaultValue: new BooleanOutputStyleObject(BooleanOutputStyleObject.Style.Word)),
-                new ParameterDefinition(name: "immediate", type: Boolean, defaultValue: new BooleanObject(false))
+                new ParameterDefinition(name: "immediate", type: Boolean, defaultValue: new BooleanObject(false)),
             ],
-            body: (self, args, context) =>
-            {
-                StringObject message = (StringObject)context.GetParam("message");
-                BooleanOutputStyleObject outputStyle = (BooleanOutputStyleObject)context.GetParam("outputStyle");
-                BooleanObject immediate = (BooleanObject)context.GetParam("immediate");
-
-                Console.Write(message.Value);
-
-                bool result = outputStyle.Value switch
-                {
-                    BooleanOutputStyleObject.Style.Word => BooleanOutputStyleObject.ReadWordOption(),
-                    BooleanOutputStyleObject.Style.YesNo => BooleanOutputStyleObject.ReadYesNo(),
-                    BooleanOutputStyleObject.Style.Char => BooleanOutputStyleObject.ReadChar(immediate.Value),
-                    BooleanOutputStyleObject.Style.Binary => BooleanOutputStyleObject.ReadBinary(immediate.Value),
-                    BooleanOutputStyleObject.Style.OnOff => BooleanOutputStyleObject.ReadOnOff(),
-                    _ => Errors.AlwaysThrow<bool>(
-                        new SystemError("A statement was reached that was deemed unreachable"))
-                };
-                return new BooleanObject(result);
-            });
+            body: (_, _, context) => InternalMethods.Terminal.ReadBoolean(context));
 
         Terminal.AddStaticMethod(readBooleanMethod);
 
         Method readKeyMethod = new(
             name: "readKey",
             returnType: String,
-            parameters: [new ParameterDefinition(name: "message", type: String)],
-            body: (self, args, context) =>
-            {
-                StringObject message = (StringObject)context.GetParam("message");
-                Console.Write(message.Value);
-
-                ConsoleKeyInfo inputtedValue = Console.ReadKey();
-                return new StringObject(inputtedValue.KeyChar.ToString());
-            });
+            parameters: [new ParameterDefinition(name: "message", type: String),],
+            body: (_, _, context) => InternalMethods.Terminal.ReadKey(context));
         Terminal.AddStaticMethod(readKeyMethod);
 
         Method clearMethod = new(
             name: "clear",
             returnType: Unit,
             parameters: [],
-            body: (self, args, context) =>
-            {
-                Console.Clear();
-                return new UnitObject();
-            });
+            body: (_, _, _) => InternalMethods.Terminal.Clear());
         Terminal.AddStaticMethod(clearMethod);
-
-        // Todo: Add other TerminalType methods
     }
 
-    public static void InitialiseFloatType()
+    private static void InitialiseFloatType()
     {
         Method toString = new(
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, _) =>
             {
                 FloatObject selfAsFloat = (FloatObject)self;
 
@@ -727,13 +580,13 @@ internal static class Builtins
         Float.AddInstanceMethod(toString);
     }
 
-    public static void InitialiseBooleanType()
+    private static void InitialiseBooleanType()
     {
         Method toString = new(
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) =>
+            body: (self, _, _) =>
             {
                 BooleanObject selfAsBoolean = (BooleanObject)self;
 
@@ -745,7 +598,7 @@ internal static class Builtins
         // Todo: Add more BooleanType methods
     }
 
-    public static void InitialiseBooleanOutputStylesType()
+    private static void InitialiseBooleanOutputStylesType()
     {
         BooleanOutputStyleObject wordStyle = new(BooleanOutputStyleObject.Style.Word);
         BooleanOutputStyleObject yesNoStyle = new(BooleanOutputStyleObject.Style.YesNo);
@@ -753,31 +606,31 @@ internal static class Builtins
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles,
-            (self, context) => wordStyle));
+            (_, _) => wordStyle));
         BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles,
-            (self, context) => yesNoStyle));
+            (_, _) => yesNoStyle));
         BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles,
-            (self, context) => charStyle));
+            (_, _) => charStyle));
         BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles,
-            (self, context) => onOffStyle));
+            (_, _) => onOffStyle));
         BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles,
-            (self, context) => binaryStyle));
+            (_, _) => binaryStyle));
     }
 
-    public static void InitialiseNullType()
+    private static void InitialiseNullType()
     {
         Method toString = new(
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, args, context) => new StringObject("null"));
+            body: (_, _, _) => new StringObject("null"));
 
         Null.AddInstanceMethod(toString);
 
         // Todo: Add more NullType methods
     }
 
-    public static void InitialiseMathType()
+    private static void InitialiseMathType()
     {
         Method truncateMethod = new(
             name: "truncate",
@@ -785,9 +638,9 @@ internal static class Builtins
             parameters:
             [
                 new ParameterDefinition(name: "value", type: Float),
-                new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0))
+                new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0)),
             ],
-            body: (self, args, context) => MathFunctions.Truncate(context));
+            body: (_, _, context) => MathFunctions.Truncate(context));
         Math.AddStaticMethod(truncateMethod);
     }
 }

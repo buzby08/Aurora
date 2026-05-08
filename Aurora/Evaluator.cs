@@ -15,34 +15,34 @@ internal class Evaluator
         foreach (string s in code)
         {
             InternalVariables.LineNumber += 1;
-            
+
             if (InternalVariables.LinesToDebug.Contains<int>((int)InternalVariables.LineNumber!))
                 Debugger.Break();
 
             int commentStart = s.IndexOf("//", StringComparison.Ordinal);
-            
+
             string line = s;
-            
+
             if (commentStart != -1)
                 line = s[0..commentStart];
-            
+
             if (string.IsNullOrWhiteSpace(line))
                 continue;
-            
+
             Evaluator evaluator = new(line);
-            AstList astList = evaluator.ParseTokenList();
+            AstList astList = evaluator.ParseTokenList(context);
             EvaluateAstList(astList, context);
         }
     }
 
-    public AstList ParseTokenList()
+    public AstList ParseTokenList(RuntimeContext context)
     {
         TokenList tokens = this.Tokenizer.GetAllTokens();
 
-        return ParseTokenList(tokens);
+        return ParseTokenList(tokens, context);
     }
 
-    public static AstList ParseTokenList(TokenList tokens)
+    public static AstList ParseTokenList(TokenList tokens, RuntimeContext context)
     {
         if (tokens.Count == 0) return [];
 
@@ -84,7 +84,7 @@ internal class Evaluator
                 tokenItem.Token is not DotToken &&
                 tokenItem.Token is not BracketToken
                 && tokenItem.Token is not NumberToken)
-                Errors.AlwaysThrow(new UnexpectedTokenError($"`{tokenItem.AsString}` was not expected"),
+                Errors.AlwaysThrow(new UnexpectedTokenError($"`{tokenItem.AsString}` was not expected"), context,
                     position: tokenItem.StartCharPosition);
 
             if (isTarget && tokenItem.Token is WordToken or StringToken or NumberToken)
@@ -103,7 +103,7 @@ internal class Evaluator
             {
                 // This should parse the args, then set the count to exactly where the argument parser finished 
                 //      The count should then be the index after the arguments closing bracket
-                ArgumentParsingReturnResult argumentParsingReturnResult = Argument.Parse(tokens[count..]);
+                ArgumentParsingReturnResult argumentParsingReturnResult = Argument.Parse(tokens[count..], context);
                 List<Argument> arguments = argumentParsingReturnResult.Arguments;
                 currentAst.Arguments = arguments;
 
@@ -132,7 +132,7 @@ internal class Evaluator
 
         if (result is null) /* Todo: This is being hit when current code in code.aur is being run. Figure out why, as passing 3 values should
                                 be allowed*/
-            Errors.AlwaysThrow(new SystemError($"Could not parse ast list where ast list is empty."));
+            Errors.AlwaysThrow(new SystemError($"Could not parse ast list where ast list is empty."), context);
 
         return result;
     }

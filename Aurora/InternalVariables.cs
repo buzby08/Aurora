@@ -10,11 +10,11 @@ internal static class InternalVariables
 {
     public static string CodeFilePath { get; set; } = string.Empty;
 
-    public static RuntimeContext GlobalContext = new(null);
+    public static RuntimeContext GlobalContext = new(CodeFilePath, 0);
 
     public static string[] Code { get; set; } = [];
 
-    public static int? LineNumber { get; set; } = null;
+    public static int LineNumber { get; set; } = 0;
 
     public static int ExpressionDepth = 0;
 
@@ -55,6 +55,6 @@ internal static class InternalVariables
     {
         RecursionDepth++;
         if (RecursionDepth > /*UserConfiguration.MaxExpressionDepth*/ 256)
-            Errors.AlwaysThrow(new MaxRecursionDepthExceededError());
+            Errors.AlwaysThrow(new MaxRecursionDepthExceededError(), GlobalContext);
     }
 }

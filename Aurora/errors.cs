@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Aurora.Internals;
 
 namespace Aurora;
 
@@ -19,24 +20,25 @@ internal class Errors
     }
 
     [DoesNotReturn]
-    public static T AlwaysThrow<T>(ErrorTypes error, int? position = null)
+    public static T AlwaysThrow<T>(ErrorTypes error, RuntimeContext? context, int? position = null)
     {
-        AlwaysThrow(error, position);
+        AlwaysThrow(error, context, position);
         throw new UnreachableException();
     }
 
     [DoesNotReturn]
-    public static void AlwaysThrow(ErrorTypes error, int? position = null)
+    public static void AlwaysThrow(ErrorTypes error, RuntimeContext? context, int? position = null)
     {
-        RaiseError(error, position, alwaysThrow: true);
-        
+        RaiseError(error, context, position, alwaysThrow: true);
+
         if (InternalVariables.DisableErrors)
             return;
         Environment.Exit(1);
         throw new UnreachableException();
     }
 
-    public static void RaiseError(ErrorTypes error, int? position = null, bool alwaysThrow = false)
+    public static void RaiseError(ErrorTypes error, RuntimeContext? context, int? position = null,
+        bool alwaysThrow = false)
     {
         int? lineNumber = InternalVariables.LineNumber;
         string positionMessage = "Unknown line";
@@ -46,6 +48,10 @@ internal class Errors
 
         if (lineNumber is not null && position is null)
             positionMessage = $"Line {lineNumber}";
+
+        if (context is not null)
+            positionMessage = $"{context.FileName} {positionMessage}";
+        
         string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
 
         bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
@@ -56,8 +62,8 @@ internal class Errors
             Warnings.Add("[WARNING]" + outputMessage);
             return;
         }
-        
-        Logs.Error(outputMessage);
+
+        Logs.Error(outputMessage, context);
 
         Environment.Exit(1);
     }

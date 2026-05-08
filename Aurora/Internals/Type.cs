@@ -49,46 +49,46 @@ internal class Type : RuntimeObject
         this.InstanceAttributes.Add(value.Name, value);
     }
 
-    public Method GetStaticMethod(string name, int? position = null)
+    public Method GetStaticMethod(string name, RuntimeContext context, int? position = null)
     {
         Method? method = this.GetStaticMethodOrDefault(name);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no static method {name}"),
-                position: position);
+                context, position: position);
 
         return method;
     }
 
-    public Method GetInstanceMethod(string name, int? position = null)
+    public Method GetInstanceMethod(string name, RuntimeContext context, int? position = null)
     {
         Method? method = this.GetInstanceMethodOrDefault(name);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no instance method {name}"),
-                position: position);
+                context, position: position);
 
         return method;
     }
 
-    public Attribute GetStaticAttribute(string name, int? position = null)
+    public Attribute GetStaticAttribute(string name, RuntimeContext context, int? position = null)
     {
         Attribute? attribute = this.GetStaticAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no static attribute {name}"),
-                position: position);
+                context, position: position);
 
         return attribute;
     }
 
-    public Attribute GetInstanceAttribute(string name, int? position = null)
+    public Attribute GetInstanceAttribute(string name, RuntimeContext context, int? position = null)
     {
         Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no instance attribute {name}"),
-                position: position);
+                context, position: position);
 
         return attribute;
     }

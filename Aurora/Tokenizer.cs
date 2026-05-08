@@ -316,7 +316,8 @@ internal class Tokenizer
     [DoesNotReturn]
     private void Error(string message)
     {
-        Errors.AlwaysThrow(new SystemError($"Tokenizer error: {message}"), position: this.Position);
+        Errors.AlwaysThrow(new SystemError($"Tokenizer error: {message}"), InternalVariables.GlobalContext,
+            this.Position);
         Environment.Exit(1);
     }
 }

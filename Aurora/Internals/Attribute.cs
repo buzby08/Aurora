@@ -15,10 +15,10 @@ internal class Attribute(string name, Type type, Func<RuntimeObject, RuntimeCont
         RuntimeObject value = this.ValueGetter(self, context);
         if (value.Type.IsSubclassOf(this.Type))
             return value;
-        
+
         Errors.AlwaysThrow(new TypeMismatchError(
             $"Attribute `{this.Name}` should return an object of type `{this.Type.Name}`, but an object of " +
-            $"type `{value.Type.Name}` was returned instead.", user: false));
+            $"type `{value.Type.Name}` was returned instead.", user: false), context);
         throw new UnreachableException();
     }
 }

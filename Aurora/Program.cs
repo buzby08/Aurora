@@ -12,12 +12,14 @@ public static class Program
     {
         if (string.IsNullOrEmpty(filePath))
         {
-            Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"));
+            Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
+                InternalVariables.GlobalContext);
         }
 
         if (!File.Exists(filePath))
         {
-            Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"));
+            Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"),
+                InternalVariables.GlobalContext);
         }
 
         if (!filePath.EndsWith(".aur"))
@@ -100,7 +102,8 @@ public static class Program
 
         if (opts.FilePath == "missing.aur")
         {
-            Errors.AlwaysThrow(new FileNotFoundError("404: File intentionally not found."));
+            Errors.AlwaysThrow(new FileNotFoundError("404: File intentionally not found."),
+                InternalVariables.GlobalContext);
         }
 
         Errors.ConfigFilePath = string.IsNullOrEmpty(opts.ConfigFile) ? Errors.ConfigFilePath : opts.ConfigFile;
@@ -131,7 +134,7 @@ public static class Program
         }
 
         Errors.RaiseError(new ConfigurationError("The system encountered an error it could not handle",
-            user: false));
+            user: false), InternalVariables.GlobalContext);
     }
 
     private static void AttachBuiltinsToGlobalContext()
@@ -195,6 +198,8 @@ public static class Program
                 .WithParsed(RunOptionsAndReturnExitCode)
                 .WithNotParsed(HandleParseError);
 
+            InternalVariables.GlobalContext.FileName = InternalVariables.CodeFilePath;
+
             string[] code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
             InternalVariables.Code = code;
 
@@ -215,7 +220,8 @@ public static class Program
 
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
-                new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)));
+                new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)),
+                InternalVariables.GlobalContext);
         }
     }
 }

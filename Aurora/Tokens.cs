@@ -116,16 +116,6 @@ internal abstract class Token
         private set => ThrowNotImplemented<bool>();
     }
 
-    public virtual CustomFloat ValueAsFloat
-    {
-        get => ThrowNotImplemented<CustomFloat>();
-    }
-
-    public virtual CustomInt ValueAsInt
-    {
-        get => ThrowNotImplemented<CustomInt>();
-    }
-
     public virtual string ValueAsString => this.Value?.ToString() ?? "null";
 
     public virtual bool ValueAsBool
@@ -173,7 +163,8 @@ internal class DotToken : Token
     public override object? Value
     {
         get => this._value;
-        set => Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false));
+        set => Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false),
+            InternalVariables.GlobalContext);
     }
 
     public DotToken Initialise()
@@ -353,26 +344,24 @@ internal class NumberToken : Token
 
     public override string Type { get; } = TokenType;
 
-    private CustomFloat? _value;
+    private double? _value;
 
     public override object? Value
     {
-        get => this._value?.Value ?? new CustomFloat(this._value);
+        get => this._value;
         set
         {
             this._value = value switch
             {
-                string v => new CustomFloat(v),
-                CustomFloat f => f,
-                CustomInt f => new CustomFloat(f),
+                string v => double.Parse(v),
+                double d => d,
+                int i => i,
                 _ => throw new ArgumentException("Float Tokens must have a string, int, or float value")
             };
         }
     }
 
-    public override CustomFloat ValueAsFloat => new(this._value?.Value.ToString() ?? "Null");
-
-    public override string ValueAsString => this._value?.Value.ToString() ?? "null";
+    public override string ValueAsString => this._value?.ToString() ?? "null";
 
     public NumberToken Initialise(object value)
     {

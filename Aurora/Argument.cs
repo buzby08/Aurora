@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Aurora.Internals;
 
 namespace Aurora;
 
@@ -12,40 +13,40 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
     public List<string> ValueAsString => this.Value.DataAsString;
     private AstList? _cachedAst;
 
-    public AstList ValueAsAsts()
+    public AstList ValueAsAsts(RuntimeContext context)
     {
         if (this._cachedAst is not null) return this._cachedAst;
 
-        this._cachedAst = Evaluator.ParseTokenList(this.Value);
+        this._cachedAst = Evaluator.ParseTokenList(this.Value, context);
         return this._cachedAst;
     }
 
-    private static void ThrowErrorAtEqualsSignIfNeeded(Argument argument, int characterIndex)
+    private static void ThrowErrorAtEqualsSignIfNeeded(Argument argument, int characterIndex, RuntimeContext context)
     {
         if (argument.Value.Count != 1)
             Errors.AlwaysThrow(new UnexpectedTokenError(
                     $"At `{argument.Value[1].AsString}` - Expected `=` after keyword name " +
                     $"`{argument.Value[0].AsString}`"),
-                position: characterIndex);
+                context, position: characterIndex);
 
         if (argument.Value.First().Token is not WordToken)
             Errors.AlwaysThrow(new UnexpectedTokenError(
                     $"`{argument.Value.First().AsString}` is not a valid keyword argument"),
-                position: characterIndex);
+                context, position: characterIndex);
     }
 
-    private static void ThrowErrorAtSemicolonIfNeeded(Argument argument, int characterIndex)
+    private static void ThrowErrorAtSemicolonIfNeeded(Argument argument, int characterIndex, RuntimeContext context)
     {
         if (argument.Value.Count == 0)
             Errors.AlwaysThrow(new UnexpectedTokenError(
                     "Unexpected token `;` - Missing argument - Expected expression before `;`"),
-                position: characterIndex);
+                context, position: characterIndex);
     }
 
-    public static ArgumentParsingReturnResult Parse(TokenList tokens)
+    public static ArgumentParsingReturnResult Parse(TokenList tokens, RuntimeContext context)
     {
         if (tokens.Count == 0)
-            Errors.AlwaysThrow(new SystemError("Argument parsing needs a closing bracket!"));
+            Errors.AlwaysThrow(new SystemError("Argument parsing needs a closing bracket!"), context);
         int bracketDepth = 1;
         List<Argument> argumentsList = [];
 
@@ -87,12 +88,12 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
                     currentArgument.Value.AddRaw(tokenItem);
                     break;
                 case ";":
-                    ThrowErrorAtSemicolonIfNeeded(currentArgument, tokenItem.StartCharPosition);
+                    ThrowErrorAtSemicolonIfNeeded(currentArgument, tokenItem.StartCharPosition, context);
                     argumentsList.Add(currentArgument);
                     currentArgument = new Argument();
                     break;
                 case "=":
-                    ThrowErrorAtEqualsSignIfNeeded(currentArgument, tokenItem.StartCharPosition);
+                    ThrowErrorAtEqualsSignIfNeeded(currentArgument, tokenItem.StartCharPosition, context);
                     currentArgument.Keyword = currentArgument.Value.First();
                     currentArgument.Value.Clear();
                     break;

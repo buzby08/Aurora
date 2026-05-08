@@ -9,17 +9,19 @@ internal class RuntimeObject
     public StringObject ConvertToStringObject(RuntimeContext context)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString")
-                .Invoke(this, [], new RuntimeContext(context));
+            this.Type.GetInstanceMethod("toString", context)
+                .Invoke(this, [],
+                    new RuntimeContext(InternalVariables.CodeFilePath, InternalVariables.LineNumber, context));
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString;
     }
-    
+
     public string ConvertToCSharpString(RuntimeContext context)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString")
-                .Invoke(this, [], new RuntimeContext(context));
+            this.Type.GetInstanceMethod("toString", context)
+                .Invoke(this, [],
+                    new RuntimeContext(InternalVariables.CodeFilePath, InternalVariables.LineNumber, context));
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString.Value;
     }
@@ -32,7 +34,7 @@ internal class RuntimeObject
             NumberToken n => CreateFromNumberToken(n),
             WordToken w => CreateFromWordToken(w, context),
             _ => Errors.AlwaysThrow<RuntimeObject>(
-                new SystemError($"{token.Type} cannot be converted to a runtime object."), position: position)
+                new SystemError($"{token.Type} cannot be converted to a runtime object."), context, position)
         };
     }
 

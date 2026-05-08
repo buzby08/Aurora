@@ -55,6 +55,7 @@ internal class Ast
             this.UpdateState();
         }
     }
+
     public string? NameAsString => _name?.AsString;
 
     private List<Argument>? _arguments { get; set; }
@@ -87,14 +88,14 @@ internal class Ast
         bool targetNotProvidedWhenNeeded = target is null && isPartialOperation;
 
         if (targetNotProvidedWhenNeeded || targetProvidedWhenNotNeeded)
-            Errors.AlwaysThrow(new SystemError($"Ast target state is invalid"));
+            Errors.AlwaysThrow(new SystemError($"Ast target state is invalid"), context);
 
         if (this._state is AstStates.Literal)
             return EvaluateLiteral(context);
 
         if (target is null && this._target is null)
             Errors.AlwaysThrow(new SystemError($"Ast target is null, and AST is not a literal"),
-                position: this._name?.StartCharPosition);
+                context, position: this._name?.StartCharPosition);
 
         target ??= RuntimeObject.CreateFromToken(_target!.Value.Token, context);
 
@@ -104,7 +105,7 @@ internal class Ast
             AstStates.AttributeAccess => EvaluateAttributeAccess(context, target),
             AstStates.PartialMethodCall => EvaluateMethodCall(context, target),
             AstStates.PartialAttributeAccess => EvaluateAttributeAccess(context, target),
-            _ => Errors.AlwaysThrow<RuntimeObject>(new SystemError("Ast state is invalid")),
+            _ => Errors.AlwaysThrow<RuntimeObject>(new SystemError("Ast state is invalid"), context),
         };
     }
 
@@ -112,10 +113,10 @@ internal class Ast
     {
         Method method = null!;
         if (target is Internals.Type type)
-            method = type.GetStaticMethod(_name!.Value.AsString, _name?.StartCharPosition);
+            method = type.GetStaticMethod(_name!.Value.AsString, context, _name?.StartCharPosition);
 
         if (target is not Internals.Type)
-            method = target.Type.GetInstanceMethod(_name!.Value.AsString, _name?.StartCharPosition);
+            method = target.Type.GetInstanceMethod(_name!.Value.AsString, context, _name?.StartCharPosition);
 
         return method.Invoke(target, _arguments!, context);
     }
@@ -123,9 +124,11 @@ internal class Ast
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
+            return type.GetStaticAttribute(_name!.Value.AsString, context, _name?.StartCharPosition)
+                .GetValue(target, context);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString, _name?.StartCharPosition).GetValue(target, context);
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString, context, _name?.StartCharPosition)
+            .GetValue(target, context);
     }
 
     private RuntimeObject EvaluateLiteral(RuntimeContext context)
