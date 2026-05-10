@@ -1,6 +1,5 @@
 using Aurora.Internals;
 using RuntimeObject = Aurora.Internals.RuntimeObject;
-using Type = Aurora.Internals.Type;
 
 namespace Aurora.BuiltinMethods;
 

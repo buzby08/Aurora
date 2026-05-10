@@ -1,9 +1,5 @@
-﻿using System.CommandLine;
-using System.Reflection;
-using Aurora.BuiltinMethods;
+﻿using Aurora.BuiltinMethods;
 using Aurora.Internals;
-using CommandLine;
-using CommandLine.Text;
 
 namespace Aurora;
 

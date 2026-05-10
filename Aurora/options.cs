@@ -1,6 +1,4 @@
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Diagnostics;
 
 namespace Aurora;
 

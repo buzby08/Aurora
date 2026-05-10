@@ -1,5 +1,4 @@
 using Aurora.Internals;
-using CommandLine;
 
 namespace Aurora;
 

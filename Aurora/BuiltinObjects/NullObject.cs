@@ -1,5 +1,4 @@
 using Aurora.Internals;
-using Type = Aurora.Internals.Type;
 
 namespace Aurora.BuiltinMethods;
 
