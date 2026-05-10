@@ -19,7 +19,7 @@ internal static class Terminal
     public static StringObject ReadLine(RuntimeContext context)
     {
         StringObject messageObject = (StringObject)context.GetParam("message");
-        RuntimeObject defaultValueObject = context.GetParam("defaultValue");
+        RuntimeObject defaultValueObject = context.GetParam("default");
 
         string message = messageObject.Value;
         string? defaultValue = defaultValueObject is NullObject ? null : ((StringObject)defaultValueObject).Value;
