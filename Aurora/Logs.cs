@@ -9,7 +9,7 @@ internal static class Logs
 {
     public static bool AllowDebug = false;
     public static bool AllowVerbose = false;
-    public static bool AllowWarning = true;
+    public static bool AllowWarning = false;
     public static bool NoConsole = false;
     public static bool ShowTimestamp = true;
     public static string LogFilePath = "aurora.LOG";
@@ -48,9 +48,12 @@ internal static class Logs
             }
 
             currentContext = currentContext.Parent;
+
+            if (!currentContext.ShowInStackTrace) continue;
+
             stackTrace.AddFirst(CreateMessage(currentContext.FileName, currentContext.LineNumber));
         }
-        
+
         return stackTrace;
 
         string CreateMessage(string fileName, int lineNum) => $"at {{{fileName} : Line {lineNum}}}";
@@ -128,11 +131,13 @@ internal static class Logs
     /// <param name="message">The warning message to log.</param>
     public static void Warning(string message)
     {
-        if (!AllowWarning)
-        {
-            return;
-        }
+        if (!AllowWarning) return;
 
+        ForceWarning(message);
+    }
+
+    public static void ForceWarning(string message)
+    {
         Console.ForegroundColor = ConsoleColor.Yellow;
         LogOutput($"[WARNING] {message}");
         Console.ResetColor();
