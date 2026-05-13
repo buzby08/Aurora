@@ -62,25 +62,7 @@ internal static class Builtins
             name: "create",
             returnType: Unit,
             parameters: null,
-            body: (self, args, context) =>
-            {
-                Type targetType = (Type)self;
-
-                foreach (var (_, rawVar) in args)
-                {
-                    RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
-
-                    if (variableObject.Type != targetType)
-                        Errors.AlwaysThrow(
-                            new TypeMismatchError(
-                                $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                            context, position: rawVar.ValuePosition);
-
-                    context.Parent!.Create(rawVar.Name, variableObject);
-                }
-
-                return new UnitObject();
-            });
+            body: InternalMethods.Type.Create);
 
         Type.AddStaticMethod(typeCreateMethod);
 
@@ -88,24 +70,7 @@ internal static class Builtins
             name: "set",
             returnType: Unit,
             parameters: null,
-            body: (self, args, context) =>
-            {
-                Type targetType = (Type)self;
-
-                foreach (var (_, rawVar) in args)
-                {
-                    RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
-                    if (variableObject.Type != targetType)
-                        Errors.AlwaysThrow(
-                            new TypeMismatchError(
-                                $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                            context, position: rawVar.ValuePosition);
-
-                    context.Set(rawVar.Name, variableObject);
-                }
-
-                return new UnitObject();
-            });
+            body: InternalMethods.Type.Set);
 
         Type.AddStaticMethod(typeSetMethod);
 
@@ -113,16 +78,18 @@ internal static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, _, _) =>
-            {
-                if (self is Type selfType)
-                    return new StringObject($"<{self.Type.Name} {selfType.Name}>");
-
-                return new StringObject($"Object<{self.Type.Name}>");
-            });
+            body: (self, _, _) => InternalMethods.Type.ToString(self));
 
         Type.AddInstanceMethod(toString);
         Type.AddStaticMethod(toString);
+
+        Method equals = new(
+            name: "equals",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Type),],
+            body: (self, _, context) => InternalMethods.Type.Equals(self, context));
+        Type.AddInstanceMethod(equals);
+        Type.AddStaticMethod(equals);
     }
 
     private static void InitialiseOptionalType()
