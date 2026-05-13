@@ -8,4 +8,9 @@ internal class NullObject : RuntimeObject
     {
         Type = Builtins.Null;
     }
+    
+    public override bool Equals(RuntimeObject other)
+    {
+        return other is NullObject;
+    }
 }

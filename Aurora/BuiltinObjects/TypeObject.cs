@@ -9,4 +9,9 @@ internal class TypeObject : RuntimeObject
     {
         this.Type = Builtins.Type;
     }
+
+    public override bool Equals(RuntimeObject other)
+    {
+        return other is TypeObject;
+    }
 }

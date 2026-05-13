@@ -136,4 +136,17 @@ internal class Type : RuntimeObject
 
         return attribute ?? this.Type.GetInstanceAttributeOrDefault(name);
     }
+
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is not Type typeObject)
+            return false;
+
+        if (this.Name != typeObject.Name) return false;
+        if (this.StaticAttributes != typeObject.StaticAttributes) return false;
+        if (this.StaticMethods != typeObject.StaticMethods) return false;
+        if (this.InstanceAttributes != typeObject.InstanceAttributes) return false;
+        if (this.InstanceMethods != typeObject.InstanceMethods) return false;
+        return true;
+    }
 }

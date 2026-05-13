@@ -29,4 +29,12 @@ internal class FloatObject : RuntimeObject
 
         Type = Builtins.Float;
     }
+    
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is FloatObject floatObject)
+            return this.Value == floatObject.Value;
+
+        return false;
+    }
 }

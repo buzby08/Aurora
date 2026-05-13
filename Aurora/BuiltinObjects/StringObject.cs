@@ -12,4 +12,12 @@ internal class StringObject : RuntimeObject
         this.Value = value;
         Type = Builtins.String;
     }
+
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is StringObject stringObject)
+            return this.Value == stringObject.Value;
+
+        return false;
+    }
 }

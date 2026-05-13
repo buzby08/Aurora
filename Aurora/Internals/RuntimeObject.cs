@@ -2,7 +2,7 @@ using Aurora.BuiltinMethods;
 
 namespace Aurora.Internals;
 
-internal class RuntimeObject
+internal abstract class RuntimeObject
 {
     public Type Type;
 
@@ -37,6 +37,8 @@ internal class RuntimeObject
                 new SystemError($"{token.Type} cannot be converted to a runtime object."), context, position)
         };
     }
+
+    public abstract bool Equals(RuntimeObject other);
 
     private static RuntimeObject CreateFromWordToken(WordToken token, RuntimeContext context)
     {

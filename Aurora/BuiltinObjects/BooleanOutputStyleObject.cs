@@ -67,4 +67,12 @@ internal class BooleanOutputStyleObject : RuntimeObject
         
         return ReadWord("1", "0");
     }
+    
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is BooleanOutputStyleObject booleanOutputStyleObject)
+            return this.Value == booleanOutputStyleObject.Value;
+
+        return false;
+    }
 }

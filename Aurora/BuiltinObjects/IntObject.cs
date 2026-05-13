@@ -22,4 +22,12 @@ internal class IntObject : RuntimeObject
         Value = intValue;
         Type = Builtins.Int;
     }
+    
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is IntObject intObject)
+            return this.Value == intObject.Value;
+
+        return false;
+    }
 }

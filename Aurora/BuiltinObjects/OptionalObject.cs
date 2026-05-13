@@ -14,4 +14,16 @@ internal class OptionalObject : RuntimeObject
         Type = Builtins.Optional;
         CreatedFromEmpty = createdFromEmpty;
     }
+    
+    public override bool Equals(RuntimeObject other)
+    {
+        if (other is not OptionalObject optionalObject)
+            return false;
+
+        if (this.Value is null ^ optionalObject.Value is null) return false;
+
+        if (this.Value is null && optionalObject.Value is null) return true;
+
+        return this.Value!.Equals(optionalObject.Value!);
+    }
 }

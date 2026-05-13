@@ -11,4 +11,9 @@ internal class TerminalObject : RuntimeObject
         this.ErrorMessage = errorMessage;
         this.Type = Builtins.Terminal;
     }
+
+    public override bool Equals(RuntimeObject other)
+    {
+        return other is TerminalObject;
+    }
 }
