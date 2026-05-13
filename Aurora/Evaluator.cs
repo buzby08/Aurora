@@ -36,7 +36,7 @@ internal class Evaluator
         }
     }
 
-    public AstList ParseTokenList(RuntimeContext context)
+    private AstList ParseTokenList(RuntimeContext context)
     {
         TokenList tokens = this.Tokenizer.GetAllTokens();
 
@@ -51,7 +51,7 @@ internal class Evaluator
 
         Ast currentAst = new()
         {
-            IsALiteral = true
+            IsALiteral = true,
         };
         bool isTarget = true;
 
@@ -75,7 +75,7 @@ internal class Evaluator
                 asts.Add(currentAst);
                 currentAst = new Ast
                 {
-                    IsALiteral = false
+                    IsALiteral = false,
                 };
                 isTarget = false;
                 continue;

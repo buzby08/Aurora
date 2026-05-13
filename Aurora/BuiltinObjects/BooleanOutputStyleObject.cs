@@ -10,7 +10,7 @@ internal class BooleanOutputStyleObject : RuntimeObject
         YesNo,
         Char,
         Binary,
-        OnOff
+        OnOff,
     }
 
     public Style Value;

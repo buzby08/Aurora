@@ -211,10 +211,10 @@ internal class BracketToken : Token
     {
         { "curly", ImmutableHashSet.Create('{', '}') },
         { "square", ImmutableHashSet.Create('[', ']') },
-        { "normal", ImmutableHashSet.Create('(', ')') }
+        { "normal", ImmutableHashSet.Create('(', ')') },
     };
 
-    public static readonly char[] VALUES = ['(', ')', '[', ']', '{', '}'];
+    public static readonly char[] VALUES = ['(', ')', '[', ']', '{', '}',];
 
     public static readonly ImmutableHashSet<char> OPEN_BRACKETS = ImmutableHashSet.Create('(', '[', '{');
     public static readonly ImmutableHashSet<char> CLOSED_BRACKETS = ImmutableHashSet.Create(')', ']', '}');
@@ -266,7 +266,7 @@ internal class BracketToken : Token
 internal class StringToken : Token
 {
     public const string TokenType = "STRING";
-    public static readonly ImmutableHashSet<char> START_CHARS = ['"', '\''];
+    public static readonly ImmutableHashSet<char> START_CHARS = ['"', '\'',];
 
     public override string Type { get; } = TokenType;
 
@@ -356,7 +356,7 @@ internal class NumberToken : Token
                 string v => double.Parse(v),
                 double d => d,
                 int i => i,
-                _ => throw new ArgumentException("Float Tokens must have a string, int, or float value")
+                _ => throw new ArgumentException("Float Tokens must have a string, int, or float value"),
             };
         }
     }
@@ -390,7 +390,7 @@ internal class SymbolToken : Token
     public const string TokenType = "SYMBOL";
 
     public static readonly ImmutableHashSet<string> VARS =
-        [",", ";", "+", "-", "*", "/", "^", ">", "<", "!", "==", "!=", ">=", "<=", "||", "&&"];
+        [",", ";", "+", "-", "*", "/", "^", ">", "<", "!", "==", "!=", ">=", "<=", "||", "&&",];
 
     public override string Type { get; } = TokenType;
 

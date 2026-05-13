@@ -11,7 +11,7 @@ internal class Ast
         AttributeAccess,
         PartialMethodCall,
         PartialAttributeAccess,
-        Invalid
+        Invalid,
     }
 
     private AstStates _state { get; set; } = AstStates.Invalid;

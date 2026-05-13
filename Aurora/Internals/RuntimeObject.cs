@@ -34,7 +34,7 @@ internal abstract class RuntimeObject
             NumberToken n => CreateFromNumberToken(n),
             WordToken w => CreateFromWordToken(w, context),
             _ => Errors.AlwaysThrow<RuntimeObject>(
-                new SystemError($"{token.Type} cannot be converted to a runtime object."), context, position)
+                new SystemError($"{token.Type} cannot be converted to a runtime object."), context, position),
         };
     }
 

@@ -31,7 +31,7 @@ internal static class InternalVariables
 
     public static bool DisableErrors = false;
 
-    public static int[] LinesToDebug = [4];
+    public static int[] LinesToDebug = [4,];
 
     /// <summary>
     /// Returns a version of the string with its surrounding quotes, not interfering with the internal string
