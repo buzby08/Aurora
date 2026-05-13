@@ -25,13 +25,13 @@ internal class Tokenizer
     /// <summary>
     /// The current character position in the <see cref="Text"/> input.
     /// </summary>
-    public int Position { get; private set; }
+    private int Position { get; set; }
 
     /// <summary>
     /// Checks if the tokenizer has reached the end of its input.
     /// </summary>
     /// <returns>Boolean to show if EOF is reached.</returns>
-    public bool IsEof()
+    private bool IsEof()
     {
         return this.Position > this._text.Length - 1;
     }
@@ -51,7 +51,7 @@ internal class Tokenizer
     /// Gets the character at the interpreters current position.
     /// </summary>
     /// <returns>The current character, or if no characters remaining, null.</returns>
-    public char? GetCurrentChar()
+    private char? GetCurrentChar()
     {
         if (this.IsEof()) return null;
         return this._text[this.Position];
@@ -107,7 +107,7 @@ internal class Tokenizer
     /// </summary>
     /// <returns>The generated <see cref="WordToken"/>.</returns>
     /// <remarks>
-    /// "Letters" means any unicode letter, as defined by the .NET <see cref="char.IsLetter(char)"/> method. More
+    /// "Letters" means any Unicode letter, as defined by the .NET <see cref="char.IsLetter(char)"/> method. More
     /// information can be found at https://learn.microsoft.com/en-us/dotnet/api/System.Char.IsLetter?view=net-9.0
     /// </remarks>
     private Token Word()
@@ -135,7 +135,7 @@ internal class Tokenizer
     /// <summary>
     /// Starting at the current character, this gets the next string, and returns a <see cref="StringToken"/>. A string
     /// is a block of characters that starts with `"`, or `'`, and ends with the same
-    /// character used to start (ie. if the string started with `"`, it must end with `"`).
+    /// character used to start (i.e. if the string started with `"`, it must end with `"`).
     /// Any characters in between the starting and ending characters are assumed part of the string, even if they meet
     /// the conditions of other tokens. Escape characters for the starting and ending characters of the string are
     /// handled by this method (I.e. if the string starts with `"`, and while searching through the
@@ -232,7 +232,7 @@ internal class Tokenizer
         if (BracketToken.VALUES.Contains((char)currentChar!))
             return new BracketToken().Initialise((char)currentChar);
 
-        return new SymbolToken().Initialise(currentChar!.Value.ToString());
+        return new SymbolToken().Initialise(currentChar.Value.ToString());
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ internal class Tokenizer
     /// If the current character doesn't match any of the valid tokens, the <see cref="Error"/> method will be called.
     /// </summary>
     /// <returns>The generated token.</returns>
-    public Token GetNextToken()
+    private Token GetNextToken()
     {
         while (true)
         {
@@ -309,7 +309,7 @@ internal class Tokenizer
     }
 
     /// <summary>
-    /// Throws an error to the user that something has gone wrong with the tokeniser. This will be treated as a
+    /// Throws an error to the user that something has gone wrong with the tokenizer. This will be treated as a
     /// <see cref="SystemError"/>. This method exits execution.
     /// </summary>
     /// <param name="message">The error message for the user.</param>
