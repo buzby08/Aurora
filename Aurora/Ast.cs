@@ -1,3 +1,4 @@
+using Aurora.BuiltinMethods;
 using Aurora.Internals;
 
 namespace Aurora;
@@ -11,6 +12,7 @@ internal class Ast
         AttributeAccess,
         PartialMethodCall,
         PartialAttributeAccess,
+        Collection,
         Invalid,
     }
 
@@ -70,6 +72,18 @@ internal class Ast
         }
     }
 
+    private List<AstList>? _containedCollection { get; set; }
+
+    public List<AstList>? ContainedCollection
+    {
+        get => _containedCollection;
+        set
+        {
+            _containedCollection = value;
+            this.UpdateState();
+        }
+    }
+
     public int? Position
     {
         get
@@ -105,6 +119,7 @@ internal class Ast
             AstStates.AttributeAccess => EvaluateAttributeAccess(context, target),
             AstStates.PartialMethodCall => EvaluateMethodCall(context, target),
             AstStates.PartialAttributeAccess => EvaluateAttributeAccess(context, target),
+            AstStates.Collection => EvaluateCollection(context),
             _ => Errors.AlwaysThrow<RuntimeObject>(new SystemError("Ast state is invalid"), context),
         };
     }
@@ -136,28 +151,44 @@ internal class Ast
         return RuntimeObject.CreateFromToken(this._name!.Value.Token, context, _name?.StartCharPosition);
     }
 
+    private UnitObject EvaluateCollection(RuntimeContext context)
+    {
+        foreach (AstList astList in _containedCollection!) Evaluator.EvaluateAstList(astList, context);
+        return new UnitObject();
+    }
+
     private void UpdateState()
     {
         switch (this._target)
         {
-            case null when this._name is not null && this._arguments is null && this._isALiteral:
+            case null when this._name is not null && this._arguments is null && this._isALiteral &&
+                           this._containedCollection is null:
                 this._state = AstStates.Literal;
                 return;
 
-            case not null when _name is not null && _arguments is not null && !this._isALiteral:
+            case not null when _name is not null && _arguments is not null && !this._isALiteral &&
+                               this._containedCollection is null:
                 this._state = AstStates.MethodCall;
                 return;
 
-            case not null when _name is not null && _arguments is null && !this._isALiteral:
+            case not null when _name is not null && _arguments is null && !this._isALiteral &&
+                               this._containedCollection is null:
                 this._state = AstStates.AttributeAccess;
                 return;
 
-            case null when this._name is not null && this._arguments is not null && !this._isALiteral:
+            case null when this._name is not null && this._arguments is not null && !this._isALiteral &&
+                           this._containedCollection is null:
                 this._state = AstStates.PartialMethodCall;
                 return;
 
-            case null when this._name is not null && this._arguments is null && !this._isALiteral:
+            case null when this._name is not null && this._arguments is null && !this._isALiteral &&
+                           this._containedCollection is null:
                 this._state = AstStates.PartialAttributeAccess;
+                return;
+
+            case null when this._name is null && this._arguments is null && !this._isALiteral &&
+                           this._containedCollection is not null:
+                this._state = AstStates.Collection;
                 return;
 
             default:
