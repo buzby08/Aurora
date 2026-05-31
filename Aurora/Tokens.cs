@@ -420,6 +420,19 @@ internal class SymbolToken : Token
     }
 }
 
+internal class EoLToken : Token
+{
+    public const string TokenType = "END_OF_LINE";
+
+    public override string Type { get; } = TokenType;
+
+    public override object? Value
+    {
+        get => null;
+        set => throw new ArgumentException("Cannot set a value to EOF_TOKEN.Value");
+    }
+}
+
 internal class EofToken : Token
 {
     public const string TokenType = "END_OF_FILE";
