@@ -240,13 +240,15 @@ internal class Tokenizer
     /// If the current character doesn't match any of the valid tokens, the <see cref="Error"/> method will be called.
     /// </summary>
     /// <returns>The generated token.</returns>
-    private Token GetNextToken()
+    public Token GetNextToken()
     {
         while (true)
         {
             char? currentChar = this.GetCurrentChar();
 
             if (currentChar is null || this.IsEof()) return new EofToken();
+
+            if (currentChar == '\n') return new EoLToken();
 
             if (char.IsDigit((char)currentChar) || currentChar == '-') return this.Number();
 
