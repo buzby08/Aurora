@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aurora.BuiltinMethods;
 
 namespace Aurora.Internals;
@@ -39,6 +40,12 @@ internal abstract class RuntimeObject
     }
 
     public abstract bool Equals(RuntimeObject other);
+
+    public virtual RuntimeObject Invoke(List<Argument> arguments, RuntimeContext parentContext)
+    {
+        Errors.AlwaysThrow(new UnsupportedOperationError("Object is not invokable"), parentContext);
+        throw new UnreachableException();
+    }
 
     private static RuntimeObject CreateFromWordToken(WordToken token, RuntimeContext context)
     {

@@ -38,7 +38,7 @@ internal class Errors
     }
 
     public static void RaiseError(ErrorTypes error, RuntimeContext? context, int? position = null,
-        bool alwaysThrow = false)
+                                  bool alwaysThrow = false)
     {
         int? lineNumber = InternalVariables.LineNumber;
         string positionMessage = "Unknown line";
@@ -51,7 +51,7 @@ internal class Errors
 
         if (context is not null)
             positionMessage = $"{context.FileName} {positionMessage}";
-        
+
         string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
 
         bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
@@ -442,7 +442,7 @@ internal class InvalidMethodError : ErrorTypes
     public InvalidMethodError(string? message = null, bool user = true)
     {
         this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
-        this.Title = "Invalid Method" + (user ? " (User)" : " (System)");
+        this.Title = "Invalid Callable" + (user ? " (User)" : " (System)");
     }
 }
 
@@ -563,6 +563,21 @@ internal class MemoryError : ErrorTypes
     {
         this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
         this.Title = "Memory Error" + (user ? " (User)" : " (System)");
+    }
+}
+
+internal class EofError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "End of file was found before an expression finished.";
+    public override string Message { get; }
+    public override string Code => "Aurora.EofError";
+    public override bool AlwaysError => true;
+
+    public EofError(string? message = null, bool user = false)
+    {
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Eof Error" + (user ? " (User)" : " (System)");
     }
 }
 

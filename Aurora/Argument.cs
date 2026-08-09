@@ -16,7 +16,7 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
     {
         if (this._cachedAst is not null) return this._cachedAst;
 
-        this._cachedAst = Evaluator.ParseTokenList(this.Value, context);
+        this._cachedAst = null; // Todo: Fix
         return this._cachedAst;
     }
 

@@ -12,6 +12,7 @@ internal static class Builtins
     public static Type Boolean = null!;
     public static Type Null = null!;
     public static Type Unit = null!;
+    public static Type Callable = null!;
     public static Type Terminal = null!;
     public static Type BooleanOutputStyles = null!;
     public static Type Optional = null!;
@@ -21,6 +22,8 @@ internal static class Builtins
     {
         Type = new Type("Type");
         Type.Type = Type;
+
+        Callable = new Type("Callable", type: Type);
 
         Unit = new Type("Unit", type: Type);
 

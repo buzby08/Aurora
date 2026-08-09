@@ -1,65 +1,33 @@
-namespace Aurora.Internals;
+using System.Diagnostics;
+using Aurora.Internals;
+using Type = System.Type;
 
-internal class Method
+namespace Aurora.BuiltinMethods;
+
+internal class MethodObject : CallableObject
 {
     public string Name { get; }
-    public Type DeclaringType { get; }
-    public readonly List<ParameterDefinition>? Parameters;
-    public Type? UnlimitedPositionalArgsType { get; }
-    public Type? UnlimitedKeywordArgumentsType { get; }
+    public Internals.Type ReturnType { get; }
+    public RuntimeObject? BoundSelf { get; }
+    private readonly List<ParameterDefinition>? Parameters;
+    private Internals.Type? UnlimitedPositionalArgsType { get; }
+    private Internals.Type? UnlimitedKeywordArgumentsType { get; }
+    private readonly MethodBody? _builtinBody;
+    private readonly List<List<Ast>>? _userDefinedBody;
+    private bool IsBuiltin => this._builtinBody is not null;
 
-    public Method(string name, Type returnType, List<ParameterDefinition>? parameters, MethodBody body)
+    public override RuntimeObject Invoke(List<Argument> arguments, RuntimeContext parentContext)
     {
-        this.Name = name;
-        this.DeclaringType = returnType;
-        this.Parameters = parameters;
-        this._builtinBody = body;
-    }
+        if (BoundSelf is null)
+            Errors.AlwaysThrow(new UnsupportedOperationError($"Method `{this.Name}` is not bound"), parentContext);
 
-    public Method(string name, Type returnType, Type? unlimitedPositionalArgumentsType,
-                  Type? unlimitedKeywordArgumentsType, MethodBody body)
-    {
-        this.Name = name;
-        this.DeclaringType = returnType;
-        this.Parameters = [];
-        this.UnlimitedPositionalArgsType = unlimitedPositionalArgumentsType;
-        this.UnlimitedKeywordArgumentsType = unlimitedKeywordArgumentsType;
-        this._builtinBody = body;
-    }
-
-    public Method(string name, Type returnType, Type? unlimitedPositionalArgumentsType,
-                  Type? unlimitedKeywordArgumentsType, List<ParameterDefinition>? parameters, MethodBody body)
-    {
-        this.Name = name;
-        this.DeclaringType = returnType;
-        this.Parameters = parameters;
-        this.UnlimitedPositionalArgsType = unlimitedPositionalArgumentsType;
-        this.UnlimitedKeywordArgumentsType = unlimitedKeywordArgumentsType;
-        this._builtinBody = body;
-    }
-
-    public Method(string name, Type returnType, List<ParameterDefinition> parameters, List<List<Ast>> body)
-    {
-        this.Name = name;
-        this.DeclaringType = returnType;
-        this.Parameters = parameters;
-        this._userDefinedBody = body;
-    }
-
-    public bool IsBuiltin => this._builtinBody is not null;
-
-    public RuntimeObject Invoke(
-        RuntimeObject self,
-        List<Argument> args,
-        RuntimeContext parentContext)
-    {
         RuntimeContext methodContext = new(InternalVariables.CodeFilePath, InternalVariables.LineNumber, parentContext);
 
-        Dictionary<string, RawMethodArgument> matchedArgs = MatchArgumentsToParameter(args, parentContext);
+        Dictionary<string, RawMethodArgument> matchedArgs = MatchArgumentsToParameter(arguments, parentContext);
 
         bool doNotValidate = this.IsBuiltin && this.Parameters is null;
         if (doNotValidate)
-            return this._builtinBody!(self, matchedArgs, methodContext);
+            return this._builtinBody!(this.BoundSelf, matchedArgs, methodContext);
 
         Dictionary<string, RuntimeObject> validatedArgs = [];
 
@@ -78,27 +46,28 @@ internal class Method
         RuntimeObject returnedObject = null!;
 
         if (this.IsBuiltin)
-            returnedObject = this._builtinBody!(self, matchedArgs, methodContext);
+            returnedObject = this._builtinBody!(this.BoundSelf, matchedArgs, methodContext);
 
         if (!this.IsBuiltin)
             returnedObject = Evaluator.ExecuteMethodAst(
                 this._userDefinedBody!,
-                self,
+                this.BoundSelf,
                 methodContext);
 
-        if (returnedObject.Type != this.DeclaringType)
+        if (!returnedObject.Type.IsSubclassOf(this.ReturnType))
             Errors.AlwaysThrow(new TypeMismatchError(
-                    $"Callable is declared to return a value of type {this.DeclaringType.Name}, but a value of " +
+                    $"Callable is declared to return a value of type {this.ReturnType.Name}, but a value of " +
                     $"type {returnedObject.Type.Name} was returned",
                     user: false),
                 parentContext);
 
         return returnedObject;
+        // Todo: Add invoke logic from other class here
     }
 
-    public void ValidateArguments(Dictionary<string, RuntimeObject> validatedArgs,
-                                  Dictionary<string, RawMethodArgument> matchedArgs,
-                                  RuntimeContext context)
+    private void ValidateArguments(Dictionary<string, RuntimeObject> validatedArgs,
+                                   Dictionary<string, RawMethodArgument> matchedArgs,
+                                   RuntimeContext context)
     {
         if (this.Parameters is null)
             Errors.AlwaysThrow(new SystemError(
@@ -279,7 +248,10 @@ internal class Method
         return matchedArgs;
     }
 
-
-    private readonly MethodBody? _builtinBody;
-    private readonly List<List<Ast>>? _userDefinedBody;
+    public override bool Equals(RuntimeObject other)
+    {
+        Errors.AlwaysThrow(new UnsupportedOperationError("Cannot compare equality of methods"),
+            InternalVariables.GlobalContext);
+        throw new UnreachableException();
+    }
 }

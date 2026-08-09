@@ -153,7 +153,7 @@ internal class Ast
 
     private UnitObject EvaluateCollection(RuntimeContext context)
     {
-        foreach (AstList astList in _containedCollection!) Evaluator.EvaluateAstList(astList, context);
+        foreach (AstList astList in _containedCollection!) Evaluator.EvaluateAll(); // Todo: Make evaluate ast list
         return new UnitObject();
     }
 

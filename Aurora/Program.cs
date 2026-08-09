@@ -5,7 +5,7 @@ namespace Aurora;
 
 public static class Program
 {
-    private static string[] ReadCode(string filePath, RuntimeContext context)
+    private static string ReadCode(string filePath, RuntimeContext context)
     {
         if (string.IsNullOrEmpty(filePath))
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
@@ -19,7 +19,7 @@ public static class Program
             Logs.Warning("Aurora code should be written in an aurora file (ending with .aur).");
 
         context.Create("__SCRIPT__", new StringObject(filePath));
-        return File.ReadAllLines(filePath);
+        return File.ReadAllText(filePath);
     }
 
     private static void HandleArgumentEasterEggs(string[] args)
@@ -90,11 +90,12 @@ public static class Program
             InternalVariables.GlobalContext.FileName = InternalVariables.CodeFilePath;
             InternalVariables.GlobalContext.ShowInStackTrace = false;
 
-            string[] code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
+            string code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
             InternalVariables.Code = code;
 
             InternalVariables.LineNumber = 0;
-            Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
+
+            Evaluator.EvaluateAll();
 
             Errors.OutputWarningsAndExit();
         }
@@ -117,13 +118,13 @@ public static class Program
 }
 
 // namespace Aurora;
-// 
+//
 // public static class Program
 // {
 //     public static int LineNumber = 1;
-// 
+//
 //     public static void Main()
 //     {
-//         
+//
 //     }
 // }

@@ -295,13 +295,19 @@ internal class Tokenizer
     {
         if (this._cachedTokenList is not null) return this._cachedTokenList;
 
+        int lineNumber = 1;
+
         TokenList allTokens = new();
 
         Token currentToken = this.GetNextToken();
 
         while (currentToken.Type != EofToken.TokenType)
         {
-            allTokens.Add(currentToken);
+            allTokens.Add(currentToken, lineNumber);
+
+            if (currentToken.Type != EoLToken.TokenType)
+                lineNumber++;
+
             currentToken = this.GetNextToken();
         }
 

@@ -11,7 +11,7 @@ internal static class InternalVariables
 
     public static RuntimeContext GlobalContext = new(CodeFilePath, 0);
 
-    public static string[] Code { get; set; } = [];
+    public static string Code { get; set; } = "";
 
     public static int LineNumber { get; set; } = 0;
 
