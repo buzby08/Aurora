@@ -69,6 +69,11 @@ internal abstract class RuntimeObject
         return new IntObject(value);
     }
 
+    public override string ToString()
+    {
+        return $"Token: {this.Type}";
+    }
+
     private static string TrueValue = "true";
     private static string FalseValue = "false";
     private static string NullValue = "null";

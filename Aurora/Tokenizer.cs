@@ -226,6 +226,9 @@ internal class Tokenizer
         if (currentChar == '=')
             return new EqualsToken();
 
+        if (currentChar == ';')
+            return new SemiColonToken();
+
         if (currentChar == '.')
             return new DotToken();
 
@@ -248,7 +251,11 @@ internal class Tokenizer
 
             if (currentChar is null || this.IsEof()) return new EofToken();
 
-            if (currentChar == '\n') return new EoLToken();
+            if (currentChar == '\n')
+            {
+                this.Advance();
+                return new EoLToken();
+            }
 
             if (char.IsDigit((char)currentChar) || currentChar == '-') return this.Number();
 
@@ -274,7 +281,7 @@ internal class Tokenizer
                 return new DotToken().Initialise();
             }
 
-            if ((char)currentChar == '=') return this.Symbol();
+            if ((char)currentChar == '=' || (char)currentChar == ';') return this.Symbol();
 
             if (char.IsWhiteSpace((char)currentChar))
             {

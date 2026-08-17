@@ -8,6 +8,8 @@ internal abstract class Token
 
     public abstract object? Value { get; set; }
 
+    public abstract bool CanBeLiteral { get; }
+
     public int Length
     {
         get => ThrowNotImplemented<int>();
@@ -142,22 +144,10 @@ internal abstract class Token
     }
 }
 
-internal class BaseToken : Token
-{
-    public const string TokenType = "BaseToken";
-    public override string Type { get; } = TokenType;
-
-    public override object? Value
-    {
-        get => null;
-        set { }
-    }
-}
-
 internal class DotToken : Token
 {
     public const string TokenType = "DOT";
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
     private char _value = '.';
 
     public override object? Value
@@ -166,6 +156,8 @@ internal class DotToken : Token
         set => Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false),
             InternalVariables.GlobalContext);
     }
+
+    public override bool CanBeLiteral => false;
 
     public DotToken Initialise()
     {
@@ -176,7 +168,9 @@ internal class DotToken : Token
 internal class WordToken : Token
 {
     public const string TokenType = "WORD";
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
+
+    public override bool CanBeLiteral => true;
 
     private string _value = string.Empty;
 
@@ -207,6 +201,8 @@ internal class BracketToken : Token
 {
     public const string TokenType = "BRACKET";
 
+    public override bool CanBeLiteral => false;
+
     public static readonly Dictionary<string, ImmutableHashSet<char>> TYPES = new()
     {
         { "curly", ImmutableHashSet.Create('{', '}') },
@@ -219,7 +215,7 @@ internal class BracketToken : Token
     public static readonly ImmutableHashSet<char> OPEN_BRACKETS = ImmutableHashSet.Create('(', '[', '{');
     public static readonly ImmutableHashSet<char> CLOSED_BRACKETS = ImmutableHashSet.Create(')', ']', '}');
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     private char _value;
 
@@ -268,7 +264,9 @@ internal class StringToken : Token
     public const string TokenType = "STRING";
     public static readonly ImmutableHashSet<char> START_CHARS = ['"', '\'',];
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
+
+    public override bool CanBeLiteral => true;
 
     private string _value = string.Empty;
 
@@ -342,7 +340,7 @@ internal class NumberToken : Token
 {
     public const string TokenType = "NUMBER";
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     private double? _value;
 
@@ -361,6 +359,8 @@ internal class NumberToken : Token
         }
     }
 
+    public override bool CanBeLiteral => true;
+
     public override string ValueAsString => this._value?.ToString() ?? "null";
 
     public NumberToken Initialise(object value)
@@ -374,7 +374,7 @@ internal class EqualsToken : Token
 {
     public const string TokenType = "EQUALS";
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     public override object? Value
     {
@@ -382,7 +382,26 @@ internal class EqualsToken : Token
         set => throw new ArgumentException("Cannot set a value to EqualsToken.Value");
     }
 
+    public override bool CanBeLiteral => false;
+
     public static EqualsToken TokenEquals = new EqualsToken();
+}
+
+internal class SemiColonToken : Token
+{
+    public const string TokenType = "SEMICOLON";
+
+    public override string Type => TokenType;
+
+    public override object? Value
+    {
+        get => ';';
+        set => throw new ArgumentException("Cannot set a value to SemiColonToken.Value");
+    }
+
+    public override bool CanBeLiteral => false;
+
+    public static SemiColonToken TokenSemiColon = new SemiColonToken();
 }
 
 internal class SymbolToken : Token
@@ -392,7 +411,7 @@ internal class SymbolToken : Token
     public static readonly ImmutableHashSet<string> VARS =
         [",", ";", "+", "-", "*", "/", "^", ">", "<", "!", "==", "!=", ">=", "<=", "||", "&&",];
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     private string _value;
 
@@ -413,6 +432,8 @@ internal class SymbolToken : Token
         }
     }
 
+    public override bool CanBeLiteral => false;
+
     public SymbolToken Initialise(string value)
     {
         this.Value = value;
@@ -424,24 +445,28 @@ internal class EoLToken : Token
 {
     public const string TokenType = "END_OF_LINE";
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     public override object? Value
     {
         get => null;
         set => throw new ArgumentException("Cannot set a value to EOF_TOKEN.Value");
     }
+
+    public override bool CanBeLiteral => false;
 }
 
 internal class EofToken : Token
 {
     public const string TokenType = "END_OF_FILE";
 
-    public override string Type { get; } = TokenType;
+    public override string Type => TokenType;
 
     public override object? Value
     {
         get => null;
         set => throw new ArgumentException("Cannot set a value to EOF_TOKEN.Value");
     }
+
+    public override bool CanBeLiteral => false;
 }

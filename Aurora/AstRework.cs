@@ -4,24 +4,24 @@ namespace Aurora;
 
 internal class AstRework(RuntimeContext context)
 {
-    private TokenListItem? Name { get; set; }
-    private List<Argument>? Arguments { get; set; }
+    private TokenListItem? Action { get; set; }
+    private List<ArgumentRework>? Arguments { get; set; }
     private RuntimeObject? Target { get; set; }
     private int LineNumber { get; set; }
     private int ColumnNumber { get; set; }
     private RuntimeContext Context { get; set; } = context;
-    public bool IsEmpty => this.Name is null && this.Arguments is null && this.Target is null;
-    public bool NoNameWithOtherValues => this.Name is null && (this.Arguments is not null || this.Target is not null);
+    public bool IsEmpty => this.Action is null && this.Arguments is null && this.Target is null;
+    public bool NoNameWithOtherValues => this.Action is null && (this.Arguments is not null || this.Target is not null);
     public bool IsValid => !this.IsEmpty && !this.NoNameWithOtherValues;
 
-    public void AddName(TokenListItem name)
+    public void AddAction(TokenListItem name)
     {
-        if (this.Name is not null)
+        if (this.Action is not null)
             Errors.AlwaysThrow(new SystemError("Cannot redefine an ast name"),
                 this.Context,
                 this.ColumnNumber);
 
-        this.Name = name;
+        this.Action = name;
         UpdatePosition(name.LinePosition, name.StartCharPosition);
     }
 
@@ -35,7 +35,7 @@ internal class AstRework(RuntimeContext context)
         this.Target = target;
     }
 
-    public void AddArgs(List<Argument> args)
+    public void AddArgs(List<ArgumentRework> args)
     {
         if (this.Arguments is not null)
             Errors.AlwaysThrow(new SystemError("Cannot redefine an ast args"),
@@ -58,5 +58,24 @@ internal class AstRework(RuntimeContext context)
 
         LineNumber = line;
         ColumnNumber = column;
+    }
+
+    public override string ToString()
+    {
+        string asString =
+            $"AST: Target: `{this.Target?.ToString() ?? "?"}`, Action: `{this.Action?.Token?.Value?.ToString() ?? "?"}`, " +
+            $"  Args: ";
+
+        if (Arguments is null) return asString + "null";
+
+        asString += "[";
+        foreach (ArgumentRework arg in Arguments)
+        {
+            string valueAsString = string.Join(',', arg.Value.ConvertAll(ast => ast.ToString()));
+            asString +=
+                $"\n    Name: {arg.Identifier?.AsString() ?? "?"}, Value: {valueAsString}";
+        }
+
+        return asString + "  ]";
     }
 }

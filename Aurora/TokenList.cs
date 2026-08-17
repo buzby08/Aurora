@@ -94,6 +94,16 @@ internal class TokenList : IEnumerable<TokenListItem>
     {
         return this.GetEnumerator();
     }
+
+    public TokenList()
+    {
+    }
+
+    internal TokenList(IEnumerable<TokenListItem> items)
+    {
+        this.Clear();
+        foreach (TokenListItem item in items) this.AddRaw(item);
+    }
 }
 
 internal struct TokenListItem(Token token, int linePosition, int tokenIndex, int startCharPosition)

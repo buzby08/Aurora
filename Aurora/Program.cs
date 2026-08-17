@@ -1,4 +1,5 @@
-﻿using Aurora.BuiltinMethods;
+﻿#define TESTING
+using Aurora.BuiltinMethods;
 using Aurora.Internals;
 
 namespace Aurora;
@@ -65,12 +66,6 @@ public static class Program
 
     public static void Main(string[] args)
     {
-#if TESTING
-        Test.isTesting = true;
-        Test.Main();
-        Environment.Exit(0);
-#endif
-
 #if OWL
         Owl.Show();
         Environment.Exit(0);
@@ -95,7 +90,23 @@ public static class Program
 
             InternalVariables.LineNumber = 0;
 
-            Evaluator.EvaluateAll();
+#if TESTING
+            const string testCode = "Terminal.readLine(\"Age? \")\n" +
+                                    ".toInteger()\n" +
+                                    "Terminal.writeLine(age)";
+
+            ParserRework parser = new(testCode);
+            List<List<AstRework>> expressions = parser.Parse();
+
+            foreach (List<AstRework> expression in expressions)
+            {
+                Console.WriteLine("----------------------------------------");
+                foreach (AstRework ast in expression)
+                    Console.WriteLine(ast.ToString());
+            }
+
+
+#endif
 
             Errors.OutputWarningsAndExit();
         }
