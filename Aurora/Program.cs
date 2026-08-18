@@ -93,7 +93,7 @@ public static class Program
 #if TESTING
             const string testCode = "Terminal.readLine(\"Age? \")\n" +
                                     ".toInteger()\n" +
-                                    "Terminal.writeLine(age)";
+                                    "Terminal.writeLine(.age)";
 
             ParserRework parser = new(testCode);
             List<List<AstRework>> expressions = parser.Parse();

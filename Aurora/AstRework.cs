@@ -2,14 +2,13 @@ using Aurora.Internals;
 
 namespace Aurora;
 
-internal class AstRework(RuntimeContext context)
+internal class AstRework
 {
     private TokenListItem? Action { get; set; }
     private List<ArgumentRework>? Arguments { get; set; }
     private RuntimeObject? Target { get; set; }
     private int LineNumber { get; set; }
     private int ColumnNumber { get; set; }
-    private RuntimeContext Context { get; set; } = context;
     public bool IsEmpty => this.Action is null && this.Arguments is null && this.Target is null;
     public bool NoNameWithOtherValues => this.Action is null && (this.Arguments is not null || this.Target is not null);
     public bool IsValid => !this.IsEmpty && !this.NoNameWithOtherValues;
@@ -18,7 +17,7 @@ internal class AstRework(RuntimeContext context)
     {
         if (this.Action is not null)
             Errors.AlwaysThrow(new SystemError("Cannot redefine an ast name"),
-                this.Context,
+                InternalVariables.GlobalContext,
                 this.ColumnNumber);
 
         this.Action = name;
@@ -29,7 +28,7 @@ internal class AstRework(RuntimeContext context)
     {
         if (this.Target is not null)
             Errors.AlwaysThrow(new SystemError("Cannot redefine an ast target"),
-                this.Context,
+                InternalVariables.GlobalContext,
                 this.ColumnNumber);
 
         this.Target = target;
@@ -39,7 +38,7 @@ internal class AstRework(RuntimeContext context)
     {
         if (this.Arguments is not null)
             Errors.AlwaysThrow(new SystemError("Cannot redefine an ast args"),
-                this.Context,
+                InternalVariables.GlobalContext,
                 this.ColumnNumber);
 
         this.Arguments = args;
@@ -48,12 +47,12 @@ internal class AstRework(RuntimeContext context)
     private void UpdatePosition(int line, int column)
     {
         if (line < this.LineNumber)
-            Errors.AlwaysThrow(new SystemError("Line numbers cannot decrease"), this.Context,
+            Errors.AlwaysThrow(new SystemError("Line numbers cannot decrease"), InternalVariables.GlobalContext,
                 position: this.ColumnNumber);
 
         if (column < this.ColumnNumber && line == this.LineNumber)
             Errors.AlwaysThrow(new SystemError("Column numbers cannot decrease unless moving onto the next line"),
-                this.Context,
+                InternalVariables.GlobalContext,
                 position: this.ColumnNumber);
 
         LineNumber = line;

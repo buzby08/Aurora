@@ -8,14 +8,14 @@ namespace Aurora;
 
 internal class ParserRework
 {
-    public RuntimeContext Context { get; init; }
-    public string Code { get; private set; }
-    private TokenList Tokens { get; set; }
-    private List<List<AstRework>> All { get; set; } = [];
-    private int CurrentIndex { get; set; }
-    private int FinalIndex { get; set; }
+    private static ParserOptions _options = new();
+    private static int CurrentArgumentRecursionDepth { get; set; } = 0;
+    private static int CurrentExpressionRecursionDepth { get; set; } = 0;
 
-    public List<List<AstRework>> Expressions { get; private set; } = [];
+    private InternalCallPoint? CallPoint { get; set; } = null;
+    private int CurrentIndex { get; set; } = 0;
+    private TokenList Tokens { get; set; }
+    private List<List<AstRework>> Expressions { get; set; } = [];
     public List<AstRework> CurrentExpression { get; private set; } = [];
     private AstRework? CurrentAst { get; set; } = null;
     private ParserMode Mode { get; set; } = ParserMode.Expression;
@@ -24,10 +24,11 @@ internal class ParserRework
     private TokenListItem? Action { get; set; }
     private List<ArgumentRework>? Arguments { get; set; }
 
-    public ParserRework(string code)
+    public ParserRework(string code, ParserOptions? options = null)
     {
-        this.Code = code;
-        Tokenizer tokenizer = new Tokenizer()
+        _options = options ?? _options;
+
+        Tokenizer tokenizer = new()
         {
             Text = code,
         };
@@ -35,17 +36,57 @@ internal class ParserRework
         this.Tokens = tokenizer.GetAllTokens();
     }
 
-    private ParserRework(IEnumerable<TokenListItem> tokens)
+    private ParserRework(IEnumerable<TokenListItem> tokens, InternalCallPoint callPoint)
     {
+        CallPoint = callPoint;
         TokenList tokenList = new(tokens);
         this.Tokens = tokenList;
     }
 
+    private void EnsureRecursionDepthValid()
+    {
+        if (CurrentArgumentRecursionDepth > _options.MaxArgumentLimit)
+            ThrowError(new MaxRecursionDepthExceededError("Maximum recursive argument depth exceeded"));
+
+        if (CurrentExpressionRecursionDepth > _options.MaxNestingLimit)
+            ThrowError(new MaxRecursionDepthExceededError("Maximum recursive expression depth exceeded"));
+    }
+
     public List<List<AstRework>> Parse()
     {
+        switch (CallPoint)
+        {
+            case InternalCallPoint.ArgumentParsing:
+                CurrentArgumentRecursionDepth++;
+                break;
+            case InternalCallPoint.BlockParsing:
+                CurrentExpressionRecursionDepth++;
+                break;
+            case null:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        this.EnsureRecursionDepthValid();
+
         this.EvaluateTokens();
 
         this.HandleNewAstStart();
+
+        switch (CallPoint)
+        {
+            case InternalCallPoint.ArgumentParsing:
+                CurrentArgumentRecursionDepth--;
+                break;
+            case InternalCallPoint.BlockParsing:
+                CurrentExpressionRecursionDepth--;
+                break;
+            case null:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
         // TODO: Make parser handle any token that comes after a block (such as a dot, which {...}.something i dont know
         //  if should be valid. And make the parser detect the start of a block, and parse it into the block state.
@@ -111,7 +152,7 @@ internal class ParserRework
                 this.HandleBlockState(token);
                 break;
             case ParserState.Invalid:
-                this.HandleInvalidState(token);
+                HandleInvalidState(token);
                 isInvalid = true;
                 break;
             default:
@@ -130,7 +171,7 @@ internal class ParserRework
     {
         Log("Empty state");
         if (!token.Token.CanBeLiteral)
-            ThrowError(new InvalidSyntaxError("Expected a literal value"));
+            ThrowError(new InvalidSyntaxError($"Expected a literal value, found {token.Token.ValueAsString}"));
 
         Log("Setting action");
         this.Action = token;
@@ -165,7 +206,7 @@ internal class ParserRework
     private void GenerateAst()
     {
         Log("Generating ast");
-        this.CurrentAst = new AstRework(this.Context);
+        this.CurrentAst = new AstRework();
 
         if (this.Target is not null)
             this.CurrentAst.AddTarget(this.Target);
@@ -313,13 +354,13 @@ internal class ParserRework
 
         // if (valueIsEmpty && !isName)
         //     ThrowError(new InvalidSyntaxError("Expected a value"));
-        // 
+        //
         // if (!valueIsEmpty && nameIsExpression)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name but found an expression"));
-        // 
+        //
         // if (nameIsEmpty && valueIsEmpty)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name"));
-        // 
+        //
         // if (nameArray[0].Token is not WordToken nameAsWord)
         // {
         //     ThrowError(new InvalidSyntaxError("Argument name must be an identifier"));
@@ -333,7 +374,7 @@ internal class ParserRework
             nameIsEmpty = true;
         }
 
-        ParserRework parserRework = new(valueArray);
+        ParserRework parserRework = new(valueArray, InternalCallPoint.ArgumentParsing);
         Log($"Parsing value - count: {valueArray.Length}");
         List<List<AstRework>> valueAst = parserRework.Parse();
 
@@ -374,9 +415,10 @@ internal class ParserRework
         this.State = ParserState.PartialAttributeAccess;
     }
 
-    private void HandleInvalidState(Token token)
+    private static void HandleInvalidState(Token token)
     {
         Log("Invalid state");
+        ThrowError(new InvalidSyntaxError($"Unexpected token `{token.Value}`"));
     }
 
     private TokenListItem GetNextToken()
@@ -396,7 +438,7 @@ internal class ParserRework
 #if TESTING
         throw new Exception($"{error.Title} - {error.Message}");
 #else
-        Errors.AlwaysThrow(error);
+        Errors.AlwaysThrow(error, InternalVariables.GlobalContext);
 #endif
         throw new UnreachableException();
     }
@@ -419,4 +461,16 @@ internal class ParserRework
         Empty,
         Invalid,
     }
+
+    private enum InternalCallPoint
+    {
+        ArgumentParsing,
+        BlockParsing,
+    }
+}
+
+internal struct ParserOptions()
+{
+    public int MaxNestingLimit { get; init; } = 1000;
+    public int MaxArgumentLimit { get; init; } = 1000;
 }
