@@ -91,9 +91,8 @@ public static class Program
             InternalVariables.LineNumber = 0;
 
 #if TESTING
-            const string testCode = "Terminal.readLine(\"Age? \")\n" +
-                                    ".toInteger()\n" +
-                                    "Terminal.writeLine(.age)";
+
+            string testCode = File.ReadAllText("code.aur");
 
             ParserRework parser = new(testCode);
             List<List<AstRework>> expressions = parser.Parse();
