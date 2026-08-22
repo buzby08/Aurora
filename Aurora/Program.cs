@@ -104,7 +104,6 @@ public static class Program
                     Console.WriteLine(ast.ToString());
             }
 
-
 #endif
 
             Errors.OutputWarningsAndExit();

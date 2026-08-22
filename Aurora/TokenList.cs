@@ -115,4 +115,6 @@ internal struct TokenListItem(Token token, int linePosition, int tokenIndex, int
     public readonly int EndCharPosition = startCharPosition + (token.ValueAsString.Length - 1);
 
     public string AsString => token.ValueAsString;
+
+    public override string ToString() => $"TokenListItem([#{this.Token.Id}] {Token.Type} - {Token.ValueAsString})";
 }

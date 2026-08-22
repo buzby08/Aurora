@@ -4,6 +4,7 @@ namespace Aurora;
 
 internal abstract class Token
 {
+    public readonly int Id = IdGenerator.GenerateId("Token");
     public abstract string Type { get; }
 
     public abstract object? Value { get; set; }
@@ -129,7 +130,12 @@ internal abstract class Token
 
     public string AsString()
     {
-        return $"Token ({this.GetType().Name}) - {this.Value}";
+        return $"Token([#{this.Id}] {this.Type} - {this.ValueAsString})";
+    }
+
+    public override string ToString()
+    {
+        return $"Token([#{this.Id}] {this.Type} - {this.ValueAsString})";
     }
 
     public bool Equals(Token other)

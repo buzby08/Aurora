@@ -1,28 +1,34 @@
 #define TESTING
 
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Aurora.Internals;
+using System.Runtime.CompilerServices;
 
 namespace Aurora;
 
 internal class ParserRework
 {
     private static ParserOptions _options = new();
-    private static int CurrentArgumentRecursionDepth { get; set; } = 0;
-    private static int CurrentExpressionRecursionDepth { get; set; } = 0;
+    private static int CurrentArgumentRecursionDepth { get; set; }
+    private static int CurrentExpressionRecursionDepth { get; set; }
 
-    private InternalCallPoint? CallPoint { get; set; } = null;
-    private int CurrentIndex { get; set; } = 0;
-    private TokenList Tokens { get; set; }
-    private List<List<AstRework>> Expressions { get; set; } = [];
-    public List<AstRework> CurrentExpression { get; private set; } = [];
-    private AstRework? CurrentAst { get; set; } = null;
+    private int _id = IdGenerator.GenerateId("ParserRework");
+    private Logger _logger;
+    private InternalCallPoint? CallPoint { get; }
     private ParserMode Mode { get; set; } = ParserMode.Expression;
+
+    private List<List<AstRework>> Expressions { get; } = [];
+    public List<AstRework> CurrentExpression { get; private set; } = [];
+
+    private TokenList Tokens { get; }
+    private int CurrentIndex { get; set; }
     private ParserState State { get; set; } = ParserState.Empty;
-    private RuntimeObject? Target { get; set; }
+    private AstRework? CurrentAst { get; set; }
+
     private TokenListItem? Action { get; set; }
-    private List<ArgumentRework>? Arguments { get; set; }
+    private ICollection<ArgumentRework>? Arguments { get; set; }
+    private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
 
     public ParserRework(string code, ParserOptions? options = null)
     {
@@ -34,6 +40,7 @@ internal class ParserRework
         };
 
         this.Tokens = tokenizer.GetAllTokens();
+        this._logger = new Logger($"ParserRework #{this._id}");
     }
 
     private ParserRework(IEnumerable<TokenListItem> tokens, InternalCallPoint callPoint)
@@ -41,6 +48,7 @@ internal class ParserRework
         CallPoint = callPoint;
         TokenList tokenList = new(tokens);
         this.Tokens = tokenList;
+        this._logger = new Logger($"ParserRework #{this._id}");
     }
 
     private void EnsureRecursionDepthValid()
@@ -68,11 +76,11 @@ internal class ParserRework
                 throw new ArgumentOutOfRangeException();
         }
 
-        this.EnsureRecursionDepthValid();
+        EnsureRecursionDepthValid();
 
         this.EvaluateTokens();
 
-        this.HandleNewAstStart();
+        this.HandleNewExpressionStart();
 
         switch (CallPoint)
         {
@@ -131,6 +139,13 @@ internal class ParserRework
         if (token is EoLToken)
             return;
 
+        if (token is BracketToken { IsCurly: true, IsOpen: true, })
+        {
+            Log("Found block start token");
+            this.ReachedBlockStart();
+            return;
+        }
+
         switch (State)
         {
             case ParserState.Empty:
@@ -148,23 +163,18 @@ internal class ParserRework
             case ParserState.MethodCall when isDotToken:
                 this.HandleMethodCallState(token);
                 break;
-            case ParserState.Block when isDotToken:
-                this.HandleBlockState(token);
-                break;
             case ParserState.Invalid:
                 HandleInvalidState(token);
                 isInvalid = true;
                 break;
+
+            case ParserState.Block:
             default:
                 if (isDotToken) this.HandleDotToken();
 
-                this.HandleNewAstStart();
+                this.HandleNewExpressionStart();
                 goto evaluateTokenRestartPoint;
         }
-    }
-
-    private void InitializeAst()
-    {
     }
 
     private void HandleEmptyState(TokenListItem token)
@@ -191,31 +201,45 @@ internal class ParserRework
         this.HandleDotToken();
     }
 
+    private void HandleNewExpressionStart()
+    {
+        HandleNewAstStart();
+        this.Expressions.Add(this.CurrentExpression);
+        this.CurrentExpression = [];
+    }
+
     private void HandleNewAstStart()
     {
         Log("New ast start");
         this.GenerateAst();
+
+        if (this.CurrentAst is null) return;
+
         Log("Adding ast to current expression");
-        this.CurrentExpression.Add(this.CurrentAst!);
+        this.CurrentExpression.Add(this.CurrentAst);
         this.CurrentAst = null;
         this.State = ParserState.Empty;
-        this.Expressions.Add(this.CurrentExpression);
-        this.CurrentExpression = [];
+        this.BlockValue = null;
+        this.Arguments = null;
+        this.Action = null;
     }
 
     private void GenerateAst()
     {
         Log("Generating ast");
-        this.CurrentAst = new AstRework();
 
-        if (this.Target is not null)
-            this.CurrentAst.AddTarget(this.Target);
+        if (this.Action is null && this.Arguments is null && this.BlockValue is null) return;
+
+        this.CurrentAst = new AstRework();
 
         if (this.Action is not null)
             this.CurrentAst.AddAction((TokenListItem)this.Action);
 
         if (this.Arguments is not null)
-            this.CurrentAst.AddArgs(this.Arguments);
+            this.CurrentAst.AddArgs([.. this.Arguments,]);
+
+        if (this.BlockValue is not null)
+            this.CurrentAst.AddBlockValue(this.BlockValue);
     }
 
     private void HandlePartialAttributeAccessState(TokenListItem token)
@@ -235,7 +259,7 @@ internal class ParserRework
         Log("Attribute access state");
         if (token is not BracketToken bracketToken)
         {
-            ThrowError(new InvalidSyntaxError("Expected a bracket"));
+            ThrowError(new InvalidSyntaxError($"Expected a bracket, found {token.ValueAsString}"));
             return;
         }
 
@@ -264,24 +288,26 @@ internal class ParserRework
         {
             TokenListItem nextTokenListItem = this.GetNextToken();
 
+            if (nextTokenListItem.Token is EofToken) ThrowError(new EofError("Unexpected end of file"));
+
             if (nextTokenListItem.Token is BracketToken { IsOpen: true, IsNormal: true, })
             {
                 Log($"Increasing bracket depth from {bracketDepth} to {bracketDepth + 1}");
                 bracketDepth++;
-                continue;
             }
 
             if (nextTokenListItem.Token is BracketToken { IsClosed: true, IsNormal: true, })
             {
                 Log($"Decreasing bracket depth from {bracketDepth} to {bracketDepth - 1}");
                 bracketDepth--;
-                continue;
             }
+
+            if (bracketDepth == 0) continue;
 
             if (nextTokenListItem.Token is SemiColonToken)
             {
                 Log("Found semi colon");
-                arguments.Add(this.ConvertToArgument(name, value, isName));
+                arguments.Add(ConvertToArgument(name, value, isName));
                 name.Clear();
                 value.Clear();
                 isName = true;
@@ -297,7 +323,7 @@ internal class ParserRework
 
             if (isName)
             {
-                Log("Adding to name");
+                Log($"Adding `{nextTokenListItem.Token.AsString()}` to name");
                 name.Add(nextTokenListItem);
                 continue;
             }
@@ -306,7 +332,7 @@ internal class ParserRework
             value.Add(nextTokenListItem);
         }
 
-        arguments.Add(this.ConvertToArgument(name, value, isName));
+        arguments.Add(ConvertToArgument(name, value, isName));
 
         for (int i = 0; i < arguments.Count; i++)
         {
@@ -398,24 +424,54 @@ internal class ParserRework
             this.HandleDotToken();
     }
 
-    private void HandleBlockState(Token token)
+    private void ReachedBlockStart()
     {
-        Log("Block state");
-        if (token is DotToken)
-            this.HandleDotToken();
+        Log("Reached block start");
+
+        if (this.State != ParserState.Empty)
+        {
+            this.HandleNewAstStart();
+        }
+
+        List<TokenListItem> block = [];
+
+        int bracketDepth = 1;
+        while (bracketDepth > 0)
+        {
+            TokenListItem nextTokenListItem = this.GetNextToken();
+            Token token = nextTokenListItem.Token;
+
+            if (token is BracketToken { IsCurly: true, IsClosed: true, })
+            {
+                Log($"Decreasing bracket depth from {bracketDepth} to {bracketDepth - 1}");
+                bracketDepth--;
+                continue;
+            }
+
+            if (token is BracketToken { IsCurly: true, IsOpen: true, })
+            {
+                Log($"Increasing bracket depth from {bracketDepth} to {bracketDepth + 1}");
+                bracketDepth++;
+            }
+
+            block.Add(nextTokenListItem);
+        }
+
+        ParserRework parser = new(block, InternalCallPoint.BlockParsing);
+        List<List<AstRework>> blockAst = parser.Parse();
+        this.BlockValue = blockAst;
+        this.State = ParserState.Block;
+        this.HandleNewAstStart();
     }
 
     private void HandleDotToken()
     {
         Log("Dot token");
-        this.GenerateAst();
-        Log("Adding ast to current expression");
-        this.CurrentExpression.Add(this.CurrentAst!);
-        this.CurrentAst = null;
+        this.HandleNewAstStart();
         this.State = ParserState.PartialAttributeAccess;
     }
 
-    private static void HandleInvalidState(Token token)
+    private void HandleInvalidState(Token token)
     {
         Log("Invalid state");
         ThrowError(new InvalidSyntaxError($"Unexpected token `{token.Value}`"));
@@ -433,17 +489,17 @@ internal class ParserRework
     }
 
     [DoesNotReturn]
-    private static void ThrowError(ErrorTypes error)
+    private void ThrowError(ErrorTypes error)
     {
 #if TESTING
-        throw new Exception($"{error.Title} - {error.Message}");
+        this._logger.Error($"{error.Title} - {error.Message}");
 #else
         Errors.AlwaysThrow(error, InternalVariables.GlobalContext);
 #endif
         throw new UnreachableException();
     }
 
-    private static void Log(string message) => Console.WriteLine(message);
+    private void Log(string message) => this._logger.Info(message);
 
     private enum ParserMode
     {
@@ -467,10 +523,12 @@ internal class ParserRework
         ArgumentParsing,
         BlockParsing,
     }
+
+    public override string ToString() => $"ParserRework(#{this._id})";
 }
 
 internal struct ParserOptions()
 {
-    public int MaxNestingLimit { get; init; } = 1000;
-    public int MaxArgumentLimit { get; init; } = 1000;
+    public int MaxNestingLimit { get; } = 1000;
+    public int MaxArgumentLimit { get; } = 1000;
 }

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Aurora.Internals;
@@ -6,8 +7,9 @@ namespace Aurora;
 
 internal class AstRework
 {
+    public readonly int Id = IdGenerator.GenerateId("AstRework");
     private TokenListItem? Action { get; set; }
-    private List<ArgumentRework>? Arguments { get; set; }
+    private IImmutableList<ArgumentRework>? Arguments { get; set; }
     private RuntimeObject? Target { get; set; }
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
     private int LineNumber { get; set; }
@@ -33,7 +35,7 @@ internal class AstRework
         this.Target = target;
     }
 
-    public void AddArgs(List<ArgumentRework> args)
+    public void AddArgs(IImmutableList<ArgumentRework> args)
     {
         if (this.Arguments is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast args"));
@@ -48,6 +50,9 @@ internal class AstRework
 
         if (this.Target is not null || this.Action is not null || this.Arguments is not null)
             this.ThrowError(new SystemError("Cannot add a block value to an ast with other values"));
+
+
+        this.BlockValue = blockValue;
     }
 
     private void UpdatePosition(int line, int column)
@@ -71,34 +76,28 @@ internal class AstRework
 
     public override string ToString()
     {
+        bool useColor = !Debugger.IsAttached;
+        int colorCode = Random.Shared.Next(1, 231);
+        string color = useColor ? $"\e[38;5;{colorCode}m" : "";
+        string resetColor = useColor ? "\e[0m" : "";
         List<string> messages = [];
-        string asString =
-            $"AST: ";
 
-        if (Target is not null) messages.Add($"Target: {this.Target}");
-        if (Action is not null) messages.Add($"Action: {this.Action?.Token?.Value}");
+        string asString =
+            $"{color}AST([#{this.Id}] ";
+
+        if (Target is not null) messages.Add($"{color}Target: {this.Target}");
+        if (Action is not null) messages.Add($"{color}Action: {this.Action?.Token?.Value}");
 
         if (Arguments is not null)
         {
-            string argumentMessage = "Arguments: ";
-
-            argumentMessage += "[";
-            foreach (ArgumentRework arg in Arguments)
-            {
-                string valueAsString = string.Join(',', arg.Value.ConvertAll(ast => ast.ToString()));
-                argumentMessage +=
-                    $"\n    Name: {arg.Identifier?.AsString() ?? "?"}, Value: {valueAsString}";
-            }
-
-            argumentMessage += "  ]";
-
-            messages.Add(argumentMessage);
+            List<string> args = Arguments.Select(x => x.ToString()).ToList();
+            messages.Add($"{color}[" + string.Join($"{color} ,", args) + $"{color}]");
         }
 
-        if (BlockValue is not null) messages.Add($"Block: {BlockValue.Count()} expressions");
+        if (BlockValue is not null) messages.Add($"{color}Block: {BlockValue.Count()} expressions");
 
-        asString += string.Join(',', messages);
+        asString += string.Join($"{color}, ", messages);
 
-        return asString;
+        return asString + $" {color}){resetColor}";
     }
 }

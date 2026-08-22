@@ -10,6 +10,7 @@ internal static class InternalVariables
     public static string CodeFilePath { get; set; } = string.Empty;
 
     public static RuntimeContext GlobalContext = new(CodeFilePath, 0);
+    public static Logger GlobalLogger = new("MainProcess");
 
     public static string Code { get; set; } = "";
 
