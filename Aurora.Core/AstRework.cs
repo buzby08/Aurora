@@ -9,10 +9,9 @@ public class AstRework
     public readonly int Id = IdGenerator.GenerateId("AstRework");
     private TokenListItem? Action { get; set; }
     private IImmutableList<ArgumentRework>? Arguments { get; set; }
-    private RuntimeObject? Target { get; set; }
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
-    public bool IsEmpty => this.Action is null && this.Arguments is null && this.Target is null;
-    public bool NoNameWithOtherValues => this.Action is null && (this.Arguments is not null || this.Target is not null);
+    public bool IsEmpty => this.Action is null && this.Arguments is null;
+    public bool NoNameWithOtherValues => this.Action is null && this.Arguments is not null;
     public bool IsValid => !this.IsEmpty && !this.NoNameWithOtherValues;
 
     public void AddAction(TokenListItem name)
@@ -21,14 +20,6 @@ public class AstRework
             this.ThrowError(new SystemError("Cannot redefine an ast name"));
 
         this.Action = name;
-    }
-
-    public void AddTarget(RuntimeObject target)
-    {
-        if (this.Target is not null)
-            this.ThrowError(new SystemError("Cannot redefine an ast target"));
-
-        this.Target = target;
     }
 
     public void AddArgs(IImmutableList<ArgumentRework> args)
@@ -44,7 +35,7 @@ public class AstRework
         if (this.BlockValue is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast block value"));
 
-        if (this.Target is not null || this.Action is not null || this.Arguments is not null)
+        if (this.Action is not null || this.Arguments is not null)
             this.ThrowError(new SystemError("Cannot add a block value to an ast with other values"));
 
 
@@ -54,7 +45,7 @@ public class AstRework
     [DoesNotReturn]
     private void ThrowError(ErrorTypes error)
     {
-        Errors.AlwaysThrow(error, InternalVariables.GlobalContext);
+        Errors.AlwaysThrow(error, InternalVariables.GetEmptySourceLocation());
         throw new UnreachableException();
     }
 
@@ -69,7 +60,6 @@ public class AstRework
         string asString =
             $"{color}AST([#{this.Id}] ";
 
-        if (this.Target is not null) messages.Add($"{color}Target: {this.Target}");
         if (this.Action is not null) messages.Add($"{color}Action: {this.Action?.Token?.Value}");
 
         if (this.Arguments is not null)

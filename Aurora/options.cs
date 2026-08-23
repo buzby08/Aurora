@@ -115,7 +115,7 @@ public static class CommandLineArguments
         if (!DisableEasterEggs && File == "missing.aur")
         {
             Errors.AlwaysThrow(new FileNotFoundError("404: File intentionally not found."),
-                InternalVariables.GlobalContext);
+                InternalVariables.GetEmptySourceLocation());
         }
 
         Errors.ConfigFilePath = string.IsNullOrEmpty(ConfigFile) ? Errors.ConfigFilePath : ConfigFile;

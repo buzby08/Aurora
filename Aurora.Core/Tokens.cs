@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace Aurora.Core;
 
@@ -161,8 +162,12 @@ public class DotToken : Token
     public override object? Value
     {
         get => this._value;
-        set => Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false),
-            InternalVariables.GlobalContext);
+        set
+        {
+            Errors.AlwaysThrow(new UnsupportedOperationError("Cannot set a value to a dotToken", user: false),
+                InternalVariables.GetEmptySourceLocation());
+            throw new UnreachableException();
+        }
     }
 
     public override bool CanBeLiteral => false;

@@ -7,16 +7,9 @@ public static class InternalVariables
 {
     public static string CodeFilePath { get; set; } = string.Empty;
 
-    public static RuntimeContext GlobalContext = new(CodeFilePath, 0);
     public static Logger GlobalLogger = new("MainProcess");
 
     public static string Code { get; set; } = "";
-
-    public static int LineNumber { get; set; } = 0;
-
-    public static int ExpressionDepth = 0;
-
-    public static int RecursionDepth = 0;
 
     public const string ConfigFilePath = "auroraConfig.json";
 
@@ -49,10 +42,14 @@ public static class InternalVariables
         return $"{quote}{value}{quote}";
     }
 
-    public static void IncrementRecursionDepth()
+    public static SourceLocation GetEmptySourceLocation()
     {
-        RecursionDepth++;
-        if (RecursionDepth > /*UserConfiguration.MaxExpressionDepth*/ 256)
-            Errors.AlwaysThrow(new MaxRecursionDepthExceededError(), GlobalContext);
+        return new SourceLocation
+        {
+            FilePath = CodeFilePath,
+            LineNumber = 0,
+            ColumnNumber = 0,
+            Offset = 0,
+        };
     }
 }

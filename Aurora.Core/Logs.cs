@@ -24,40 +24,40 @@ public static class Logs
         }
     }
 
-    private static LinkedList<string> GenerateStackTrace(RuntimeContext? context)
-    {
-        LinkedList<string> stackTrace = new();
+    // private static LinkedList<string> GenerateStackTrace(RuntimeContext? context)
+    // {
+    //     LinkedList<string> stackTrace = new();
+    //
+    //     if (context is null)
+    //         return stackTrace;
+    //
+    //     stackTrace.AddFirst(CreateMessage(context.FileName, context.LineNumber));
+    //
+    //     RuntimeContext currentContext = context;
+    //
+    //     while (currentContext.Parent is not null)
+    //     {
+    //         bool locationIsSame = currentContext.FileName == currentContext.Parent.FileName &&
+    //                               currentContext.LineNumber == currentContext.Parent.LineNumber;
+    //         if (locationIsSame)
+    //         {
+    //             currentContext = currentContext.Parent;
+    //             continue;
+    //         }
+    //
+    //         currentContext = currentContext.Parent;
+    //
+    //         if (!currentContext.ShowInStackTrace) continue;
+    //
+    //         stackTrace.AddFirst(CreateMessage(currentContext.FileName, currentContext.LineNumber));
+    //     }
+    //
+    //     return stackTrace;
+    //
+    //     string CreateMessage(string fileName, int lineNum) => $"at {{{fileName} : Line {lineNum}}}";
+    // }
 
-        if (context is null)
-            return stackTrace;
-
-        stackTrace.AddFirst(CreateMessage(context.FileName, context.LineNumber));
-
-        RuntimeContext currentContext = context;
-
-        while (currentContext.Parent is not null)
-        {
-            bool locationIsSame = currentContext.FileName == currentContext.Parent.FileName &&
-                                  currentContext.LineNumber == currentContext.Parent.LineNumber;
-            if (locationIsSame)
-            {
-                currentContext = currentContext.Parent;
-                continue;
-            }
-
-            currentContext = currentContext.Parent;
-
-            if (!currentContext.ShowInStackTrace) continue;
-
-            stackTrace.AddFirst(CreateMessage(currentContext.FileName, currentContext.LineNumber));
-        }
-
-        return stackTrace;
-
-        string CreateMessage(string fileName, int lineNum) => $"at {{{fileName} : Line {lineNum}}}";
-    }
-
-    private static void LogOutput(string message, RuntimeContext? context = null)
+    private static void LogOutput(string message/*, RuntimeContext? context = null*/)
     {
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         string fullMessage = ShowTimestamp ? $"{timestamp}: {message}" : message;
@@ -65,8 +65,8 @@ public static class Logs
         if (!NoConsole)
         {
             Console.WriteLine(message);
-            foreach (string stackTraceItem in GenerateStackTrace(context))
-                Console.WriteLine(stackTraceItem);
+            // foreach (string stackTraceItem in GenerateStackTrace(context))
+            //     Console.WriteLine(stackTraceItem);
         }
 
         fullMessage = fullMessage
@@ -141,10 +141,10 @@ public static class Logs
         Console.ResetColor();
     }
 
-    public static void Error(string message, RuntimeContext context)
+    public static void Error(string message/*, RuntimeContext context*/)
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        LogOutput($"[ERROR] {message}", context);
+        LogOutput($"[ERROR] {message}");
         Console.ResetColor();
     }
 

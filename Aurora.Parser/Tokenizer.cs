@@ -419,8 +419,9 @@ public class Tokenizer
     [DoesNotReturn]
     private void Error(string message)
     {
-        Errors.AlwaysThrow(new SystemError($"Tokenizer error: {message}"), InternalVariables.GlobalContext,
-            this.Position);
+        Errors.AlwaysThrow(
+            new SystemError($"Tokenizer error: {message}"),
+            InternalVariables.GetEmptySourceLocation());
         Environment.Exit(1);
     }
 }

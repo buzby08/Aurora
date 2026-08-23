@@ -1,45 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-// [DoesNotReturn]
-// public static T AlwaysThrow<T>(ErrorTypes error, SourceLocation location)
-// {
-//     AlwaysThrow(error, location);
-//     throw new UnreachableException();
-// }
-//
-// [DoesNotReturn]
-// public static void AlwaysThrow(ErrorTypes error, SourceLocation location)
-// {
-//     RaiseError(error, location, alwaysThrow: true);
-//
-//     if (InternalVariables.DisableErrors)
-//         return;
-//     Environment.Exit(1);
-//     throw new UnreachableException();
-// }
-//
-// public static void RaiseError(ErrorTypes error, SourceLocation location,
-//                               bool alwaysThrow = false)
-// {
-//     string positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
-//
-//     string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
-//
-//     bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
-//
-//     if (!isError || InternalVariables.DisableErrors)
-//     {
-//         Logs.Warning(outputMessage);
-//         Warnings.Add("[WARNING]" + outputMessage);
-//         return;
-//     }
-//
-//     Logs.Error(outputMessage);
-//
-//     Environment.Exit(1);
-// }
-
 namespace Aurora.Core;
 
 public class Errors
@@ -58,16 +19,16 @@ public class Errors
     }
 
     [DoesNotReturn]
-    public static T AlwaysThrow<T>(ErrorTypes error, RuntimeContext? context, int? position = null)
+    public static T AlwaysThrow<T>(ErrorTypes error, SourceLocation location)
     {
-        AlwaysThrow(error, context, position);
+        AlwaysThrow(error, location);
         throw new UnreachableException();
     }
 
     [DoesNotReturn]
-    public static void AlwaysThrow(ErrorTypes error, RuntimeContext? context, int? position = null)
+    public static void AlwaysThrow(ErrorTypes error, SourceLocation location)
     {
-        RaiseError(error, context, position, alwaysThrow: true);
+        RaiseError(error, location, alwaysThrow: true);
 
         if (InternalVariables.DisableErrors)
             return;
@@ -75,20 +36,10 @@ public class Errors
         throw new UnreachableException();
     }
 
-    public static void RaiseError(ErrorTypes error, RuntimeContext? context, int? position = null,
+    public static void RaiseError(ErrorTypes error, SourceLocation location,
                                   bool alwaysThrow = false)
     {
-        int? lineNumber = InternalVariables.LineNumber;
-        string positionMessage = "Unknown line";
-
-        if (lineNumber is not null && position is not null)
-            positionMessage = $"Line {lineNumber} : position {position}";
-
-        if (lineNumber is not null && position is null)
-            positionMessage = $"Line {lineNumber}";
-
-        if (context is not null)
-            positionMessage = $"{context.FileName} {positionMessage}";
+        string positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
 
         string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
 
@@ -101,7 +52,7 @@ public class Errors
             return;
         }
 
-        Logs.Error(outputMessage, context);
+        Logs.Error(outputMessage);
 
         Environment.Exit(1);
     }
