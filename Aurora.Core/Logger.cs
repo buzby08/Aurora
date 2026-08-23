@@ -1,6 +1,6 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal class Logger(string caller)
+public class Logger(string caller)
 {
     private static bool UseConsole = true;
     private static string? FilePath = "aurora.log";

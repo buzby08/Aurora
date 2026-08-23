@@ -1,11 +1,10 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Aurora.Internals;
 
-namespace Aurora;
+namespace Aurora.Core;
 
-internal class AstRework
+public class AstRework
 {
     public readonly int Id = IdGenerator.GenerateId("AstRework");
     private TokenListItem? Action { get; set; }
@@ -70,16 +69,16 @@ internal class AstRework
         string asString =
             $"{color}AST([#{this.Id}] ";
 
-        if (Target is not null) messages.Add($"{color}Target: {this.Target}");
-        if (Action is not null) messages.Add($"{color}Action: {this.Action?.Token?.Value}");
+        if (this.Target is not null) messages.Add($"{color}Target: {this.Target}");
+        if (this.Action is not null) messages.Add($"{color}Action: {this.Action?.Token?.Value}");
 
-        if (Arguments is not null)
+        if (this.Arguments is not null)
         {
-            List<string> args = Arguments.Select(x => x.ToString()).ToList();
+            List<string> args = this.Arguments.Select(x => x.ToString()).ToList();
             messages.Add($"{color}[" + string.Join($"{color} ,", args) + $"{color}]");
         }
 
-        if (BlockValue is not null) messages.Add($"{color}Block: {BlockValue.Count()} expressions");
+        if (this.BlockValue is not null) messages.Add($"{color}Block: {this.BlockValue.Count()} expressions");
 
         asString += string.Join($"{color}, ", messages);
 

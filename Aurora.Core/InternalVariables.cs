@@ -1,11 +1,9 @@
-using Aurora.Internals;
-
-namespace Aurora;
+namespace Aurora.Core;
 
 /// <summary>
 /// Stores all internal variables for the interpreter.
 /// </summary>
-internal static class InternalVariables
+public static class InternalVariables
 {
     public static string CodeFilePath { get; set; } = string.Empty;
 

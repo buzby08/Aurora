@@ -1,8 +1,6 @@
-using Aurora.Internals;
+namespace Aurora.Core;
 
-namespace Aurora;
-
-internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
+public class Argument(TokenList? value = null, TokenListItem? keyword = null)
 {
     public TokenListItem? Keyword = keyword;
     public string? KeywordAsString => keyword?.AsString;
@@ -106,7 +104,7 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
     }
 }
 
-internal struct ArgumentParsingReturnResult(int numberOfTokensChecked, List<Argument> arguments)
+public struct ArgumentParsingReturnResult(int numberOfTokensChecked, List<Argument> arguments)
 {
     public List<Argument> Arguments = arguments;
     public int NumberOfTokensChecked = numberOfTokensChecked;

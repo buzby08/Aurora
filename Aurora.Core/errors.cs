@@ -1,10 +1,48 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Aurora.Internals;
 
-namespace Aurora;
+// [DoesNotReturn]
+// public static T AlwaysThrow<T>(ErrorTypes error, SourceLocation location)
+// {
+//     AlwaysThrow(error, location);
+//     throw new UnreachableException();
+// }
+//
+// [DoesNotReturn]
+// public static void AlwaysThrow(ErrorTypes error, SourceLocation location)
+// {
+//     RaiseError(error, location, alwaysThrow: true);
+//
+//     if (InternalVariables.DisableErrors)
+//         return;
+//     Environment.Exit(1);
+//     throw new UnreachableException();
+// }
+//
+// public static void RaiseError(ErrorTypes error, SourceLocation location,
+//                               bool alwaysThrow = false)
+// {
+//     string positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
+//
+//     string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
+//
+//     bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
+//
+//     if (!isError || InternalVariables.DisableErrors)
+//     {
+//         Logs.Warning(outputMessage);
+//         Warnings.Add("[WARNING]" + outputMessage);
+//         return;
+//     }
+//
+//     Logs.Error(outputMessage);
+//
+//     Environment.Exit(1);
+// }
 
-internal class Errors
+namespace Aurora.Core;
+
+public class Errors
 {
     public static string ConfigFilePath { get; set; } = "AuroraConfig.json";
     public static List<string> Warnings = [];
@@ -75,7 +113,7 @@ internal class Errors
     }
 }
 
-internal abstract class ErrorTypes
+public abstract class ErrorTypes
 {
     public abstract string Title { get; }
     public abstract string Description { get; }
@@ -84,7 +122,7 @@ internal abstract class ErrorTypes
     public virtual bool AlwaysError => false;
 }
 
-internal class ArgumentSurplusError : ErrorTypes
+public class ArgumentSurplusError : ErrorTypes
 {
     public override string Title { get; }
 
@@ -100,7 +138,7 @@ internal class ArgumentSurplusError : ErrorTypes
     }
 }
 
-internal class ArgumentDeficitError : ErrorTypes
+public class ArgumentDeficitError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Not enough arguments were provided for this method or operation";
@@ -116,7 +154,7 @@ internal class ArgumentDeficitError : ErrorTypes
     }
 }
 
-internal class ArgumentTypeMismatchError : ErrorTypes
+public class ArgumentTypeMismatchError : ErrorTypes
 {
     public override string Title { get; }
 
@@ -134,7 +172,7 @@ internal class ArgumentTypeMismatchError : ErrorTypes
     }
 }
 
-internal class MissingRequiredArgError : ErrorTypes
+public class MissingRequiredArgError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A required argument is missing from this method call";
@@ -149,7 +187,7 @@ internal class MissingRequiredArgError : ErrorTypes
     }
 }
 
-internal class UnexpectedKeywordArgError : ErrorTypes
+public class UnexpectedKeywordArgError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "An unexpected keyword argument was supplied";
@@ -163,7 +201,7 @@ internal class UnexpectedKeywordArgError : ErrorTypes
     }
 }
 
-internal class InvalidArgNameError : ErrorTypes
+public class InvalidArgNameError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The provided argument name is invalid or reserved";
@@ -177,7 +215,7 @@ internal class InvalidArgNameError : ErrorTypes
     }
 }
 
-internal class ObjectNotFoundError : ErrorTypes
+public class ObjectNotFoundError : ErrorTypes
 {
     public override string Title { get; }
 
@@ -194,7 +232,7 @@ internal class ObjectNotFoundError : ErrorTypes
     }
 }
 
-internal class VarAlreadyExistsError : ErrorTypes
+public class VarAlreadyExistsError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A variable with the same name already exists";
@@ -208,7 +246,7 @@ internal class VarAlreadyExistsError : ErrorTypes
     }
 }
 
-internal class InvalidRangeError : ErrorTypes
+public class InvalidRangeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The provided range is invalid";
@@ -223,7 +261,7 @@ internal class InvalidRangeError : ErrorTypes
     }
 }
 
-internal class ImmutableVarModificationError : ErrorTypes
+public class ImmutableVarModificationError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Attempted to modify a constant (immutable) variable";
@@ -238,7 +276,7 @@ internal class ImmutableVarModificationError : ErrorTypes
     }
 }
 
-internal class InvalidVarTypeError : ErrorTypes
+public class InvalidVarTypeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The provided variable type is invalid or not recognised";
@@ -253,7 +291,7 @@ internal class InvalidVarTypeError : ErrorTypes
     }
 }
 
-internal class VarScopeViolationError : ErrorTypes
+public class VarScopeViolationError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Access to a variable outside its defined scope";
@@ -268,7 +306,7 @@ internal class VarScopeViolationError : ErrorTypes
     }
 }
 
-internal class TypeMismatchError : ErrorTypes
+public class TypeMismatchError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Operation cannot be performed due to incompatible data types";
@@ -282,7 +320,7 @@ internal class TypeMismatchError : ErrorTypes
     }
 }
 
-internal class UnsupportedOperationError : ErrorTypes
+public class UnsupportedOperationError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Operation cannot be performed due to incompatible data types";
@@ -297,7 +335,7 @@ internal class UnsupportedOperationError : ErrorTypes
     }
 }
 
-internal class OutOfRangeError : ErrorTypes
+public class OutOfRangeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A value is outside the allowed range";
@@ -312,7 +350,7 @@ internal class OutOfRangeError : ErrorTypes
     }
 }
 
-internal class DivisionByZeroError : ErrorTypes
+public class DivisionByZeroError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Attempted to divide by zero";
@@ -327,7 +365,7 @@ internal class DivisionByZeroError : ErrorTypes
     }
 }
 
-internal class UnexpectedTokenError : ErrorTypes
+public class UnexpectedTokenError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "An unexpected token was encountered during parsing";
@@ -342,7 +380,7 @@ internal class UnexpectedTokenError : ErrorTypes
     }
 }
 
-internal class InvalidSyntaxError : ErrorTypes
+public class InvalidSyntaxError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The syntax of this statement is invalid";
@@ -357,7 +395,7 @@ internal class InvalidSyntaxError : ErrorTypes
     }
 }
 
-internal class UnclosedDelimiterError : ErrorTypes
+public class UnclosedDelimiterError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A delimiter (e.g. Parenthesis, brackets) was not closed";
@@ -372,7 +410,7 @@ internal class UnclosedDelimiterError : ErrorTypes
     }
 }
 
-internal class MissingSeparatorError : ErrorTypes
+public class MissingSeparatorError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A required separator (e.g. ';', '.') is missing";
@@ -387,7 +425,7 @@ internal class MissingSeparatorError : ErrorTypes
     }
 }
 
-internal class UnreachableCodeError : ErrorTypes
+public class UnreachableCodeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Code exists after a return, halt, or exit point";
@@ -401,7 +439,7 @@ internal class UnreachableCodeError : ErrorTypes
     }
 }
 
-internal class InvalidReturnTypeError : ErrorTypes
+public class InvalidReturnTypeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Returned value does not match the declared return type";
@@ -416,7 +454,7 @@ internal class InvalidReturnTypeError : ErrorTypes
     }
 }
 
-internal class ModuleNotFoundError : ErrorTypes
+public class ModuleNotFoundError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The specified module could not be found";
@@ -431,7 +469,7 @@ internal class ModuleNotFoundError : ErrorTypes
     }
 }
 
-internal class InvalidMethodError : ErrorTypes
+public class InvalidMethodError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The provided method could not be found";
@@ -446,7 +484,7 @@ internal class InvalidMethodError : ErrorTypes
     }
 }
 
-internal class FileNotFoundError : ErrorTypes
+public class FileNotFoundError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The specified file could not be found";
@@ -461,7 +499,7 @@ internal class FileNotFoundError : ErrorTypes
     }
 }
 
-internal class InvalidAttributeError : ErrorTypes
+public class InvalidAttributeError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The provided attribute could not be found";
@@ -476,7 +514,7 @@ internal class InvalidAttributeError : ErrorTypes
     }
 }
 
-internal class InvalidMemberAccessError : ErrorTypes
+public class InvalidMemberAccessError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "Attempted to access an undefined or restricted class member";
@@ -491,7 +529,7 @@ internal class InvalidMemberAccessError : ErrorTypes
     }
 }
 
-internal class ConstantRedefinitionError : ErrorTypes
+public class ConstantRedefinitionError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A constant cannot be redefined after initial assignment";
@@ -506,7 +544,7 @@ internal class ConstantRedefinitionError : ErrorTypes
     }
 }
 
-internal class ConfigurationError : ErrorTypes
+public class ConfigurationError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "A problem occured while loading or interpreting the configuration";
@@ -521,7 +559,7 @@ internal class ConfigurationError : ErrorTypes
     }
 }
 
-internal class MaxExpressionDepthExceededError : ErrorTypes
+public class MaxExpressionDepthExceededError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The maximum number of expressions per line was exceeded";
@@ -536,7 +574,7 @@ internal class MaxExpressionDepthExceededError : ErrorTypes
     }
 }
 
-internal class MaxRecursionDepthExceededError : ErrorTypes
+public class MaxRecursionDepthExceededError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The system encountered its maximum recursion depth.";
@@ -551,7 +589,7 @@ internal class MaxRecursionDepthExceededError : ErrorTypes
     }
 }
 
-internal class MemoryError : ErrorTypes
+public class MemoryError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "The system tried to use or access invalid memory.";
@@ -566,7 +604,7 @@ internal class MemoryError : ErrorTypes
     }
 }
 
-internal class EofError : ErrorTypes
+public class EofError : ErrorTypes
 {
     public override string Title { get; }
     public sealed override string Description => "End of file was found before an expression finished.";
@@ -581,7 +619,7 @@ internal class EofError : ErrorTypes
     }
 }
 
-internal class SystemError : ErrorTypes
+public class SystemError : ErrorTypes
 {
     public override string Title => "[SYSTEM]";
     public sealed override string Description => "The system encountered a problem it could not handle";

@@ -1,6 +1,6 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal static class Writer
+public static class Writer
 {
     private static readonly List<string> Queue = [];
 
@@ -16,7 +16,7 @@ internal static class Writer
             Console.Write(message);
             Logs.Debug($"(Written To Stream) {message}");
         }
-        
+
         Queue.Clear();
     }
 

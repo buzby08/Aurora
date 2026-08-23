@@ -1,4 +1,4 @@
-namespace Aurora;
+namespace Aurora.Core;
 
 public static class Owl
 {

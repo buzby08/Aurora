@@ -81,7 +81,7 @@ internal class Method
             returnedObject = this._builtinBody!(self, matchedArgs, methodContext);
 
         if (!this.IsBuiltin)
-            returnedObject = Evaluator.ExecuteMethodAst(
+            returnedObject = Evaluator.Evaluator.ExecuteMethodAst(
                 this._userDefinedBody!,
                 self,
                 methodContext);

@@ -49,7 +49,7 @@ internal class MethodObject : CallableObject
             returnedObject = this._builtinBody!(this.BoundSelf, matchedArgs, methodContext);
 
         if (!this.IsBuiltin)
-            returnedObject = Evaluator.ExecuteMethodAst(
+            returnedObject = Evaluator.Evaluator.ExecuteMethodAst(
                 this._userDefinedBody!,
                 this.BoundSelf,
                 methodContext);

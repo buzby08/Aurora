@@ -1,11 +1,9 @@
-using Aurora.Internals;
-
-namespace Aurora;
+namespace Aurora.Core;
 
 /// <summary>
 /// Allows easy logs to a log file
 /// </summary>
-internal static class Logs
+public static class Logs
 {
     public static bool AllowDebug = false;
     public static bool AllowVerbose = false;

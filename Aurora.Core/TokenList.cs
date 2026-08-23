@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Diagnostics;
 
-namespace Aurora;
+namespace Aurora.Core;
 
-internal class TokenList : IEnumerable<TokenListItem>
+public class TokenList : IEnumerable<TokenListItem>
 {
     private readonly List<TokenListItem> _data = [];
 
@@ -18,7 +18,7 @@ internal class TokenList : IEnumerable<TokenListItem>
         }
     }
 
-    public int Count => _data.Count;
+    public int Count => this._data.Count;
     public SourceLocation StartLocation => this._data.First().StartLocation;
     public SourceLocation EndLocation => this._data.Last().EndLocation;
 
@@ -48,7 +48,7 @@ internal class TokenList : IEnumerable<TokenListItem>
     {
         get
         {
-            if (index < 0 || index >= Count)
+            if (index < 0 || index >= this.Count)
                 throw new IndexOutOfRangeException();
 
             return this._data[index];
@@ -56,7 +56,7 @@ internal class TokenList : IEnumerable<TokenListItem>
 
         set
         {
-            if (index < 0 || index >= Count)
+            if (index < 0 || index >= this.Count)
                 throw new IndexOutOfRangeException();
 
             this._data[index] = value;
@@ -67,13 +67,13 @@ internal class TokenList : IEnumerable<TokenListItem>
     {
         get
         {
-            var (start, length) = range.GetOffsetAndLength(Count);
+            var (start, length) = range.GetOffsetAndLength(this.Count);
 
             TokenList slice = new();
 
             for (int i = start; i < start + length; i++)
             {
-                slice._data.Add(_data[i]);
+                slice._data.Add(this._data[i]);
             }
 
             return slice;
@@ -83,7 +83,7 @@ internal class TokenList : IEnumerable<TokenListItem>
 
     public IEnumerator<TokenListItem> GetEnumerator()
     {
-        return _data.GetEnumerator();
+        return this._data.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -95,14 +95,14 @@ internal class TokenList : IEnumerable<TokenListItem>
     {
     }
 
-    internal TokenList(IEnumerable<TokenListItem> items)
+    public TokenList(IEnumerable<TokenListItem> items)
     {
         this.Clear();
         foreach (TokenListItem item in items) this.AddRaw(item);
     }
 }
 
-internal struct TokenListItem(Token token)
+public struct TokenListItem(Token token)
 {
     public readonly Token Token = token;
     public SourceLocation StartLocation => token.StartLocation;
@@ -110,5 +110,5 @@ internal struct TokenListItem(Token token)
 
     public string AsString => token.ValueAsString;
 
-    public override string ToString() => $"TokenListItem([#{this.Token.Id}] {Token.Type} - {Token.ValueAsString})";
+    public override string ToString() => $"TokenListItem([#{this.Token.Id}] {this.Token.Type} - {this.Token.ValueAsString})";
 }

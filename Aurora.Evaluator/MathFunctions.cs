@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
 
-namespace Aurora;
+namespace Aurora.Evaluator;
 
 internal static class MathFunctions
 {

@@ -1,9 +1,6 @@
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
+namespace Aurora.Core;
 
-namespace Aurora;
-
-internal class Ast
+public class Ast
 {
     public enum AstStates
     {
@@ -18,30 +15,30 @@ internal class Ast
 
     private AstStates _state { get; set; } = AstStates.Invalid;
 
-    public AstStates State => _state;
+    public AstStates State => this._state;
 
     private TokenListItem? _target { get; set; }
 
     public TokenListItem? Target
     {
-        get => _target;
+        get => this._target;
         set
         {
-            _target = value;
+            this._target = value;
             this.UpdateState();
         }
     }
 
-    public string? TargetAsString => _target?.AsString;
+    public string? TargetAsString => this._target?.AsString;
 
     private bool _isALiteral { get; set; } = false;
 
     public bool IsALiteral
     {
-        get => _isALiteral;
+        get => this._isALiteral;
         set
         {
-            _isALiteral = value;
+            this._isALiteral = value;
             this.UpdateState();
         }
     }
@@ -50,24 +47,24 @@ internal class Ast
 
     public TokenListItem? Name
     {
-        get => _name;
+        get => this._name;
         set
         {
-            _name = value;
+            this._name = value;
             this.UpdateState();
         }
     }
 
-    public string? NameAsString => _name?.AsString;
+    public string? NameAsString => this._name?.AsString;
 
     private List<Argument>? _arguments { get; set; }
 
     public List<Argument>? Arguments
     {
-        get => _arguments;
+        get => this._arguments;
         set
         {
-            _arguments = value;
+            this._arguments = value;
             this.UpdateState();
         }
     }
@@ -76,10 +73,10 @@ internal class Ast
 
     public List<AstList>? ContainedCollection
     {
-        get => _containedCollection;
+        get => this._containedCollection;
         set
         {
-            _containedCollection = value;
+            this._containedCollection = value;
             this.UpdateState();
         }
     }
@@ -105,21 +102,21 @@ internal class Ast
             Errors.AlwaysThrow(new SystemError($"Ast target state is invalid"), context);
 
         if (this._state is AstStates.Literal)
-            return EvaluateLiteral(context);
+            return this.EvaluateLiteral(context);
 
         if (target is null && this._target is null)
             Errors.AlwaysThrow(new SystemError($"Ast target is null, and AST is not a literal"),
                 context, position: 0 /* Start */);
 
-        target ??= RuntimeObject.CreateFromToken(_target!.Value.Token, context);
+        target ??= RuntimeObject.CreateFromToken(this._target!.Value.Token, context);
 
         return this._state switch
         {
-            AstStates.MethodCall => EvaluateMethodCall(context, target),
-            AstStates.AttributeAccess => EvaluateAttributeAccess(context, target),
-            AstStates.PartialMethodCall => EvaluateMethodCall(context, target),
-            AstStates.PartialAttributeAccess => EvaluateAttributeAccess(context, target),
-            AstStates.Collection => EvaluateCollection(context),
+            AstStates.MethodCall => this.EvaluateMethodCall(context, target),
+            AstStates.AttributeAccess => this.EvaluateAttributeAccess(context, target),
+            AstStates.PartialMethodCall => this.EvaluateMethodCall(context, target),
+            AstStates.PartialAttributeAccess => this.EvaluateAttributeAccess(context, target),
+            AstStates.Collection => this.EvaluateCollection(context),
             _ => Errors.AlwaysThrow<RuntimeObject>(new SystemError("Ast state is invalid"), context),
         };
     }
@@ -128,21 +125,21 @@ internal class Ast
     {
         Method method = null!;
         if (target is Internals.Type type)
-            method = type.GetStaticMethod(_name!.Value.AsString, context, 0 /* Start */);
+            method = type.GetStaticMethod(this._name!.Value.AsString, context, 0 /* Start */);
 
         if (target is not Internals.Type)
-            method = target.Type.GetInstanceMethod(_name!.Value.AsString, context, 0 /* Start */);
+            method = target.Type.GetInstanceMethod(this._name!.Value.AsString, context, 0 /* Start */);
 
-        return method.Invoke(target, _arguments!, context);
+        return method.Invoke(target, this._arguments!, context);
     }
 
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString, context, 0 /* Start */)
+            return type.GetStaticAttribute(this._name!.Value.AsString, context, 0 /* Start */)
                 .GetValue(target, context);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString, context, 0 /* Start */)
+        return target.Type.GetInstanceAttribute(this._name!.Value.AsString, context, 0 /* Start */)
             .GetValue(target, context);
     }
 
@@ -153,7 +150,7 @@ internal class Ast
 
     private UnitObject EvaluateCollection(RuntimeContext context)
     {
-        foreach (AstList astList in _containedCollection!) Evaluator.EvaluateAll(); // Todo: Make evaluate ast list
+        foreach (AstList astList in this._containedCollection!) Evaluator.EvaluateAll(); // Todo: Make evaluate ast list
         return new UnitObject();
     }
 
@@ -166,12 +163,12 @@ internal class Ast
                 this._state = AstStates.Literal;
                 return;
 
-            case not null when _name is not null && _arguments is not null && !this._isALiteral &&
+            case not null when this._name is not null && this._arguments is not null && !this._isALiteral &&
                                this._containedCollection is null:
                 this._state = AstStates.MethodCall;
                 return;
 
-            case not null when _name is not null && _arguments is null && !this._isALiteral &&
+            case not null when this._name is not null && this._arguments is null && !this._isALiteral &&
                                this._containedCollection is null:
                 this._state = AstStates.AttributeAccess;
                 return;

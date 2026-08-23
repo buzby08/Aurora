@@ -12,7 +12,7 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
+            RuntimeObject variableObject = Evaluator.Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
 
             if (variableObject.Type != targetType)
                 Errors.AlwaysThrow(
@@ -32,7 +32,7 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            RuntimeObject variableObject = Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
+            RuntimeObject variableObject = Evaluator.Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
             if (variableObject.Type != targetType)
                 Errors.AlwaysThrow(
                     new TypeMismatchError(

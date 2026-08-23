@@ -1,6 +1,6 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal class SourceLocation
+public class SourceLocation
 {
     public readonly int Id = IdGenerator.GenerateId("SourceLocation");
     public required string FilePath { get; init; }

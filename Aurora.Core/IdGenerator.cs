@@ -1,6 +1,6 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal static class IdGenerator
+public static class IdGenerator
 {
     private static Dictionary<string, int> _ids = new();
 

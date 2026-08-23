@@ -1,8 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.SymbolStore;
+using Aurora.Core;
+using SymbolToken = Aurora.Core.SymbolToken;
 
-namespace Aurora;
+namespace Aurora.Parser;
 
-internal class Tokenizer
+public class Tokenizer
 {
     public string FilePath { get; init; }
 
@@ -69,9 +72,9 @@ internal class Tokenizer
     /// Starting at the current character, this gets the next block of numbers, including negative and decimal symbols,
     /// and returns a <see cref="NumberToken"/>. If the current character does not meet the requirements, the
     /// <see cref="Error"/> method will be called. If the current character is a negative symbol, and no following
-    /// characters meet the requirements, an <see cref="SymbolToken"/> containing the negative symbol will be returned.
+    /// characters meet the requirements, an <see cref="Core.SymbolToken"/> containing the negative symbol will be returned.
     /// </summary>
-    /// <returns>The generated <see cref="NumberToken"/> or <see cref="SymbolToken"/>.</returns>
+    /// <returns>The generated <see cref="NumberToken"/> or <see cref="Core.SymbolToken"/>.</returns>
     /// <remarks>"Negative symbol" = `-` and "Decimal symbol" = `.`</remarks>
     private Token Number()
     {
@@ -239,12 +242,12 @@ internal class Tokenizer
 
     /// <summary>
     /// Starting at the current character, this character gets the next block of symbols. A list of the symbols can be
-    /// at <see cref="SymbolToken.VARS"/>, and also includes `=` and `.`. If the current character does
+    /// at <see cref="Core.SymbolToken.VARS"/>, and also includes `=` and `.`. If the current character does
     /// not meet the requirements, the <see cref="Error"/> method will be called. When the symbol is created, if the
-    /// full generated symbol is not a valid symbol, the <see cref="SymbolToken"/> initialisation will throw an error to
+    /// full generated symbol is not a valid symbol, the <see cref="Core.SymbolToken"/> initialisation will throw an error to
     /// the user.
     /// </summary>
-    /// <returns>The generated <see cref="SymbolToken"/>.</returns>
+    /// <returns>The generated <see cref="Core.SymbolToken"/>.</returns>
     /// <remarks>
     /// `=` is ascii character 61. `.` is ascii character 46. All ascii values are in the decimal format.
     /// </remarks>

@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 
-namespace Aurora;
+namespace Aurora.Core;
 
-internal abstract class Token
+public abstract class Token
 {
     public readonly int Id = IdGenerator.GenerateId("Token");
     public required SourceLocation StartLocation { get; init; }
@@ -128,7 +128,7 @@ internal abstract class Token
         get => ThrowNotImplemented<bool>();
     }
 
-    public int ValueLength => ValueAsString?.Length ?? 0;
+    public int ValueLength => this.ValueAsString?.Length ?? 0;
 
     public string AsString()
     {
@@ -152,7 +152,7 @@ internal abstract class Token
     }
 }
 
-internal class DotToken : Token
+public class DotToken : Token
 {
     public const string TokenType = "DOT";
     public override string Type => TokenType;
@@ -173,7 +173,7 @@ internal class DotToken : Token
     }
 }
 
-internal class WordToken : Token
+public class WordToken : Token
 {
     public const string TokenType = "WORD";
     public override string Type => TokenType;
@@ -205,7 +205,7 @@ internal class WordToken : Token
     }
 }
 
-internal class BracketToken : Token
+public class BracketToken : Token
 {
     public const string TokenType = "BRACKET";
 
@@ -260,7 +260,7 @@ internal class BracketToken : Token
     }
 }
 
-internal class StringToken : Token
+public class StringToken : Token
 {
     public const string TokenType = "STRING";
     public static readonly ImmutableHashSet<char> START_CHARS = ['"', '\'',];
@@ -316,8 +316,8 @@ internal class StringToken : Token
     //     return escapeSequences.GetValueOrDefault(escapeSequence, escapeSequence);
     // }
 
-    public override string ValueAsString => _value;
-    public new int ValueLength => StartChar is not null ? 2 + ValueLength : base.ValueLength;
+    public override string ValueAsString => this._value;
+    public new int ValueLength => this.StartChar is not null ? 2 + this.ValueLength : base.ValueLength;
 
     public StringToken Initialise(string value, bool withoutQuotes = false)
     {
@@ -337,7 +337,7 @@ internal class StringToken : Token
     }
 }
 
-internal class NumberToken : Token
+public class NumberToken : Token
 {
     public const string TokenType = "NUMBER";
 
@@ -371,7 +371,7 @@ internal class NumberToken : Token
     }
 }
 
-internal class EqualsToken : Token
+public class EqualsToken : Token
 {
     public const string TokenType = "EQUALS";
 
@@ -386,7 +386,7 @@ internal class EqualsToken : Token
     public override bool CanBeLiteral => false;
 }
 
-internal class SemiColonToken : Token
+public class SemiColonToken : Token
 {
     public const string TokenType = "SEMICOLON";
 
@@ -401,7 +401,7 @@ internal class SemiColonToken : Token
     public override bool CanBeLiteral => false;
 }
 
-internal class SymbolToken : Token
+public class SymbolToken : Token
 {
     public const string TokenType = "SYMBOL";
 
@@ -438,7 +438,7 @@ internal class SymbolToken : Token
     }
 }
 
-internal class EoLToken : Token
+public class EoLToken : Token
 {
     public const string TokenType = "END_OF_LINE";
 
@@ -453,7 +453,7 @@ internal class EoLToken : Token
     public override bool CanBeLiteral => false;
 }
 
-internal class EofToken : Token
+public class EofToken : Token
 {
     public const string TokenType = "END_OF_FILE";
 

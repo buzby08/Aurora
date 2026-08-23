@@ -1,9 +1,8 @@
 using System.Collections;
-using Aurora.Internals;
 
-namespace Aurora;
+namespace Aurora.Core;
 
-internal class AstList : IEnumerable<Ast>
+public class AstList : IEnumerable<Ast>
 {
     public readonly List<Ast> Data = [];
     public int Count => this.Data.Count;
@@ -13,7 +12,7 @@ internal class AstList : IEnumerable<Ast>
     {
         this.Data.Add(item);
     }
-    
+
     public void Clear()
     {
         this.Data.Clear();
@@ -22,11 +21,11 @@ internal class AstList : IEnumerable<Ast>
     public RuntimeObject Evaluate(RuntimeContext context)
     {
         if (this._evaluatedResult is not null) return this._evaluatedResult;
-        
+
         this._evaluatedResult = Evaluator.EvaluateAstList(this, context);
         return this._evaluatedResult;
     }
-    
+
     public IEnumerator<Ast> GetEnumerator()
     {
         return this.Data.GetEnumerator();
