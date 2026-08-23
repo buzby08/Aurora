@@ -9,7 +9,7 @@ internal class Tokenizer
     /// <summary>
     /// The text for the tokenizer.
     /// </summary>
-    public string Text { get; } = string.Empty;
+    public string Text { get; init; } = string.Empty;
 
     private TokenList? _cachedTokenList;
 
@@ -22,12 +22,12 @@ internal class Tokenizer
     /// The current line number in the <see cref="Text"/> input.
     /// </summary>
     /// <remarks>A line is delimited by a \n character.</remarks>
-    private int LineNumber { get; set; }
+    private int LineNumber { get; set; } = 1;
 
     /// <summary>
     /// The current column number in the <see cref="Text"/> input.
     /// </summary>
-    private int ColumnNumber { get; set; }
+    private int ColumnNumber { get; set; } = 1;
 
     /// <summary>
     /// Checks if the tokenizer has reached the end of its input.
@@ -59,7 +59,7 @@ internal class Tokenizer
         return this.Text[this.Position];
     }
 
-    private EofToken GetEofToken()
+    public EofToken GetEofToken()
     {
         SourceLocation location = this.GetSourceLocation();
         return new EofToken { StartLocation = location, EndLocation = location, };
@@ -312,7 +312,7 @@ internal class Tokenizer
                 this.Advance();
                 SourceLocation end = this.GetSourceLocation();
                 this.LineNumber++;
-                this.ColumnNumber = 0;
+                this.ColumnNumber = 1;
                 return new EoLToken
                 {
                     StartLocation = start,

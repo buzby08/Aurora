@@ -90,11 +90,17 @@ public static class Program
 
             InternalVariables.LineNumber = 0;
 
+            Tokenizer tokenizer = new()
+            {
+                Text = code,
+                FilePath = InternalVariables.CodeFilePath,
+            };
+
 #if TESTING
 
             string testCode = File.ReadAllText("code.aur");
 
-            ParserRework parser = new(testCode);
+            ParserRework parser = new(tokenizer);
             List<List<AstRework>> expressions = parser.Parse();
 
             foreach (List<AstRework> expression in expressions)

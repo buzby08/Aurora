@@ -30,14 +30,9 @@ internal class ParserRework
     private ICollection<ArgumentRework>? Arguments { get; set; }
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
 
-    public ParserRework(string code, ParserOptions? options = null)
+    public ParserRework(Tokenizer tokenizer, ParserOptions? options = null)
     {
         _options = options ?? _options;
-
-        Tokenizer tokenizer = new()
-        {
-            Text = code,
-        };
 
         this.Tokens = tokenizer.GetAllTokens();
         this._logger = new Logger($"ParserRework #{this._id}");
@@ -484,8 +479,20 @@ internal class ParserRework
 
     private TokenListItem GetTokenAtIndex(int index)
     {
-        if (index < 0 || index >= this.Tokens.Count) return new TokenListItem(new EofToken(), 0, 0, 0);
-        return this.Tokens.ElementAtOrDefault(index);
+        if (index >= 0 && index < this.Tokens.Count) return this.Tokens.ElementAtOrDefault(index);
+
+        SourceLocation location = new()
+        {
+            LineNumber = 0,
+            ColumnNumber = 0,
+            Offset = 0,
+            FilePath = "",
+        };
+        return new TokenListItem(new EofToken
+        {
+            StartLocation = location,
+            EndLocation = location,
+        }, 0, 0, 0);
     }
 
     [DoesNotReturn]

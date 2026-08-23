@@ -54,9 +54,9 @@ internal abstract class Evaluator
 
             if (token is not EofToken) return token;
 
-            if (this.CodeIndex == this.MaxCodeIndex) return new EofToken();
+            if (this.CodeIndex == this.MaxCodeIndex) return this.Tokenizer.GetEofToken();
 
-            this.Tokenizer.Text = this.Code[++this.CodeIndex];
+            // this.Tokenizer.Text = this.Code[++this.CodeIndex];
         }
     }
 }
