@@ -5,6 +5,8 @@ namespace Aurora;
 internal abstract class Token
 {
     public readonly int Id = IdGenerator.GenerateId("Token");
+    public required SourceLocation StartLocation { get; init; }
+    public required SourceLocation EndLocation { get; init; }
     public abstract string Type { get; }
 
     public abstract object? Value { get; set; }
@@ -256,13 +258,6 @@ internal class BracketToken : Token
         this.Value = value;
         return this;
     }
-
-    public static readonly BracketToken OpenNormal = new BracketToken().Initialise('(');
-    public static readonly BracketToken CloseNormal = new BracketToken().Initialise(')');
-    public static readonly BracketToken OpenSquare = new BracketToken().Initialise('[');
-    public static readonly BracketToken CloseSquare = new BracketToken().Initialise(']');
-    public static readonly BracketToken OpenCurly = new BracketToken().Initialise('{');
-    public static readonly BracketToken CloseCurly = new BracketToken().Initialise('}');
 }
 
 internal class StringToken : Token
@@ -389,8 +384,6 @@ internal class EqualsToken : Token
     }
 
     public override bool CanBeLiteral => false;
-
-    public static EqualsToken TokenEquals = new EqualsToken();
 }
 
 internal class SemiColonToken : Token
@@ -406,8 +399,6 @@ internal class SemiColonToken : Token
     }
 
     public override bool CanBeLiteral => false;
-
-    public static SemiColonToken TokenSemiColon = new SemiColonToken();
 }
 
 internal class SymbolToken : Token
