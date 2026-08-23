@@ -197,7 +197,7 @@ internal class Method
 
             if (isPositionalArgument && hasReachedKeywordArgument)
                 Errors.AlwaysThrow(new InvalidSyntaxError("Positional arguments cannot exist after keyword arguments"),
-                    context, position: arg.Value.First().StartCharPosition);
+                    context, position: 0 /* Start */);
 
             if (!isPositionalArgument)
             {

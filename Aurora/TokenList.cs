@@ -18,28 +18,24 @@ internal class TokenList : IEnumerable<TokenListItem>
         }
     }
 
-    private int totalChars = 0;
-
     public int Count => _data.Count;
-    public int? Position => this._data.ElementAtOrDefault(0).StartCharPosition;
+    public SourceLocation StartLocation => this._data.First().StartLocation;
+    public SourceLocation EndLocation => this._data.Last().EndLocation;
 
-    public void Add(Token token, int linePosition)
+    public void Add(Token token)
     {
-        TokenListItem item = new(token, linePosition: linePosition, tokenIndex: this.Count,
-            startCharPosition: this.totalChars + 1);
-        this.totalChars += item.EndCharPosition - item.StartCharPosition;
+        TokenListItem item = new(token);
+
         this._data.Add(item);
     }
 
     public void AddRaw(TokenListItem item)
     {
-        this.totalChars += item.EndCharPosition - item.StartCharPosition;
         this._data.Add(item);
     }
 
     public void Clear()
     {
-        this.totalChars = 0;
         this._data.Clear();
     }
 
@@ -106,13 +102,11 @@ internal class TokenList : IEnumerable<TokenListItem>
     }
 }
 
-internal struct TokenListItem(Token token, int linePosition, int tokenIndex, int startCharPosition)
+internal struct TokenListItem(Token token)
 {
     public readonly Token Token = token;
-    public readonly int TokenIndex = tokenIndex;
-    public readonly int LinePosition = linePosition;
-    public readonly int StartCharPosition = startCharPosition;
-    public readonly int EndCharPosition = startCharPosition + (token.ValueAsString.Length - 1);
+    public SourceLocation StartLocation => token.StartLocation;
+    public SourceLocation EndLocation => token.EndLocation;
 
     public string AsString => token.ValueAsString;
 

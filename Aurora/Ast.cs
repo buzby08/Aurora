@@ -89,9 +89,9 @@ internal class Ast
         get
         {
             if (this._target is not null)
-                return this._target!.Value.StartCharPosition;
+                return 0; // START
 
-            return this._name?.StartCharPosition;
+            return 0; // START
         }
     }
 
@@ -109,7 +109,7 @@ internal class Ast
 
         if (target is null && this._target is null)
             Errors.AlwaysThrow(new SystemError($"Ast target is null, and AST is not a literal"),
-                context, position: this._name?.StartCharPosition);
+                context, position: 0 /* Start */);
 
         target ??= RuntimeObject.CreateFromToken(_target!.Value.Token, context);
 
@@ -128,10 +128,10 @@ internal class Ast
     {
         Method method = null!;
         if (target is Internals.Type type)
-            method = type.GetStaticMethod(_name!.Value.AsString, context, _name?.StartCharPosition);
+            method = type.GetStaticMethod(_name!.Value.AsString, context, 0 /* Start */);
 
         if (target is not Internals.Type)
-            method = target.Type.GetInstanceMethod(_name!.Value.AsString, context, _name?.StartCharPosition);
+            method = target.Type.GetInstanceMethod(_name!.Value.AsString, context, 0 /* Start */);
 
         return method.Invoke(target, _arguments!, context);
     }
@@ -139,16 +139,16 @@ internal class Ast
     private RuntimeObject EvaluateAttributeAccess(RuntimeContext context, RuntimeObject target)
     {
         if (target is Internals.Type type)
-            return type.GetStaticAttribute(_name!.Value.AsString, context, _name?.StartCharPosition)
+            return type.GetStaticAttribute(_name!.Value.AsString, context, 0 /* Start */)
                 .GetValue(target, context);
 
-        return target.Type.GetInstanceAttribute(_name!.Value.AsString, context, _name?.StartCharPosition)
+        return target.Type.GetInstanceAttribute(_name!.Value.AsString, context, 0 /* Start */)
             .GetValue(target, context);
     }
 
     private RuntimeObject EvaluateLiteral(RuntimeContext context)
     {
-        return RuntimeObject.CreateFromToken(this._name!.Value.Token, context, _name?.StartCharPosition);
+        return RuntimeObject.CreateFromToken(this._name!.Value.Token, context, 0 /* Start */);
     }
 
     private UnitObject EvaluateCollection(RuntimeContext context)

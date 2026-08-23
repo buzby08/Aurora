@@ -7,8 +7,8 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
     public TokenListItem? Keyword = keyword;
     public string? KeywordAsString => keyword?.AsString;
     public readonly TokenList Value = value ?? [];
-    public int? KeywordPosition => this.Keyword?.StartCharPosition;
-    public int? ValuePosition => this.Value?.Position;
+    public int? KeywordPosition => 0;
+    public int? ValuePosition => 0;
     public List<string> ValueAsString => this.Value.DataAsString;
     private AstList? _cachedAst;
 
@@ -87,12 +87,12 @@ internal class Argument(TokenList? value = null, TokenListItem? keyword = null)
                     currentArgument.Value.AddRaw(tokenItem);
                     break;
                 case ";":
-                    ThrowErrorAtSemicolonIfNeeded(currentArgument, tokenItem.StartCharPosition, context);
+                    ThrowErrorAtSemicolonIfNeeded(currentArgument, 0, context);
                     argumentsList.Add(currentArgument);
                     currentArgument = new Argument();
                     break;
                 case "=":
-                    ThrowErrorAtEqualsSignIfNeeded(currentArgument, tokenItem.StartCharPosition, context);
+                    ThrowErrorAtEqualsSignIfNeeded(currentArgument, 0, context);
                     currentArgument.Keyword = currentArgument.Value.First();
                     currentArgument.Value.Clear();
                     break;

@@ -12,8 +12,6 @@ internal class AstRework
     private IImmutableList<ArgumentRework>? Arguments { get; set; }
     private RuntimeObject? Target { get; set; }
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
-    private int LineNumber { get; set; }
-    private int ColumnNumber { get; set; }
     public bool IsEmpty => this.Action is null && this.Arguments is null && this.Target is null;
     public bool NoNameWithOtherValues => this.Action is null && (this.Arguments is not null || this.Target is not null);
     public bool IsValid => !this.IsEmpty && !this.NoNameWithOtherValues;
@@ -24,7 +22,6 @@ internal class AstRework
             this.ThrowError(new SystemError("Cannot redefine an ast name"));
 
         this.Action = name;
-        UpdatePosition(name.LinePosition, name.StartCharPosition);
     }
 
     public void AddTarget(RuntimeObject target)
@@ -53,18 +50,6 @@ internal class AstRework
 
 
         this.BlockValue = blockValue;
-    }
-
-    private void UpdatePosition(int line, int column)
-    {
-        if (line < this.LineNumber)
-            this.ThrowError(new SystemError("Line numbers cannot decrease"));
-
-        if (column < this.ColumnNumber && line == this.LineNumber)
-            this.ThrowError(new SystemError("Column numbers cannot decrease unless moving onto the next line"));
-
-        LineNumber = line;
-        ColumnNumber = column;
     }
 
     [DoesNotReturn]

@@ -492,7 +492,7 @@ internal class ParserRework
         {
             StartLocation = location,
             EndLocation = location,
-        }, 0, 0, 0);
+        });
     }
 
     [DoesNotReturn]
