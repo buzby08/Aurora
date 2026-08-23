@@ -1,6 +1,8 @@
 ﻿#define TESTING
+using Aurora.Core;
 using Aurora.BuiltinMethods;
 using Aurora.Internals;
+using Aurora.Parser;
 
 namespace Aurora;
 
