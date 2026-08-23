@@ -27,7 +27,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Aurora.Core\Aurora.Core.csproj" />
-      <ProjectReference Include="..\Aurora.Evaluator\Aurora.Evaluator.csproj" />
       <ProjectReference Include="..\Aurora.Parser\Aurora.Parser.csproj" />
     </ItemGroup>
 
