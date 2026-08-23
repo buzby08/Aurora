@@ -4,21 +4,12 @@ namespace Aurora;
 
 internal class Tokenizer
 {
-    private string _text = string.Empty;
+    public string FilePath { get; init; }
 
     /// <summary>
     /// The text for the tokenizer.
     /// </summary>
-    public string Text
-    {
-        get => this._text;
-        set
-        {
-            this._text = value;
-            this.Position = 0;
-            this._cachedTokenList = null;
-        }
-    }
+    public string Text { get; } = string.Empty;
 
     private TokenList? _cachedTokenList;
 
@@ -28,12 +19,23 @@ internal class Tokenizer
     private int Position { get; set; }
 
     /// <summary>
+    /// The current line number in the <see cref="Text"/> input.
+    /// </summary>
+    /// <remarks>A line is delimited by a \n character.</remarks>
+    private int LineNumber { get; set; }
+
+    /// <summary>
+    /// The current column number in the <see cref="Text"/> input.
+    /// </summary>
+    private int ColumnNumber { get; set; }
+
+    /// <summary>
     /// Checks if the tokenizer has reached the end of its input.
     /// </summary>
     /// <returns>Boolean to show if EOF is reached.</returns>
     private bool IsEof()
     {
-        return this.Position > this._text.Length - 1;
+        return this.Position > this.Text.Length - 1;
     }
 
     /// <summary>
@@ -41,10 +43,10 @@ internal class Tokenizer
     /// </summary>
     private void Advance()
     {
-        if (this.Position < this._text.Length)
-        {
-            this.Position += 1;
-        }
+        if (this.Position >= this.Text.Length) return;
+
+        this.Position++;
+        this.ColumnNumber++;
     }
 
     /// <summary>
@@ -54,7 +56,13 @@ internal class Tokenizer
     private char? GetCurrentChar()
     {
         if (this.IsEof()) return null;
-        return this._text[this.Position];
+        return this.Text[this.Position];
+    }
+
+    private EofToken GetEofToken()
+    {
+        SourceLocation location = this.GetSourceLocation();
+        return new EofToken { StartLocation = location, EndLocation = location, };
     }
 
     /// <summary>
@@ -67,8 +75,9 @@ internal class Tokenizer
     /// <remarks>"Negative symbol" = `-` and "Decimal symbol" = `.`</remarks>
     private Token Number()
     {
-        if (this.IsEof()) return new EofToken();
+        if (this.IsEof()) return this.GetEofToken();
 
+        SourceLocation start = this.GetSourceLocation();
         string fullNum = string.Empty;
         char? currentChar = this.GetCurrentChar();
 
@@ -93,9 +102,19 @@ internal class Tokenizer
             fullNum = fullNum[..^1];
         }
 
-        if (fullNum == "-") return new SymbolToken().Initialise("-");
+        SourceLocation end = this.GetSourceLocation();
 
-        return new NumberToken().Initialise(fullNum);
+        if (fullNum == "-") return new SymbolToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise("-");
+
+        return new NumberToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise(fullNum);
 
         bool Condition(char x, bool firstItem = false) =>
             char.IsDigit(x) || (x == '.' && !firstItem) || (x == '-' && firstItem);
@@ -112,8 +131,9 @@ internal class Tokenizer
     /// </remarks>
     private Token Word()
     {
-        if (this.IsEof()) return new EofToken();
+        if (this.IsEof()) return this.GetEofToken();
 
+        SourceLocation start = this.GetSourceLocation();
         string fullWord = string.Empty;
         char? currentChar = this.GetCurrentChar();
 
@@ -129,7 +149,12 @@ internal class Tokenizer
             currentChar = this.GetCurrentChar();
         }
 
-        return new WordToken().Initialise(fullWord);
+        SourceLocation end = this.GetSourceLocation();
+        return new WordToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise(fullWord);
     }
 
     /// <summary>
@@ -154,8 +179,9 @@ internal class Tokenizer
     /// </remarks>
     private Token String()
     {
-        if (this.IsEof()) return new EofToken();
+        if (this.IsEof()) return this.GetEofToken();
 
+        SourceLocation start = this.GetSourceLocation();
         string fullString = string.Empty;
         char? currentChar = this.GetCurrentChar();
 
@@ -202,7 +228,13 @@ internal class Tokenizer
             currentChar = this.GetCurrentChar();
         }
 
-        return new StringToken().Initialise(fullString);
+        SourceLocation end = this.GetSourceLocation();
+
+        return new StringToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise(fullString);
     }
 
     /// <summary>
@@ -218,24 +250,47 @@ internal class Tokenizer
     /// </remarks>
     private Token Symbol()
     {
-        if (this.IsEof()) return new EofToken();
+        if (this.IsEof()) return this.GetEofToken();
 
+        SourceLocation start = this.GetSourceLocation();
         char? currentChar = this.GetCurrentChar();
         this.Advance();
 
+        SourceLocation end = this.GetSourceLocation();
+
         if (currentChar == '=')
-            return new EqualsToken();
+            return new EqualsToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        };
 
         if (currentChar == ';')
-            return new SemiColonToken();
+            return new SemiColonToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        };
 
         if (currentChar == '.')
-            return new DotToken();
+            return new DotToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        };
 
         if (BracketToken.VALUES.Contains((char)currentChar!))
-            return new BracketToken().Initialise((char)currentChar);
+            return new BracketToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise((char)currentChar);
 
-        return new SymbolToken().Initialise(currentChar.Value.ToString());
+        return new SymbolToken
+        {
+            StartLocation = start,
+            EndLocation = end,
+        }.Initialise(currentChar.Value.ToString());
     }
 
     /// <summary>
@@ -249,12 +304,20 @@ internal class Tokenizer
         {
             char? currentChar = this.GetCurrentChar();
 
-            if (currentChar is null || this.IsEof()) return new EofToken();
+            if (currentChar is null || this.IsEof()) return this.GetEofToken();
 
             if (currentChar == '\n')
             {
+                SourceLocation start = this.GetSourceLocation();
                 this.Advance();
-                return new EoLToken();
+                SourceLocation end = this.GetSourceLocation();
+                this.LineNumber++;
+                this.ColumnNumber = 0;
+                return new EoLToken
+                {
+                    StartLocation = start,
+                    EndLocation = end,
+                };
             }
 
             if (char.IsDigit((char)currentChar) || currentChar == '-') return this.Number();
@@ -264,8 +327,14 @@ internal class Tokenizer
             if (BracketToken.OPEN_BRACKETS.Contains((char)currentChar) ||
                 BracketToken.CLOSED_BRACKETS.Contains((char)currentChar))
             {
+                SourceLocation start = this.GetSourceLocation();
                 this.Advance();
-                return new BracketToken().Initialise((char)currentChar);
+                SourceLocation end = this.GetSourceLocation();
+                return new BracketToken
+                {
+                    StartLocation = start,
+                    EndLocation = end,
+                }.Initialise((char)currentChar);
             }
 
             if (StringToken.START_CHARS.Contains((char)currentChar)) return this.String();
@@ -277,8 +346,14 @@ internal class Tokenizer
 
             if ((char)currentChar == '.')
             {
+                SourceLocation start = this.GetSourceLocation();
                 this.Advance();
-                return new DotToken().Initialise();
+                SourceLocation end = this.GetSourceLocation();
+                return new DotToken()
+                {
+                    StartLocation = start,
+                    EndLocation = end,
+                }.Initialise();
             }
 
             if ((char)currentChar == '=' || (char)currentChar == ';') return this.Symbol();
@@ -291,6 +366,17 @@ internal class Tokenizer
 
             this.Error($"Invalid character - {currentChar}");
         }
+    }
+
+    private SourceLocation GetSourceLocation()
+    {
+        return new SourceLocation
+        {
+            FilePath = this.FilePath,
+            LineNumber = this.LineNumber,
+            ColumnNumber = this.ColumnNumber,
+            Offset = this.Position,
+        };
     }
 
     /// <summary>
