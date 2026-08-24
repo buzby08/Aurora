@@ -48,10 +48,10 @@ public class ParserRework
     private void EnsureRecursionDepthValid()
     {
         if (CurrentArgumentRecursionDepth > _options.MaxArgumentLimit)
-            this.ThrowError(new MaxRecursionDepthExceededError("Maximum recursive argument depth exceeded"));
+            ThrowError(new MaxRecursionDepthExceededError("Maximum recursive argument depth exceeded"), null);
 
         if (CurrentExpressionRecursionDepth > _options.MaxNestingLimit)
-            this.ThrowError(new MaxRecursionDepthExceededError("Maximum recursive expression depth exceeded"));
+            ThrowError(new MaxRecursionDepthExceededError("Maximum recursive expression depth exceeded"), null);
     }
 
     public List<List<AstRework>> Parse()
@@ -175,7 +175,8 @@ public class ParserRework
     {
         this.Log("Empty state");
         if (!token.Token.CanBeLiteral)
-            this.ThrowError(new InvalidSyntaxError($"Expected a literal value, found {token.Token.ValueAsString}"));
+            ThrowError(new InvalidSyntaxError($"Expected a literal value, found {token.Token.ValueAsString}"),
+                token.StartLocation);
 
         this.Log("Setting action");
         this.Action = token;
@@ -188,7 +189,7 @@ public class ParserRework
         this.Log("Literal state");
         if (token is not DotToken)
         {
-            this.ThrowError(new SystemError("Was expecting a dot token after a literal value"));
+            ThrowError(new InvalidSyntaxError("Was expecting a dot token after a literal value"), token.StartLocation);
             return;
         }
 
@@ -240,7 +241,7 @@ public class ParserRework
     {
         this.Log("Partial attribute access state");
         if (token.Token is not WordToken)
-            this.ThrowError(new InvalidSyntaxError("Expected a word"));
+            ThrowError(new InvalidSyntaxError("Expected a word"), token.StartLocation);
 
         this.Log("Setting action");
         this.Action = token;
@@ -253,13 +254,13 @@ public class ParserRework
         this.Log("Attribute access state");
         if (token is not BracketToken bracketToken)
         {
-            this.ThrowError(new InvalidSyntaxError($"Expected a bracket, found {token.ValueAsString}"));
+            ThrowError(new InvalidSyntaxError($"Expected a bracket, found {token.ValueAsString}"), token.StartLocation);
             return;
         }
 
         if (bracketToken is not { IsOpen: true, IsNormal: true, })
         {
-            this.ThrowError(new InvalidSyntaxError("Expected an open bracket"));
+            ThrowError(new InvalidSyntaxError("Expected an open bracket"), token.StartLocation);
         }
 
         this.Log("Setting arguments");
@@ -271,18 +272,22 @@ public class ParserRework
     private List<ArgumentRework> ParseArguments()
     {
         this.Log("Parsing arguments");
-        List<ArgumentRework?> arguments = [];
+        List<ArgumentRework> arguments = [];
 
         int bracketDepth = 1;
         List<TokenListItem> name = [];
         List<TokenListItem> value = [];
         bool isName = true;
 
+        SourceLocation currentLocation = null!;
+
         while (bracketDepth > 0)
         {
             TokenListItem nextTokenListItem = this.GetNextToken();
+            currentLocation = nextTokenListItem.StartLocation;
 
-            if (nextTokenListItem.Token is EofToken) this.ThrowError(new EofError("Unexpected end of file"));
+            if (nextTokenListItem.Token is EofToken)
+                ThrowError(new EofError("Unexpected end of file"), nextTokenListItem.StartLocation);
 
             if (nextTokenListItem.Token is BracketToken { IsOpen: true, IsNormal: true, })
             {
@@ -298,10 +303,10 @@ public class ParserRework
 
             if (bracketDepth == 0) continue;
 
-            if (nextTokenListItem.Token is SemiColonToken)
+            if (bracketDepth <= 1 && nextTokenListItem.Token is SemiColonToken)
             {
                 this.Log("Found semi colon");
-                arguments.Add(this.ConvertToArgument(name, value, isName));
+                arguments.Add(this.ConvertToArgument(name, value, isName, nextTokenListItem.StartLocation));
                 name.Clear();
                 value.Clear();
                 isName = true;
@@ -326,23 +331,13 @@ public class ParserRework
             value.Add(nextTokenListItem);
         }
 
-        arguments.Add(this.ConvertToArgument(name, value, isName));
+        arguments.Add(this.ConvertToArgument(name, value, isName, currentLocation));
 
-        for (int i = 0; i < arguments.Count; i++)
-        {
-            ArgumentRework? argument = arguments[i];
-            if (argument is not null)
-                continue;
-
-            if (i < arguments.Count - 1)
-                this.ThrowError(new InvalidSyntaxError("Cannot have an empty argument in a parameter list"));
-        }
-
-        return [.. arguments.Where(x => x is not null)!,];
+        return arguments;
     }
 
-    private ArgumentRework? ConvertToArgument(IEnumerable<TokenListItem> name, IEnumerable<TokenListItem> value,
-                                              bool isName)
+    private ArgumentRework ConvertToArgument(IEnumerable<TokenListItem> name, IEnumerable<TokenListItem> value,
+                                             bool isName, SourceLocation semiColonLocation)
     {
         this.Log("Converting to argument");
 
@@ -358,7 +353,7 @@ public class ParserRework
         bool valid = false;
 
         if (nameIsEmpty && valueIsEmpty && isName)
-            return null;
+            ThrowError(new InvalidSyntaxError("An argument cannot be empty"), semiColonLocation);
 
         if (valueIsEmpty && !nameIsEmpty && isName)
             valid = true;
@@ -366,9 +361,12 @@ public class ParserRework
         if (nameCount == 1 && nameArray[0].Token is WordToken && !valueIsEmpty && !isName)
             valid = true;
 
+        if (!nameIsEmpty && valueIsEmpty && !isName)
+            ThrowError(new InvalidSyntaxError("Expected a value"), semiColonLocation);
+
         if (!valid)
         {
-            this.ThrowError(new InvalidSyntaxError("Expected an argument name or value"));
+            ThrowError(new InvalidSyntaxError("Expected an argument name or value"), semiColonLocation);
             throw new UnreachableException();
         }
 
@@ -394,12 +392,16 @@ public class ParserRework
             nameIsEmpty = true;
         }
 
+        if (valueArray.Length == 0)
+            ThrowError(new InvalidSyntaxError("Expected a value"), semiColonLocation);
+
         ParserRework parserRework = new(valueArray, InternalCallPoint.ArgumentParsing);
         this.Log($"Parsing value - count: {valueArray.Length}");
         List<List<AstRework>> valueAst = parserRework.Parse();
 
         if (valueAst.Count > 1)
-            this.ThrowError(new InvalidSyntaxError("Expected argument value to be a single expression"));
+            ThrowError(new InvalidSyntaxError("Expected argument value to be a single expression"),
+                valueAst[1][0].GetSourceLocation());
 
         if (nameIsEmpty)
         {
@@ -468,7 +470,7 @@ public class ParserRework
     private void HandleInvalidState(Token token)
     {
         this.Log("Invalid state");
-        this.ThrowError(new InvalidSyntaxError($"Unexpected token `{token.Value}`"));
+        ThrowError(new InvalidSyntaxError($"Unexpected token `{token.Value}`"), token.StartLocation);
     }
 
     private TokenListItem GetNextToken()
@@ -495,13 +497,9 @@ public class ParserRework
     }
 
     [DoesNotReturn]
-    private void ThrowError(ErrorTypes error)
+    private static void ThrowError(ErrorTypes error, SourceLocation location)
     {
-#if TESTING
-        this._logger.Error($"{error.Title} - {error.Message}");
-#else
-        Errors.AlwaysThrow(error, InternalVariables.GlobalContext);
-#endif
+        Errors.AlwaysThrow(error, location);
         throw new UnreachableException();
     }
 

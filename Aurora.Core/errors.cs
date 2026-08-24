@@ -19,27 +19,31 @@ public class Errors
     }
 
     [DoesNotReturn]
-    public static T AlwaysThrow<T>(ErrorTypes error, SourceLocation location)
+    public static T AlwaysThrow<T>(ErrorTypes error, SourceLocation? location)
     {
         AlwaysThrow(error, location);
         throw new UnreachableException();
     }
 
     [DoesNotReturn]
-    public static void AlwaysThrow(ErrorTypes error, SourceLocation location)
+    public static void AlwaysThrow(ErrorTypes error, SourceLocation? location)
     {
         RaiseError(error, location, alwaysThrow: true);
 
         if (InternalVariables.DisableErrors)
             return;
+
         Environment.Exit(1);
         throw new UnreachableException();
     }
 
-    public static void RaiseError(ErrorTypes error, SourceLocation location,
+    public static void RaiseError(ErrorTypes error, SourceLocation? location,
                                   bool alwaysThrow = false)
     {
-        string positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
+        string positionMessage = "";
+
+        if (location is not null)
+            positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
 
         string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
 

@@ -6,7 +6,7 @@ namespace Aurora;
 
 public static class Program
 {
-    private static string ReadCode(string filePath/*, RuntimeContext context*/)
+    private static string ReadCode(string filePath /*, RuntimeContext context*/)
     {
         if (string.IsNullOrEmpty(filePath))
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
@@ -82,7 +82,7 @@ public static class Program
 
             InternalVariables.CodeFilePath = CommandLineArguments.File!;
 
-            string code = ReadCode(InternalVariables.CodeFilePath/*, InternalVariables.GlobalContext*/);
+            string code = ReadCode(InternalVariables.CodeFilePath /*, InternalVariables.GlobalContext*/);
             InternalVariables.Code = code;
 
             Tokenizer tokenizer = new()
@@ -95,6 +95,7 @@ public static class Program
 
             ParserRework parser = new(tokenizer);
             List<List<AstRework>> expressions = parser.Parse();
+
 
             foreach (List<AstRework> expression in expressions)
             {
@@ -120,7 +121,7 @@ public static class Program
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
                 new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)),
-                InternalVariables.GetEmptySourceLocation());
+                null);
         }
     }
 }

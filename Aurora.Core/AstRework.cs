@@ -7,17 +7,19 @@ namespace Aurora.Core;
 public class AstRework
 {
     public readonly int Id = IdGenerator.GenerateId("AstRework");
+
     private TokenListItem? Action { get; set; }
     private IImmutableList<ArgumentRework>? Arguments { get; set; }
+
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
-    public bool IsEmpty => this.Action is null && this.Arguments is null;
-    public bool NoNameWithOtherValues => this.Action is null && this.Arguments is not null;
-    public bool IsValid => !this.IsEmpty && !this.NoNameWithOtherValues;
 
     public void AddAction(TokenListItem name)
     {
         if (this.Action is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast name"));
+
+        if (this.BlockValue is not null)
+            this.ThrowError(new SystemError("Cannot add an action to an ast with a block value"));
 
         this.Action = name;
     }
@@ -25,7 +27,10 @@ public class AstRework
     public void AddArgs(IImmutableList<ArgumentRework> args)
     {
         if (this.Arguments is not null)
-            this.ThrowError(new SystemError("Cannot redefine an ast args"));
+            this.ThrowError(new SystemError("Cannot redefine an ast's arguments"));
+
+        if (this.Action is null)
+            this.ThrowError(new SystemError("Cannot add arguments to an ast without an action"));
 
         this.Arguments = args;
     }
@@ -40,13 +45,6 @@ public class AstRework
 
 
         this.BlockValue = blockValue;
-    }
-
-    [DoesNotReturn]
-    private void ThrowError(ErrorTypes error)
-    {
-        Errors.AlwaysThrow(error, InternalVariables.GetEmptySourceLocation());
-        throw new UnreachableException();
     }
 
     public override string ToString()
@@ -73,5 +71,23 @@ public class AstRework
         asString += string.Join($"{color}, ", messages);
 
         return asString + $" {color}){resetColor}";
+    }
+
+    public SourceLocation? GetSourceLocation()
+    {
+        if (Action is not null)
+            return Action?.StartLocation;
+
+        if (BlockValue is not null)
+            return BlockValue.FirstOrDefault()?.FirstOrDefault()?.GetSourceLocation();
+
+        return null;
+    }
+
+    [DoesNotReturn]
+    private void ThrowError(ErrorTypes error)
+    {
+        Errors.AlwaysThrow(error, this.GetSourceLocation());
+        throw new UnreachableException();
     }
 }
