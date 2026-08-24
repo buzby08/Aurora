@@ -20,12 +20,12 @@ public class ParserRework
     private List<List<AstRework>> Expressions { get; } = [];
     public List<AstRework> CurrentExpression { get; private set; } = [];
 
-    private TokenList Tokens { get; }
+    private List<Token> Tokens { get; }
     private int CurrentIndex { get; set; }
     private ParserState State { get; set; } = ParserState.Empty;
     private AstRework? CurrentAst { get; set; }
 
-    private TokenListItem? Action { get; set; }
+    private Token? Action { get; set; }
     private ICollection<ArgumentRework>? Arguments { get; set; }
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
 
@@ -33,15 +33,14 @@ public class ParserRework
     {
         _options = options ?? _options;
 
-        this.Tokens = tokenizer.GetAllTokens();
+        this.Tokens = tokenizer.GetAllTokens().ToList();
         this._logger = new Logger($"ParserRework #{this._id}");
     }
 
-    private ParserRework(IEnumerable<TokenListItem> tokens, InternalCallPoint callPoint)
+    private ParserRework(IEnumerable<Token> tokens, InternalCallPoint callPoint)
     {
         this.CallPoint = callPoint;
-        TokenList tokenList = new(tokens);
-        this.Tokens = tokenList;
+        this.Tokens = tokens.ToList();
         this._logger = new Logger($"ParserRework #{this._id}");
     }
 
@@ -102,21 +101,19 @@ public class ParserRework
         while (this.CurrentIndex < this.Tokens.Count && !reachedInvalidState)
         {
             this.Log($"Current index: {this.CurrentIndex}");
-            TokenListItem tokenListItem = this.GetNextToken();
+            Token token = this.GetNextToken();
 
-            this.EvaluateToken(tokenListItem, out bool shouldContinue, out bool isInvalid);
+            this.EvaluateToken(token, out bool shouldContinue, out bool isInvalid);
 
             if (isInvalid) reachedInvalidState = true;
             if (!shouldContinue) break;
         }
     }
 
-    private void EvaluateToken(TokenListItem tokenListItem, out bool shouldContinue, out bool isInvalid)
+    private void EvaluateToken(Token token, out bool shouldContinue, out bool isInvalid)
     {
         shouldContinue = true;
         isInvalid = false;
-
-        Token token = tokenListItem.Token;
 
         bool isDotToken = token is DotToken;
 
@@ -143,13 +140,13 @@ public class ParserRework
         switch (this.State)
         {
             case ParserState.Empty:
-                this.HandleEmptyState(tokenListItem);
+                this.HandleEmptyState(token);
                 break;
             case ParserState.Literal when isDotToken:
                 this.HandleLiteralState(token);
                 break;
             case ParserState.PartialAttributeAccess:
-                this.HandlePartialAttributeAccessState(tokenListItem);
+                this.HandlePartialAttributeAccessState(token);
                 break;
             case ParserState.AttributeAccess:
                 this.HandleAttributeAccessState(token);
@@ -171,11 +168,11 @@ public class ParserRework
         }
     }
 
-    private void HandleEmptyState(TokenListItem token)
+    private void HandleEmptyState(Token token)
     {
         this.Log("Empty state");
-        if (!token.Token.CanBeLiteral)
-            ThrowError(new InvalidSyntaxError($"Expected a literal value, found {token.Token.ValueAsString}"),
+        if (!token.CanBeLiteral)
+            ThrowError(new InvalidSyntaxError($"Expected a literal value, found {token.ValueAsString}"),
                 token.StartLocation);
 
         this.Log("Setting action");
@@ -228,7 +225,7 @@ public class ParserRework
         this.CurrentAst = new AstRework();
 
         if (this.Action is not null)
-            this.CurrentAst.AddAction((TokenListItem)this.Action);
+            this.CurrentAst.AddAction(this.Action);
 
         if (this.Arguments is not null)
             this.CurrentAst.AddArgs([.. this.Arguments,]);
@@ -237,10 +234,10 @@ public class ParserRework
             this.CurrentAst.AddBlockValue(this.BlockValue);
     }
 
-    private void HandlePartialAttributeAccessState(TokenListItem token)
+    private void HandlePartialAttributeAccessState(Token token)
     {
         this.Log("Partial attribute access state");
-        if (token.Token is not WordToken)
+        if (token is not WordToken)
             ThrowError(new InvalidSyntaxError("Expected a word"), token.StartLocation);
 
         this.Log("Setting action");
@@ -275,27 +272,27 @@ public class ParserRework
         List<ArgumentRework> arguments = [];
 
         int bracketDepth = 1;
-        List<TokenListItem> name = [];
-        List<TokenListItem> value = [];
+        List<Token> name = [];
+        List<Token> value = [];
         bool isName = true;
 
         SourceLocation currentLocation = null!;
 
         while (bracketDepth > 0)
         {
-            TokenListItem nextTokenListItem = this.GetNextToken();
+            Token nextTokenListItem = this.GetNextToken();
             currentLocation = nextTokenListItem.StartLocation;
 
-            if (nextTokenListItem.Token is EofToken)
+            if (nextTokenListItem is EofToken)
                 ThrowError(new EofError("Unexpected end of file"), nextTokenListItem.StartLocation);
 
-            if (nextTokenListItem.Token is BracketToken { IsOpen: true, IsNormal: true, })
+            if (nextTokenListItem is BracketToken { IsOpen: true, IsNormal: true, })
             {
                 this.Log($"Increasing bracket depth from {bracketDepth} to {bracketDepth + 1}");
                 bracketDepth++;
             }
 
-            if (nextTokenListItem.Token is BracketToken { IsClosed: true, IsNormal: true, })
+            if (nextTokenListItem is BracketToken { IsClosed: true, IsNormal: true, })
             {
                 this.Log($"Decreasing bracket depth from {bracketDepth} to {bracketDepth - 1}");
                 bracketDepth--;
@@ -303,7 +300,7 @@ public class ParserRework
 
             if (bracketDepth == 0) continue;
 
-            if (bracketDepth <= 1 && nextTokenListItem.Token is SemiColonToken)
+            if (bracketDepth <= 1 && nextTokenListItem is SemiColonToken)
             {
                 this.Log("Found semi colon");
                 arguments.Add(this.ConvertToArgument(name, value, isName, nextTokenListItem.StartLocation));
@@ -313,7 +310,7 @@ public class ParserRework
                 continue;
             }
 
-            if (nextTokenListItem.Token is EqualsToken)
+            if (nextTokenListItem is EqualsToken)
             {
                 this.Log("Found equals");
                 isName = false;
@@ -322,7 +319,7 @@ public class ParserRework
 
             if (isName)
             {
-                this.Log($"Adding `{nextTokenListItem.Token.AsString()}` to name");
+                this.Log($"Adding `{nextTokenListItem.AsString()}` to name");
                 name.Add(nextTokenListItem);
                 continue;
             }
@@ -336,13 +333,13 @@ public class ParserRework
         return arguments;
     }
 
-    private ArgumentRework ConvertToArgument(IEnumerable<TokenListItem> name, IEnumerable<TokenListItem> value,
+    private ArgumentRework ConvertToArgument(IEnumerable<Token> name, IEnumerable<Token> value,
                                              bool isName, SourceLocation semiColonLocation)
     {
         this.Log("Converting to argument");
 
-        TokenListItem[] nameArray = [.. name,];
-        TokenListItem[] valueArray = [.. value,];
+        Token[] nameArray = [.. name,];
+        Token[] valueArray = [.. value,];
 
         bool valueIsEmpty = valueArray.Length == 0;
 
@@ -358,7 +355,7 @@ public class ParserRework
         if (valueIsEmpty && !nameIsEmpty && isName)
             valid = true;
 
-        if (nameCount == 1 && nameArray[0].Token is WordToken && !valueIsEmpty && !isName)
+        if (nameCount == 1 && nameArray[0] is WordToken && !valueIsEmpty && !isName)
             valid = true;
 
         if (!nameIsEmpty && valueIsEmpty && !isName)
@@ -410,7 +407,7 @@ public class ParserRework
         }
 
         this.Log("Creating argument with name and value");
-        return new ArgumentRework((WordToken)nameArray[0].Token, valueAst[0]);
+        return new ArgumentRework((WordToken)nameArray[0], valueAst[0]);
     }
 
     private void HandleMethodCallState(Token token)
@@ -429,13 +426,12 @@ public class ParserRework
             this.HandleNewAstStart();
         }
 
-        List<TokenListItem> block = [];
+        List<Token> block = [];
 
         int bracketDepth = 1;
         while (bracketDepth > 0)
         {
-            TokenListItem nextTokenListItem = this.GetNextToken();
-            Token token = nextTokenListItem.Token;
+            Token token = this.GetNextToken();
 
             if (token is BracketToken { IsCurly: true, IsClosed: true, })
             {
@@ -450,7 +446,7 @@ public class ParserRework
                 bracketDepth++;
             }
 
-            block.Add(nextTokenListItem);
+            block.Add(token);
         }
 
         ParserRework parser = new(block, InternalCallPoint.BlockParsing);
@@ -473,14 +469,14 @@ public class ParserRework
         ThrowError(new InvalidSyntaxError($"Unexpected token `{token.Value}`"), token.StartLocation);
     }
 
-    private TokenListItem GetNextToken()
+    private Token GetNextToken()
     {
         return this.GetTokenAtIndex(this.CurrentIndex++);
     }
 
-    private TokenListItem GetTokenAtIndex(int index)
+    private Token GetTokenAtIndex(int index)
     {
-        if (index >= 0 && index < this.Tokens.Count) return this.Tokens.ElementAtOrDefault(index);
+        if (index >= 0 && index < this.Tokens.Count) return this.Tokens.ElementAtOrDefault(index)!;
 
         SourceLocation location = new()
         {
@@ -489,15 +485,15 @@ public class ParserRework
             Offset = 0,
             FilePath = "",
         };
-        return new TokenListItem(new EofToken
+        return new EofToken
         {
             StartLocation = location,
             EndLocation = location,
-        });
+        };
     }
 
     [DoesNotReturn]
-    private static void ThrowError(ErrorTypes error, SourceLocation location)
+    private static void ThrowError(ErrorTypes error, SourceLocation? location)
     {
         Errors.AlwaysThrow(error, location);
         throw new UnreachableException();

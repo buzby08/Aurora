@@ -14,7 +14,7 @@ public class Tokenizer
     /// </summary>
     public string Text { get; init; } = string.Empty;
 
-    private TokenList? _cachedTokenList;
+    private IEnumerable<Token>? _cachedTokenList;
 
     /// <summary>
     /// The current character position in the <see cref="Text"/> input.
@@ -387,11 +387,11 @@ public class Tokenizer
     /// for speed. This does not include the trailing <see cref="EofToken"/>.
     /// </summary>
     /// <returns>A <see cref="TokenList"/> with all the tokens in the input text.</returns>
-    public TokenList GetAllTokens()
+    public IEnumerable<Token> GetAllTokens()
     {
         if (this._cachedTokenList is not null) return this._cachedTokenList;
 
-        TokenList allTokens = new();
+        List<Token> allTokens = [];
 
         Token currentToken = this.GetNextToken();
 

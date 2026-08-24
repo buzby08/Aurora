@@ -8,12 +8,12 @@ public class AstRework
 {
     public readonly int Id = IdGenerator.GenerateId("AstRework");
 
-    private TokenListItem? Action { get; set; }
+    private Token? Action { get; set; }
     private IImmutableList<ArgumentRework>? Arguments { get; set; }
 
     private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
 
-    public void AddAction(TokenListItem name)
+    public void AddAction(Token name)
     {
         if (this.Action is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast name"));
@@ -58,7 +58,7 @@ public class AstRework
         string asString =
             $"{color}AST([#{this.Id}] ";
 
-        if (this.Action is not null) messages.Add($"{color}Action: {this.Action?.Token?.Value}");
+        if (this.Action is not null) messages.Add($"{color}Action: {this.Action?.Value}");
 
         if (this.Arguments is not null)
         {
