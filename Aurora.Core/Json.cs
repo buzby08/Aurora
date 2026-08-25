@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace Aurora;
+namespace Aurora.Core;
 
-internal static class Json
+public static class Json
 {
     public static List<T> ReadList<T>(string filePath)
     {

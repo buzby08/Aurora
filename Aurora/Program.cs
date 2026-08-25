@@ -1,24 +1,25 @@
-﻿using Aurora.BuiltinMethods;
-using Aurora.Internals;
+﻿#define TESTING
+using Aurora.Core;
+using Aurora.Parser;
 
 namespace Aurora;
 
 public static class Program
 {
-    private static string ReadCode(string filePath, RuntimeContext context)
+    private static string ReadCode(string filePath /*, RuntimeContext context*/)
     {
         if (string.IsNullOrEmpty(filePath))
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
-                InternalVariables.GlobalContext);
+                InternalVariables.GetEmptySourceLocation());
 
         if (!File.Exists(filePath))
             Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"),
-                InternalVariables.GlobalContext);
+                InternalVariables.GetEmptySourceLocation());
 
         if (!filePath.EndsWith(".aur"))
             Logs.Warning("Aurora code should be written in an aurora file (ending with .aur).");
 
-        context.Create("__SCRIPT__", new StringObject(filePath));
+        // context.Create("__SCRIPT__", new StringObject(filePath));
         return File.ReadAllText(filePath);
     }
 
@@ -50,27 +51,21 @@ public static class Program
 
     private static void AttachBuiltinsToGlobalContext()
     {
-        InternalVariables.GlobalContext.Create("Type", Builtins.Type);
-        InternalVariables.GlobalContext.Create("Null", Builtins.Null);
-        InternalVariables.GlobalContext.Create("Unit", Builtins.Unit);
-        InternalVariables.GlobalContext.Create("Int", Builtins.Int);
-        InternalVariables.GlobalContext.Create("Float", Builtins.Float);
-        InternalVariables.GlobalContext.Create("String", Builtins.String);
-        InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
-        InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
-        InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
-        InternalVariables.GlobalContext.Create("Optional", Builtins.Optional);
-        InternalVariables.GlobalContext.Create("Math", Builtins.Math);
+        // InternalVariables.GlobalContext.Create("Type", Builtins.Type);
+        // InternalVariables.GlobalContext.Create("Null", Builtins.Null);
+        // InternalVariables.GlobalContext.Create("Unit", Builtins.Unit);
+        // InternalVariables.GlobalContext.Create("Int", Builtins.Int);
+        // InternalVariables.GlobalContext.Create("Float", Builtins.Float);
+        // InternalVariables.GlobalContext.Create("String", Builtins.String);
+        // InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
+        // InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
+        // InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
+        // InternalVariables.GlobalContext.Create("Optional", Builtins.Optional);
+        // InternalVariables.GlobalContext.Create("Math", Builtins.Math);
     }
 
     public static void Main(string[] args)
     {
-#if TESTING
-        Test.isTesting = true;
-        Test.Main();
-        Environment.Exit(0);
-#endif
-
 #if OWL
         Owl.Show();
         Environment.Exit(0);
@@ -78,7 +73,7 @@ public static class Program
 
         try
         {
-            Builtins.InitialiseTypes();
+            // Builtins.InitialiseTypes();
             AttachBuiltinsToGlobalContext();
 
             CommandLineArguments.HandleArgs(args);
@@ -87,15 +82,29 @@ public static class Program
 
             InternalVariables.CodeFilePath = CommandLineArguments.File!;
 
-            InternalVariables.GlobalContext.FileName = InternalVariables.CodeFilePath;
-            InternalVariables.GlobalContext.ShowInStackTrace = false;
-
-            string code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
+            string code = ReadCode(InternalVariables.CodeFilePath /*, InternalVariables.GlobalContext*/);
             InternalVariables.Code = code;
 
-            InternalVariables.LineNumber = 0;
+            Tokenizer tokenizer = new()
+            {
+                Text = code,
+                FilePath = InternalVariables.CodeFilePath,
+            };
 
-            Evaluator.EvaluateAll();
+#if TESTING
+
+            ParserRework parser = new(tokenizer);
+            List<List<AstRework>> expressions = parser.Parse();
+
+
+            foreach (List<AstRework> expression in expressions)
+            {
+                Console.WriteLine("----------------------------------------");
+                foreach (AstRework ast in expression)
+                    Console.WriteLine(ast.ToString());
+            }
+
+#endif
 
             Errors.OutputWarningsAndExit();
         }
@@ -112,7 +121,7 @@ public static class Program
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
                 new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)),
-                InternalVariables.GlobalContext);
+                null);
         }
     }
 }

@@ -1,11 +1,11 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal static class MaryPoppins
+public static class MaryPoppins
 {
     public static void Supercalifragalisticexpialidocious()
     {
         Console.Clear();
-        
+
         const string song = """
                             It's supercalifragilisticexpialidocious
                             Even though the sound of it is something quite atrocious
@@ -54,7 +54,7 @@ internal static class MaryPoppins
                             Supercalifragilisticexpialidocious
                             Supercalifragilisticexpialidocious
                             """;
-        
+
         Console.WriteLine(song);
         Environment.Exit(0);
     }

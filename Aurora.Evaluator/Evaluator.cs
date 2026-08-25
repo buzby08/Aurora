@@ -1,8 +1,4 @@
-using System.Diagnostics;
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
-
-namespace Aurora;
+namespace Aurora.Evaluator;
 
 internal abstract class Evaluator
 {
@@ -16,7 +12,7 @@ internal abstract class Evaluator
 
     public Evaluator(string[] code, RuntimeContext context)
     {
-        Code = code;
+        this.Code = code;
         this.Tokenizer = new Tokenizer
         {
             Text = code[this.CodeIndex],
@@ -54,9 +50,9 @@ internal abstract class Evaluator
 
             if (token is not EofToken) return token;
 
-            if (this.CodeIndex == this.MaxCodeIndex) return new EofToken();
+            if (this.CodeIndex == this.MaxCodeIndex) return this.Tokenizer.GetEofToken();
 
-            this.Tokenizer.Text = this.Code[++this.CodeIndex];
+            // this.Tokenizer.Text = this.Code[++this.CodeIndex];
         }
     }
 }

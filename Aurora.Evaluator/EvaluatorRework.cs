@@ -1,4 +1,4 @@
-namespace Aurora;
+namespace Aurora.Evaluator;
 
 internal class EvaluatorRework
 {

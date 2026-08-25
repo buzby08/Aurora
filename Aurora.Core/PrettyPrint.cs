@@ -1,16 +1,16 @@
-namespace Aurora;
+namespace Aurora.Core;
 
-internal static class PrettyPrint
+public static class PrettyPrint
 {
     public static string? List(object list, bool output = true)
     {
         string? message = string.Empty;
-        
+
         if (list is not string and IEnumerable<object> collection)
         {
             message += "[";
             bool first = true;
-    
+
             foreach (var item in collection)
             {
                 if (!first) message += ", ";
@@ -24,10 +24,10 @@ internal static class PrettyPrint
         {
             message = list.ToString();
         }
-        
+
         if (output)
             Console.WriteLine(message);
-        
+
         return message;
     }
 

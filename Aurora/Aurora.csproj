@@ -25,4 +25,9 @@
         <PackageReference Include="System.CommandLine" Version="2.0.7"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Aurora.Core\Aurora.Core.csproj" />
+      <ProjectReference Include="..\Aurora.Parser\Aurora.Parser.csproj" />
+    </ItemGroup>
+
 </Project>
