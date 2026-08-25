@@ -1,17 +1,17 @@
 namespace Aurora.Core;
 
-public class ArgumentRework
+public class Arguement
 {
-    public readonly int Id = IdGenerator.GenerateId("ArgumentRework");
+    public readonly int Id = IdGenerator.GenerateId("Arguement");
 
     public WordToken? Identifier { get; }
-    public List<AstRework> Value { get; }
+    public List<Ast> Value { get; }
 
-    public ArgumentRework(List<AstRework> value) : this(null!, value)
+    public Arguement(List<Ast> value) : this(null!, value)
     {
     }
 
-    public ArgumentRework(WordToken identifier, List<AstRework> value)
+    public Arguement(WordToken identifier, List<Ast> value)
     {
         this.Identifier = identifier;
         this.Value = value;

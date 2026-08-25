@@ -93,14 +93,14 @@ public static class Program
 
 #if TESTING
 
-            ParserRework parser = new(tokenizer);
-            List<List<AstRework>> expressions = parser.Parse();
+            Parser.Parser parser = new(tokenizer);
+            List<List<Ast>> expressions = parser.Parse();
 
 
-            foreach (List<AstRework> expression in expressions)
+            foreach (List<Ast> expression in expressions)
             {
                 Console.WriteLine("----------------------------------------");
-                foreach (AstRework ast in expression)
+                foreach (Ast ast in expression)
                     Console.WriteLine(ast.ToString());
             }
 

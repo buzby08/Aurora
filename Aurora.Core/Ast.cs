@@ -4,14 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Aurora.Core;
 
-public class AstRework
+public class Ast
 {
-    public readonly int Id = IdGenerator.GenerateId("AstRework");
+    public readonly int Id = IdGenerator.GenerateId("Ast");
 
     private Token? Action { get; set; }
-    private IImmutableList<ArgumentRework>? Arguments { get; set; }
+    private IImmutableList<Arguement>? Arguments { get; set; }
 
-    private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
+    private IEnumerable<IEnumerable<Ast>>? BlockValue { get; set; }
 
     public void AddAction(Token name)
     {
@@ -24,7 +24,7 @@ public class AstRework
         this.Action = name;
     }
 
-    public void AddArgs(IImmutableList<ArgumentRework> args)
+    public void AddArgs(IImmutableList<Arguement> args)
     {
         if (this.Arguments is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast's arguments"));
@@ -35,7 +35,7 @@ public class AstRework
         this.Arguments = args;
     }
 
-    public void AddBlockValue(IEnumerable<IEnumerable<AstRework>> blockValue)
+    public void AddBlockValue(IEnumerable<IEnumerable<Ast>> blockValue)
     {
         if (this.BlockValue is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast block value"));

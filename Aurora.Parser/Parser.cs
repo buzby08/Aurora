@@ -6,42 +6,42 @@ using Aurora.Core;
 
 namespace Aurora.Parser;
 
-public class ParserRework
+public class Parser
 {
     private static ParserOptions _options = new();
     private static int CurrentArgumentRecursionDepth { get; set; }
     private static int CurrentExpressionRecursionDepth { get; set; }
 
-    private int _id = IdGenerator.GenerateId("ParserRework");
+    private int _id = IdGenerator.GenerateId("Parser");
     private Logger _logger;
     private InternalCallPoint? CallPoint { get; }
     private ParserMode Mode { get; set; } = ParserMode.Expression;
 
-    private List<List<AstRework>> Expressions { get; } = [];
-    public List<AstRework> CurrentExpression { get; private set; } = [];
+    private List<List<Ast>> Expressions { get; } = [];
+    public List<Ast> CurrentExpression { get; private set; } = [];
 
     private List<Token> Tokens { get; }
     private int CurrentIndex { get; set; }
     private ParserState State { get; set; } = ParserState.Empty;
-    private AstRework? CurrentAst { get; set; }
+    private Ast? CurrentAst { get; set; }
 
     private Token? Action { get; set; }
-    private ICollection<ArgumentRework>? Arguments { get; set; }
-    private IEnumerable<IEnumerable<AstRework>>? BlockValue { get; set; }
+    private ICollection<Arguement>? Arguments { get; set; }
+    private IEnumerable<IEnumerable<Ast>>? BlockValue { get; set; }
 
-    public ParserRework(Tokenizer tokenizer, ParserOptions? options = null)
+    public Parser(Tokenizer tokenizer, ParserOptions? options = null)
     {
         _options = options ?? _options;
 
         this.Tokens = tokenizer.GetAllTokens().ToList();
-        this._logger = new Logger($"ParserRework #{this._id}");
+        this._logger = new Logger($"Parser #{this._id}");
     }
 
-    private ParserRework(IEnumerable<Token> tokens, InternalCallPoint callPoint)
+    private Parser(IEnumerable<Token> tokens, InternalCallPoint callPoint)
     {
         this.CallPoint = callPoint;
         this.Tokens = tokens.ToList();
-        this._logger = new Logger($"ParserRework #{this._id}");
+        this._logger = new Logger($"Parser #{this._id}");
     }
 
     private void EnsureRecursionDepthValid()
@@ -53,7 +53,7 @@ public class ParserRework
             ThrowError(new MaxRecursionDepthExceededError("Maximum recursive expression depth exceeded"), null);
     }
 
-    public List<List<AstRework>> Parse()
+    public List<List<Ast>> Parse()
     {
         switch (this.CallPoint)
         {
@@ -222,7 +222,7 @@ public class ParserRework
 
         if (this.Action is null && this.Arguments is null && this.BlockValue is null) return;
 
-        this.CurrentAst = new AstRework();
+        this.CurrentAst = new Ast();
 
         if (this.Action is not null)
             this.CurrentAst.AddAction(this.Action);
@@ -266,10 +266,10 @@ public class ParserRework
         this.State = ParserState.MethodCall;
     }
 
-    private List<ArgumentRework> ParseArguments()
+    private List<Arguement> ParseArguments()
     {
         this.Log("Parsing arguments");
-        List<ArgumentRework> arguments = [];
+        List<Arguement> arguments = [];
 
         int bracketDepth = 1;
         List<Token> name = [];
@@ -333,7 +333,7 @@ public class ParserRework
         return arguments;
     }
 
-    private ArgumentRework ConvertToArgument(IEnumerable<Token> name, IEnumerable<Token> value,
+    private Arguement ConvertToArgument(IEnumerable<Token> name, IEnumerable<Token> value,
                                              bool isName, SourceLocation semiColonLocation)
     {
         this.Log("Converting to argument");
@@ -392,9 +392,9 @@ public class ParserRework
         if (valueArray.Length == 0)
             ThrowError(new InvalidSyntaxError("Expected a value"), semiColonLocation);
 
-        ParserRework parserRework = new(valueArray, InternalCallPoint.ArgumentParsing);
+        Parser parser = new(valueArray, InternalCallPoint.ArgumentParsing);
         this.Log($"Parsing value - count: {valueArray.Length}");
-        List<List<AstRework>> valueAst = parserRework.Parse();
+        List<List<Ast>> valueAst = parser.Parse();
 
         if (valueAst.Count > 1)
             ThrowError(new InvalidSyntaxError("Expected argument value to be a single expression"),
@@ -403,11 +403,11 @@ public class ParserRework
         if (nameIsEmpty)
         {
             this.Log("Not a named argument, creating argument with just value");
-            return new ArgumentRework(valueAst[0]);
+            return new Arguement(valueAst[0]);
         }
 
         this.Log("Creating argument with name and value");
-        return new ArgumentRework((WordToken)nameArray[0], valueAst[0]);
+        return new Arguement((WordToken)nameArray[0], valueAst[0]);
     }
 
     private void HandleMethodCallState(Token token)
@@ -449,8 +449,8 @@ public class ParserRework
             block.Add(token);
         }
 
-        ParserRework parser = new(block, InternalCallPoint.BlockParsing);
-        List<List<AstRework>> blockAst = parser.Parse();
+        Parser parser = new(block, InternalCallPoint.BlockParsing);
+        List<List<Ast>> blockAst = parser.Parse();
         this.BlockValue = blockAst;
         this.State = ParserState.Block;
         this.HandleNewAstStart();
@@ -524,7 +524,7 @@ public class ParserRework
         BlockParsing,
     }
 
-    public override string ToString() => $"ParserRework(#{this._id})";
+    public override string ToString() => $"Parser(#{this._id})";
 }
 
 public struct ParserOptions()
