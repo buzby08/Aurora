@@ -1,7 +1,8 @@
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
+using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals;
 
-namespace Aurora.InternalMethods;
+namespace Aurora.Evaluator.InternalMethods;
 
 internal static class Type
 {
@@ -12,15 +13,16 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            RuntimeObject variableObject = Evaluator.Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
+            Evaluator evaluator = new(context.Parent!);
+            RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
 
             if (variableObject.Type != targetType)
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
                         $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                    context, position: rawVar.ValuePosition);
+                    null /* Todo: Try add a better source value*/);
 
-            context.Parent!.Create(rawVar.Name, variableObject);
+            context.Parent!.Create(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
         return new UnitObject();
@@ -32,14 +34,15 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            RuntimeObject variableObject = Evaluator.Evaluator.EvaluateAstList(rawVar.Value, context.Parent!);
+            Evaluator evaluator = new(context.Parent!);
+            RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
             if (variableObject.Type != targetType)
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
                         $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
-                    context, position: rawVar.ValuePosition);
+                    null /* Todo: Try add a better source value*/);
 
-            context.Set(rawVar.Name, variableObject);
+            context.Set(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
         return new UnitObject();
@@ -55,7 +58,7 @@ internal static class Type
 
     public static BooleanObject Equals(RuntimeObject self, RuntimeContext context)
     {
-        RuntimeObject other = context.Get("other");
+        RuntimeObject other = context.GetParam("other");
 
         return new BooleanObject(self.Equals(other));
     }

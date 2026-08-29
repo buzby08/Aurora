@@ -1,8 +1,9 @@
 using System.Diagnostics;
+using Aurora.Core;
 
-namespace Aurora.Internals;
+namespace Aurora.Evaluator.Internals;
 
-internal class Attribute(string name, Type type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
+public class Attribute(string name, Type type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
 {
     public string Name = name;
     public Type Type = type;
@@ -10,7 +11,8 @@ internal class Attribute(string name, Type type, Func<RuntimeObject, RuntimeCont
 
     public RuntimeObject GetValue(
         RuntimeObject self,
-        RuntimeContext context)
+        RuntimeContext context,
+        SourceLocation location)
     {
         RuntimeObject value = this.ValueGetter(self, context);
         if (value.Type.IsSubclassOf(this.Type))
@@ -18,7 +20,7 @@ internal class Attribute(string name, Type type, Func<RuntimeObject, RuntimeCont
 
         Errors.AlwaysThrow(new TypeMismatchError(
             $"Attribute `{this.Name}` should return an object of type `{this.Type.Name}`, but an object of " +
-            $"type `{value.Type.Name}` was returned instead.", user: false), context);
+            $"type `{value.Type.Name}` was returned instead.", user: false), location);
         throw new UnreachableException();
     }
 }

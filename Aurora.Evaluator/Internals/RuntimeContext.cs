@@ -1,19 +1,47 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using Aurora.Core;
 
-namespace Aurora.Internals;
+namespace Aurora.Evaluator.Internals;
 
-internal class RuntimeContext(string fileName, int lineNumber, RuntimeContext? parent = null)
+public class RuntimeContext
 {
+    public static RuntimeContext? GlobalContext;
+
+    public static string GlobalFilePath => GlobalContext?.CallSiteLocation.FilePath ??
+                                           throw new InvalidOperationException("Global context not initialized");
+
     private readonly Dictionary<string, RuntimeObject> _variables = [];
 
-    public RuntimeContext? Parent { get; } = parent;
-    public string FileName { get; set; } = fileName;
-    public int LineNumber { get; } = lineNumber;
-    public bool ShowInStackTrace = true;
+    public RuntimeContext? Parent { get; }
+    public SourceLocation CallSiteLocation { get; }
+
+    private RuntimeContext(RuntimeContext? parent, SourceLocation callSiteLocation)
+    {
+        this.Parent = parent;
+        this.CallSiteLocation = callSiteLocation;
+    }
+
+    public static void CreateGlobalContext(string filePath)
+    {
+        GlobalContext ??= new RuntimeContext(null, new SourceLocation
+        {
+            FilePath = filePath,
+            ColumnNumber = 0,
+            LineNumber = 0,
+            Offset = 0,
+        });
+    }
+
+    public RuntimeContext CreateChild(SourceLocation callSiteLocation)
+    {
+        return new RuntimeContext(this, callSiteLocation);
+    }
+
 
     private RuntimeObject? GetOrNull(string name)
     {
-        if (_variables.TryGetValue(name, out var value))
+        if (this._variables.TryGetValue(name, out RuntimeObject? value))
             return value;
 
         return this.Parent?.GetOrNull(name);
@@ -33,19 +61,19 @@ internal class RuntimeContext(string fileName, int lineNumber, RuntimeContext? p
     /// error, that gets passed to the user. If <paramref name="systemFault"/> is true, the users are indicated that
     /// this error is not because of their code. This is not a c# error.
     /// </exception>
-    public RuntimeObject Get(string name, bool systemFault = false)
+    public RuntimeObject Get(string name, SourceLocation location, bool systemFault = false)
     {
         RuntimeObject? value = this.GetOrNull(name);
 
         if (value is null)
-            Errors.AlwaysThrow(new ObjectNotFoundError($"Object `{name}` not found", user: !systemFault), this);
+            Errors.AlwaysThrow(new ObjectNotFoundError($"Object `{name}` not found", user: !systemFault), location);
 
         return value;
     }
 
-    public T Get<T>(string name, bool systemFault = false) where T : RuntimeObject
+    public T Get<T>(string name, SourceLocation location, bool systemFault = false) where T : RuntimeObject
     {
-        return (T)this.Get(name, systemFault);
+        return (T)this.Get(name, location, systemFault);
     }
 
     /// <summary>
@@ -59,10 +87,10 @@ internal class RuntimeContext(string fileName, int lineNumber, RuntimeContext? p
     /// </exception>
     public RuntimeObject GetParam(string name)
     {
-        if (_variables.TryGetValue(name, out RuntimeObject? value))
+        if (this._variables.TryGetValue(name, out RuntimeObject? value))
             return value;
 
-        Errors.AlwaysThrow(new ObjectNotFoundError($"Object `{name}` not found", user: false), this);
+        Errors.AlwaysThrow(new ObjectNotFoundError($"Required object `{name}` not found", user: false), null);
         throw new UnreachableException();
     }
 
@@ -89,41 +117,70 @@ internal class RuntimeContext(string fileName, int lineNumber, RuntimeContext? p
         return this._variables.GetValueOrDefault(name) ?? defaultValue;
     }
 
-    public void Create(string name, RuntimeObject value)
+    public void Create(string name, RuntimeObject value, SourceLocation? location)
+    {
+        if (ReservedKeywords.Contains(name))
+            Errors.AlwaysThrow(new InvalidSyntaxError($"Cannot set reserved keyword `{name}`"), location);
+
+        this.InternalCreate(name, value, location);
+    }
+
+    private void InternalCreate(string name, RuntimeObject value, SourceLocation? location)
     {
         RuntimeObject? old = this._variables.GetValueOrDefault(name);
 
         if (old is null)
         {
-            _variables[name] = value;
+            this._variables[name] = value;
             return;
         }
 
         Errors.AlwaysThrow(
             new VarAlreadyExistsError($"Variable `{name}` already exists. " +
-                                      $"To redefine the variable, use .Set instead"), this);
+                                      $"To redefine the variable, use .Set instead"), location);
     }
 
-    public void Set(string name, RuntimeObject value)
+    public void Set(string name, RuntimeObject value, SourceLocation? location)
+    {
+        if (ReservedKeywords.Contains(name))
+            Errors.AlwaysThrow(new InvalidSyntaxError($"Cannot redefine reserved keyword `{name}`"), location);
+
+        this.InternalSet(name, value, location);
+    }
+
+    private void InternalSet(string name, RuntimeObject value, SourceLocation? location)
     {
         RuntimeObject? old = this._variables.GetValueOrDefault(name);
 
-        if (old is null && Parent is not null)
+        if (old is null && this.Parent is not null)
         {
-            Parent.Set(name, value);
+            this.Parent.Set(name, value, location);
             return;
         }
 
-        if (old is null && Parent is null)
+        if (old is null && this.Parent is null)
         {
-            Errors.AlwaysThrow(new ObjectNotFoundError($"Variable `{name}` not found"), this);
+            Errors.AlwaysThrow(new ObjectNotFoundError($"Variable `{name}` not found"), location);
             return;
         }
 
         if (old!.Type != value.Type)
             Errors.AlwaysThrow(
-                new TypeMismatchError($"Cannot assign value of type {value.Type.Name} to {old.Type.Name}"), this);
+                new TypeMismatchError($"Cannot assign value of type {value.Type.Name} to {old.Type.Name}"), location);
 
-        _variables[name] = value;
+        this._variables[name] = value;
     }
+
+    internal void SetThis(RuntimeObject value, SourceLocation? location)
+    {
+        // if (!this._variables.ContainsKey("this"))
+        // {
+        //     this.InternalSet("this", value, location);
+        //     return;
+        // }
+        //
+        // this.InternalCreate("this", value, location);
+    }
+
+    private static readonly string[] ReservedKeywords = ["this",];
 }

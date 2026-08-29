@@ -8,11 +8,14 @@ public class Ast
 {
     public readonly int Id = IdGenerator.GenerateId("Ast");
 
+    public AstState State => GetState();
+
     private Token? Action { get; set; }
-    private IImmutableList<Arguement>? Arguments { get; set; }
+    private IImmutableList<Argument>? Arguments { get; set; }
 
     private IEnumerable<IEnumerable<Ast>>? BlockValue { get; set; }
 
+    [MemberNotNull("Action")]
     public void AddAction(Token name)
     {
         if (this.Action is not null)
@@ -24,7 +27,9 @@ public class Ast
         this.Action = name;
     }
 
-    public void AddArgs(IImmutableList<Arguement> args)
+    public Token? GetAction() => this.Action;
+
+    public void AddArgs(IImmutableList<Argument> args)
     {
         if (this.Arguments is not null)
             this.ThrowError(new SystemError("Cannot redefine an ast's arguments"));
@@ -34,6 +39,8 @@ public class Ast
 
         this.Arguments = args;
     }
+
+    public IImmutableList<Argument>? GetArgs() => this.Arguments;
 
     public void AddBlockValue(IEnumerable<IEnumerable<Ast>> blockValue)
     {
@@ -46,6 +53,8 @@ public class Ast
 
         this.BlockValue = blockValue;
     }
+
+    public IEnumerable<IEnumerable<Ast>>? GetBlockValue() => this.BlockValue;
 
     public override string ToString()
     {
@@ -90,4 +99,20 @@ public class Ast
         Errors.AlwaysThrow(error, this.GetSourceLocation());
         throw new UnreachableException();
     }
+
+    private AstState GetState()
+    {
+        if (this.Arguments is not null) return AstState.Method;
+        if (this.BlockValue is not null) return AstState.Block;
+        if (this.Action is not null) return AstState.Literal;
+        return AstState.None;
+    }
+}
+
+public enum AstState
+{
+    None,
+    Literal,
+    Method,
+    Block,
 }

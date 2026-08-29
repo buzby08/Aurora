@@ -1,7 +1,6 @@
-using Aurora.Internals;
-using RuntimeObject = Aurora.Internals.RuntimeObject;
+using Aurora.Evaluator.Internals;
 
-namespace Aurora.BuiltinMethods;
+namespace Aurora.Evaluator.BuiltinObjects;
 
 internal class BooleanObject : RuntimeObject
 {
@@ -9,7 +8,7 @@ internal class BooleanObject : RuntimeObject
 
     public BooleanObject(bool value)
     {
-        Value = value;
+        this.Value = value;
         Type = Builtins.Boolean;
     }
 

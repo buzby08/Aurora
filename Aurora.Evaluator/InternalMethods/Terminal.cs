@@ -1,14 +1,17 @@
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
+using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals;
 
-namespace Aurora.InternalMethods;
+namespace Aurora.Evaluator.InternalMethods;
 
 internal static class Terminal
 {
     public static UnitObject WriteLine(RuntimeContext context)
     {
-        StringObject endObject = (StringObject)context.GetParam("end");
-        StringObject separatorObject = (StringObject)context.GetParam("separator");
+        StringObject endObject =
+            (StringObject)context.GetParam("end");
+        StringObject separatorObject =
+            (StringObject)context.GetParam("separator");
 
         string end = endObject.Value;
         string separator = separatorObject.Value;
@@ -18,8 +21,10 @@ internal static class Terminal
 
     public static StringObject ReadLine(RuntimeContext context)
     {
-        StringObject messageObject = (StringObject)context.GetParam("message");
-        RuntimeObject defaultValueObject = context.GetParam("default");
+        StringObject messageObject =
+            (StringObject)context.GetParam("message");
+        RuntimeObject defaultValueObject =
+            context.GetParam("default");
 
         string message = messageObject.Value;
         string? defaultValue = defaultValueObject is NullObject ? null : ((StringObject)defaultValueObject).Value;
@@ -29,7 +34,8 @@ internal static class Terminal
 
     public static IntObject ReadInteger(RuntimeContext context)
     {
-        StringObject messageObject = (StringObject)context.GetParam("message");
+        StringObject messageObject =
+            (StringObject)context.GetParam("message");
         RuntimeObject minObject = context.GetParam("min");
         RuntimeObject maxObject = context.GetParam("max");
 
@@ -41,7 +47,8 @@ internal static class Terminal
 
     public static FloatObject ReadFloat(RuntimeContext context)
     {
-        StringObject messageObject = (StringObject)context.GetParam("message");
+        StringObject messageObject =
+            (StringObject)context.GetParam("message");
         RuntimeObject minObject = context.GetParam("min");
         RuntimeObject maxObject = context.GetParam("max");
 
@@ -53,20 +60,23 @@ internal static class Terminal
 
     public static BooleanObject ReadBoolean(RuntimeContext context)
     {
-        StringObject messageObject = context.GetParam<StringObject>("message");
+        StringObject messageObject =
+            context.GetParam<StringObject>("message");
         BooleanOutputStyleObject styleObject = context.GetParam<BooleanOutputStyleObject>("outputStyle");
-        BooleanObject immediateObject = context.GetParam<BooleanObject>("immediate");
+        BooleanObject immediateObject =
+            context.GetParam<BooleanObject>("immediate");
 
         string message = messageObject.Value;
         BooleanOutputStyleObject.Style style = styleObject.Value;
         bool immediate = immediateObject.Value;
 
-        return ReadBoolean(context, message, style, immediate);
+        return ReadBoolean(message, style, immediate);
     }
 
     public static StringObject ReadKey(RuntimeContext context)
     {
-        StringObject messageObject = context.GetParam<StringObject>("message");
+        StringObject messageObject =
+            context.GetParam<StringObject>("message");
 
         string message = messageObject.Value;
 
@@ -89,7 +99,7 @@ internal static class Terminal
             RuntimeObject value = positionalArgs[index];
             if (index > 0)
                 valueToOutput += separator;
-            valueToOutput += value.ConvertToCSharpString(context);
+            valueToOutput += value.ConvertToCSharpString(context, context.CallSiteLocation);
         }
 
         Console.Write(valueToOutput + end);
@@ -192,7 +202,7 @@ internal static class Terminal
         }
     }
 
-    private static BooleanObject ReadBoolean(RuntimeContext context, string message,
+    private static BooleanObject ReadBoolean(string message,
                                              BooleanOutputStyleObject.Style style, bool immediate)
     {
         Console.Write(message);
@@ -206,7 +216,7 @@ internal static class Terminal
             BooleanOutputStyleObject.Style.OnOff => BooleanOutputStyleObject.ReadOnOff(),
             _ => Errors.AlwaysThrow<bool>(
                 new SystemError("A statement was reached that was deemed unreachable"),
-                context),
+                null),
         };
         return new BooleanObject(result);
     }

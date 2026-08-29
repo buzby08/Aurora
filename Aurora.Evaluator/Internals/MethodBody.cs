@@ -1,14 +1,14 @@
-namespace Aurora.Internals;
+using Aurora.Core;
 
-delegate RuntimeObject MethodBody(
+namespace Aurora.Evaluator.Internals;
+
+public delegate RuntimeObject MethodBody(
     RuntimeObject self,
     Dictionary<string, RawMethodArgument> args,
     RuntimeContext context);
 
-internal class RawMethodArgument(string name, AstList value, int? keywordPosition = null)
+public class RawMethodArgument(string name, Ast[] value)
 {
     public string Name = name;
-    public AstList Value = value;
-    public int? KeywordKeywordPosition = keywordPosition;
-    public int? ValuePosition = value.Position;
+    public Ast[] Value = value;
 }

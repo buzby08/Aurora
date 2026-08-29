@@ -1,59 +1,112 @@
+using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals;
+using Type = Aurora.Evaluator.Internals.Type;
+
 namespace Aurora.Evaluator;
 
-internal abstract class Evaluator
+public class Evaluator
 {
-    public string[] Code { get; private init; }
-    private int CodeIndex { get; set; }
-    private int MaxCodeIndex { get; }
+    public readonly int Id;
+
+    private Logger _logger;
     private Ast? CurrentAst { get; set; }
     private RuntimeObject? PreviousResult { get; set; }
-    private Tokenizer Tokenizer;
     private RuntimeContext Context;
 
-    public Evaluator(string[] code, RuntimeContext context)
+    public Evaluator(RuntimeContext context)
     {
-        this.Code = code;
-        this.Tokenizer = new Tokenizer
-        {
-            Text = code[this.CodeIndex],
-        };
-        this.CodeIndex = 0;
-        this.MaxCodeIndex = this.Code.Length - 1;
         this.Context = context;
+        this.Id = IdGenerator.GenerateId("Evaluator");
+        this._logger = new Logger($"Evaluator #{this.Id}");
     }
 
-    public static void EvaluateAll()
+    public RuntimeObject? EvaluateMultipleExpressions(IEnumerable<IEnumerable<Ast>> expressions)
     {
-        throw new NotImplementedException();
-    }
+        Ast[][] expressionsArr = expressions.Select(x => x.ToArray()).ToArray();
 
-    public static RuntimeObject EvaluateAstList(AstList astList, RuntimeContext context)
-    {
-        throw new NotImplementedException();
-    }
-
-    public static RuntimeObject ExecuteMethodAst(List<List<Ast?>> body, RuntimeObject self, RuntimeContext context)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void EnsureCurrentAstExists()
-    {
-        this.CurrentAst ??= new Ast();
-    }
-
-    private Token GetNextToken()
-    {
-        while (true)
+        foreach (Ast[] expression in expressionsArr)
         {
-            Token token = this.Tokenizer.GetNextToken();
+            RuntimeObject? returnValue = EvaluateExpression(expression);
 
-            if (token is not EofToken) return token;
-
-            if (this.CodeIndex == this.MaxCodeIndex) return this.Tokenizer.GetEofToken();
-
-            // this.Tokenizer.Text = this.Code[++this.CodeIndex];
+            if (returnValue is not null)
+                return returnValue;
         }
+
+        return null;
+    }
+
+    public RuntimeObject? EvaluateExpression(Ast[] expression)
+    {
+        RuntimeObject? previousResult = null;
+
+        foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
+
+        this._logger.Debug($"Expression evaluated to {previousResult}");
+
+        return null;
+    }
+
+    public RuntimeObject EvaluateExpressionForValue(Ast[] expression)
+    {
+        RuntimeObject? previousResult = null;
+
+        foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
+
+        if (previousResult is null)
+            Errors.AlwaysThrow(new SystemError("Expression evaluated to null"), null);
+
+        return previousResult;
+    }
+
+    private RuntimeObject EvaluateAst(Ast ast, RuntimeObject? previousResult = null)
+    {
+        if (ast.State == AstState.None)
+            Errors.AlwaysThrow(new SystemError("Ast has no state"), null);
+
+        if (ast.State == AstState.Literal && previousResult is null)
+            return RuntimeObject.CreateFromToken(ast.GetAction()!, this.Context);
+
+        if (ast.State == AstState.Literal && previousResult is not null)
+            return this.EvaluateAttributeAccess(ast.GetAction()!, previousResult);
+
+        if (ast.State == AstState.Method && previousResult is not null)
+            return this.EvaluateMethodCall(ast, previousResult);
+
+        throw new NotImplementedException(
+            $"Ast state `{ast.State}`, previous result: {(previousResult is null ? 'n' : 'y')} is not implemented yet");
+    }
+
+    private RuntimeObject EvaluateAttributeAccess(Token literal, RuntimeObject previousResult)
+    {
+        if (literal is not WordToken)
+            Errors.AlwaysThrow(new InvalidSyntaxError("Attribute names must be a word"), literal.StartLocation);
+
+        string attributeName = literal.ValueAsString;
+
+        if (previousResult is Type type)
+            return type.GetStaticAttribute(attributeName, this.Context, literal.StartLocation)
+                .GetValue(previousResult, this.Context, literal.StartLocation);
+
+        return previousResult.Type.GetInstanceAttribute(attributeName, this.Context, literal.StartLocation)
+            .GetValue(previousResult, this.Context, literal.StartLocation);
+    }
+
+    private RuntimeObject EvaluateMethodCall(Ast ast, RuntimeObject previousResult)
+    {
+        Token methodName = ast.GetAction()!;
+        string methodNameString = methodName.ValueAsString;
+        Argument[] args = ast.GetArgs()!.ToArray();
+
+        Method method = null!;
+
+        if (previousResult is Type type)
+            method = type.GetStaticMethod(methodNameString, this.Context, methodName.StartLocation);
+
+        if (previousResult is not Type)
+            method = previousResult.Type.GetInstanceMethod(methodNameString, this.Context, methodName.StartLocation);
+
+        return method.Invoke(previousResult, args, this.Context, methodName.StartLocation);
     }
 }
 

@@ -24,6 +24,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Evaluator", "Aurora.
 		{3796C155-CCA4-4539-9D88-57151636C683} = {3796C155-CCA4-4539-9D88-57151636C683}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code", "Code", "{7C43F040-EFA8-42E2-9222-5DB61009C0C2}"
+	ProjectSection(SolutionItems) = preProject
+		Aurora\code.aur = Aurora\code.aur
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

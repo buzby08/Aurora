@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals;
 
 namespace Aurora.Evaluator;
 
@@ -7,8 +9,10 @@ internal static class MathFunctions
 {
     public static FloatObject Truncate(RuntimeContext context)
     {
-        IntObject placesObject = (IntObject)context.GetParam("places");
-        FloatObject valueObject = (FloatObject)context.GetParam("value");
+        IntObject placesObject =
+            (IntObject)context.GetParam("places");
+        FloatObject valueObject =
+            (FloatObject)context.GetParam("value");
         int places = placesObject.Value;
         decimal value = valueObject.Value;
 

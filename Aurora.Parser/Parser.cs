@@ -26,7 +26,7 @@ public class Parser
     private Ast? CurrentAst { get; set; }
 
     private Token? Action { get; set; }
-    private ICollection<Arguement>? Arguments { get; set; }
+    private ICollection<Argument>? Arguments { get; set; }
     private IEnumerable<IEnumerable<Ast>>? BlockValue { get; set; }
 
     public Parser(Tokenizer tokenizer, ParserOptions? options = null)
@@ -266,10 +266,10 @@ public class Parser
         this.State = ParserState.MethodCall;
     }
 
-    private List<Arguement> ParseArguments()
+    private List<Argument> ParseArguments()
     {
         this.Log("Parsing arguments");
-        List<Arguement> arguments = [];
+        List<Argument> arguments = [];
 
         int bracketDepth = 1;
         List<Token> name = [];
@@ -310,7 +310,7 @@ public class Parser
                 continue;
             }
 
-            if (nextTokenListItem is EqualsToken)
+            if (nextTokenListItem is EqualsToken && bracketDepth <= 1)
             {
                 this.Log("Found equals");
                 isName = false;
@@ -333,8 +333,8 @@ public class Parser
         return arguments;
     }
 
-    private Arguement ConvertToArgument(IEnumerable<Token> name, IEnumerable<Token> value,
-                                             bool isName, SourceLocation semiColonLocation)
+    private Argument ConvertToArgument(IEnumerable<Token> name, IEnumerable<Token> value,
+                                       bool isName, SourceLocation semiColonLocation)
     {
         this.Log("Converting to argument");
 
@@ -403,11 +403,11 @@ public class Parser
         if (nameIsEmpty)
         {
             this.Log("Not a named argument, creating argument with just value");
-            return new Arguement(valueAst[0]);
+            return new Argument(valueAst[0]);
         }
 
         this.Log("Creating argument with name and value");
-        return new Arguement((WordToken)nameArray[0], valueAst[0]);
+        return new Argument((WordToken)nameArray[0], valueAst[0]);
     }
 
     private void HandleMethodCallState(Token token)

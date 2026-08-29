@@ -1,6 +1,6 @@
-namespace Aurora.Internals;
+namespace Aurora.Evaluator.Internals;
 
-internal class ParameterDefinition(string name, Type type, bool nullable = false, RuntimeObject? defaultValue = null)
+public class ParameterDefinition(string name, Type type, bool nullable = false, RuntimeObject? defaultValue = null)
 {
     public string Name { get; } = name;
     public Type Type { get; } = type;

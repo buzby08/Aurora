@@ -1,6 +1,8 @@
-namespace Aurora.Internals;
+using Aurora.Core;
 
-internal class Type : RuntimeObject
+namespace Aurora.Evaluator.Internals;
+
+public class Type : RuntimeObject
 {
     public string Name { get; }
     public bool CanAccessParentValues;
@@ -49,46 +51,51 @@ internal class Type : RuntimeObject
         this.InstanceAttributes.Add(value.Name, value);
     }
 
-    public Method GetStaticMethod(string name, RuntimeContext context, int? position = null)
+    public Method GetStaticMethod(string name, RuntimeContext context, SourceLocation location)
     {
         Method? method = this.GetStaticMethodOrDefault(name);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no static method {name}"),
-                context, position: position);
+                location);
 
         return method;
     }
 
-    public Method GetInstanceMethod(string name, RuntimeContext context, int? position = null)
+    public Method GetInstanceMethod(string name, RuntimeContext context, SourceLocation location)
     {
         Method? method = this.GetInstanceMethodOrDefault(name);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no instance method {name}"),
-                context, position: position);
+                location);
 
         return method;
     }
 
-    public Attribute GetStaticAttribute(string name, RuntimeContext context, int? position = null)
+    public Attribute GetStaticAttribute(string name, RuntimeContext context, SourceLocation location)
     {
+        // Todo: Make it so a method cannot have the same name as an attribute and vice versa.
+
+        // Todo: Make it so that if an attribute is not found, the method is returned, somehow.
+        //  So, `Terminal.writeLine` would return `Method: writeLine (class Terminal)` or something similar, that can be
+        //  stored as a variable and then invoked later.
         Attribute? attribute = this.GetStaticAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no static attribute {name}"),
-                context, position: position);
+                location);
 
         return attribute;
     }
 
-    public Attribute GetInstanceAttribute(string name, RuntimeContext context, int? position = null)
+    public Attribute GetInstanceAttribute(string name, RuntimeContext context, SourceLocation location)
     {
         Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no instance attribute {name}"),
-                context, position: position);
+                location);
 
         return attribute;
     }
@@ -149,4 +156,6 @@ internal class Type : RuntimeObject
         if (this.InstanceMethods != typeObject.InstanceMethods) return false;
         return true;
     }
+
+    public override string ToString() => $"{nameof(RuntimeObject)} {nameof(Type)}({this.Name})";
 }

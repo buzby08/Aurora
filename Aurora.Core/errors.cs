@@ -63,7 +63,7 @@ public class Errors
 
     public static void Log(string title, string message)
     {
-        using var writer = File.AppendText(Logs.LogFilePath);
+        using StreamWriter writer = File.AppendText(Logs.LogFilePath);
         writer.WriteLine($"Custom Log: {title} - {message}");
     }
 }

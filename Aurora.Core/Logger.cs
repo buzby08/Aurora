@@ -2,7 +2,7 @@ namespace Aurora.Core;
 
 public class Logger(string caller)
 {
-    private static bool UseConsole = true;
+    private static bool UseConsole = false;
     private static string? FilePath = "aurora.log";
     private static bool ClearFile = true;
 

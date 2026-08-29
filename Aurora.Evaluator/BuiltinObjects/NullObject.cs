@@ -1,12 +1,12 @@
-using Aurora.Internals;
+using Aurora.Evaluator.Internals;
 
-namespace Aurora.BuiltinMethods;
+namespace Aurora.Evaluator.BuiltinObjects;
 
 internal class NullObject : RuntimeObject
 {
     public NullObject()
     {
-        Type = Builtins.Null;
+        this.Type = Builtins.Null;
     }
     
     public override bool Equals(RuntimeObject other)

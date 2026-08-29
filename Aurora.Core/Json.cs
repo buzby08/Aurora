@@ -12,10 +12,10 @@ public static class Json
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"The provided file path - {filePath} - does not exist");
 
-        using var r = new StreamReader(filePath);
+        using StreamReader r = new StreamReader(filePath);
         string json = r.ReadToEnd();
 
-        var jsonObject = JsonSerializer.Deserialize<List<T>>(json);
+        List<T>? jsonObject = JsonSerializer.Deserialize<List<T>>(json);
 
         if (jsonObject is null) throw new JsonException("Deserialization failed: JSON content is invalid or empty");
 
@@ -30,10 +30,10 @@ public static class Json
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"The provided file path - {filePath} - does not exist");
 
-        using var r = new StreamReader(filePath);
+        using StreamReader r = new StreamReader(filePath);
         string json = r.ReadToEnd();
 
-        var jsonObject = JsonSerializer.Deserialize<Dictionary<string, T>>(json);
+        Dictionary<string, T>? jsonObject = JsonSerializer.Deserialize<Dictionary<string, T>>(json);
 
         if (jsonObject is null) throw new JsonException("Deserialization failed: JSON content is invalid or empty");
 
@@ -43,14 +43,14 @@ public static class Json
     public static void Write<T>(Dictionary<string, T> data, string filePath)
     {
         string json = JsonSerializer.Serialize(data);
-        using var r = new StreamWriter(filePath);
+        using StreamWriter r = new StreamWriter(filePath);
         r.Write(json);
     }
 
     public static void Write<T>(List<T> data, string filePath)
     {
         string json = JsonSerializer.Serialize(data);
-        using var r = new StreamWriter(filePath);
+        using StreamWriter r = new StreamWriter(filePath);
         r.Write(json);
     }
 }

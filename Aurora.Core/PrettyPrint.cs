@@ -11,7 +11,7 @@ public static class PrettyPrint
             message += "[";
             bool first = true;
 
-            foreach (var item in collection)
+            foreach (object item in collection)
             {
                 if (!first) message += ", ";
                 message += List(item, output: false);

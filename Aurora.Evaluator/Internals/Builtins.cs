@@ -1,10 +1,10 @@
 using System.Globalization;
-using Aurora.BuiltinMethods;
-using Aurora.Evaluator;
+using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
-namespace Aurora.Internals;
+namespace Aurora.Evaluator.Internals;
 
-internal static class Builtins
+public static class Builtins
 {
     public static Type Type = null!;
     public static Type Int = null!;
@@ -115,7 +115,7 @@ internal static class Builtins
             parameters: [new ParameterDefinition(name: "value", type: Type),],
             body: (_, _, context) =>
             {
-                RuntimeObject valueObject = context.Get("value");
+                RuntimeObject valueObject = context.GetParam("value");
                 return new OptionalObject(valueObject);
             });
         Optional.AddStaticMethod(fromMethod);
@@ -137,7 +137,7 @@ internal static class Builtins
                 if (!selfAsOptional.HasValue)
                     Errors.AlwaysThrow(new UnsupportedOperationError(
                             "Cannot access the value from an optional type where the object does not contain a value"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 return selfAsOptional.Value!;
             });
@@ -150,7 +150,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 OptionalObject selfAsOptional = (OptionalObject)self;
-                RuntimeObject defaultObject = context.Get("default");
+                RuntimeObject defaultObject = context.GetParam("default");
 
                 if (selfAsOptional.HasValue)
                     return selfAsOptional.Value!;
@@ -168,7 +168,7 @@ internal static class Builtins
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
                 if (selfAsOptional.HasValue)
-                    return new StringObject($"Optional({selfAsOptional.Value!.ConvertToCSharpString(context)})");
+                    return new StringObject($"Optional({selfAsOptional.Value!.ConvertToCSharpString(context, context.CallSiteLocation)})");
 
                 return new StringObject("Optional(Empty)");
             });
@@ -184,7 +184,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
-                IntObject right = (IntObject)context.Get("other");
+                IntObject right = (IntObject)context.GetParam("other");
 
                 return new IntObject(
                     left.Value + right.Value);
@@ -199,7 +199,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
-                IntObject right = (IntObject)context.Get("other");
+                IntObject right = (IntObject)context.GetParam("other");
 
                 return new IntObject(
                     left.Value - right.Value);
@@ -214,7 +214,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
-                IntObject right = (IntObject)context.Get("other");
+                IntObject right = (IntObject)context.GetParam("other");
 
                 return new IntObject(
                     left.Value * right.Value);
@@ -229,7 +229,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 IntObject left = (IntObject)self;
-                IntObject right = (IntObject)context.Get("other");
+                IntObject right = (IntObject)context.GetParam("other");
 
                 return new FloatObject(
                     (decimal)left.Value / right.Value);
@@ -262,7 +262,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 StringObject left = (StringObject)self;
-                StringObject right = (StringObject)context.Get("other");
+                StringObject right = (StringObject)context.GetParam("other");
 
                 string combinedObject = left.Value + right.Value;
 
@@ -298,8 +298,9 @@ internal static class Builtins
 
                 foreach ((string _, RawMethodArgument rawArg) in args)
                 {
-                    RuntimeObject valueAsObject = rawArg.Value.Evaluate(context.Parent!);
-                    StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context);
+                    Evaluator evaluator = new(context.Parent!);
+                    RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
+                    StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);
 
                     if (fullString != string.Empty)
                         fullString += ' ';
@@ -320,10 +321,10 @@ internal static class Builtins
             {
                 StringObject left = (StringObject)self;
 
-                RuntimeObject right = context.Get("other");
-                StringObject rightAsStringObject = right.ConvertToStringObject(context);
+                RuntimeObject right = context.GetParam("other");
+                StringObject rightAsStringObject = right.ConvertToStringObject(context, context.CallSiteLocation);
 
-                return new StringObject(left.Value + rightAsStringObject.Value);
+                return new StringObject(left.Value + ' ' + rightAsStringObject.Value);
             });
 
         String.AddInstanceMethod(instanceConcatMethod);
@@ -339,8 +340,8 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
-                IntObject start = (IntObject)context.Get("start");
-                IntObject end = (IntObject)context.Get("end");
+                IntObject start = (IntObject)context.GetParam("start");
+                IntObject end = (IntObject)context.GetParam("end");
 
                 int selfLength = selfAsString.Value.Length;
 
@@ -348,17 +349,17 @@ internal static class Builtins
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
                             $"Start cannot be greater than end value ({start.Value} > {end.Value})"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 if (start.Value < 0)
                     Errors.AlwaysThrow(new InvalidRangeError($"Start cannot be less than zero ({start.Value} < 0)"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 if (end.Value > selfLength)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
                             $"End cannot be greater than the string length ({end.Value} > {selfLength})"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 string substring = selfAsString.Value[start.Value..end.Value];
                 return new StringObject(substring);
@@ -377,18 +378,18 @@ internal static class Builtins
                 StringObject selfAsString = (StringObject)self;
                 int length = selfAsString.Value.Length;
 
-                IntObject index = (IntObject)context.Get("index");
+                IntObject index = (IntObject)context.GetParam("index");
 
                 if (index.Value > length)
                     Errors.AlwaysThrow(
                         new InvalidRangeError(
                             $"Index cannot be greater than the string length ({index.Value} > {length})"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 if (index.Value < 0)
                     Errors.AlwaysThrow(new InvalidRangeError(
                             $"Index cannot be less than zero ({index.Value} < 0)"),
-                        context);
+                        null /* Todo: Add a better source location */);
 
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
@@ -404,7 +405,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
-                StringObject findValue = (StringObject)context.Get("value");
+                StringObject findValue = (StringObject)context.GetParam("value");
 
                 int index = selfAsString.Value.IndexOf(findValue.Value, StringComparison.Ordinal);
 
@@ -425,7 +426,7 @@ internal static class Builtins
             body: (self, _, context) =>
             {
                 StringObject selfAsString = (StringObject)self;
-                StringObject containsValue = (StringObject)context.Get("substring");
+                StringObject containsValue = (StringObject)context.GetParam("substring");
 
                 return new BooleanObject(selfAsString.Value.Contains(containsValue.Value, StringComparison.Ordinal));
             });
@@ -576,15 +577,15 @@ internal static class Builtins
         BooleanOutputStyleObject charStyle = new(BooleanOutputStyleObject.Style.Char);
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("wordStyle", BooleanOutputStyles,
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("word", BooleanOutputStyles,
             (_, _) => wordStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNoStyle", BooleanOutputStyles,
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNo", BooleanOutputStyles,
             (_, _) => yesNoStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("charStyle", BooleanOutputStyles,
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("char", BooleanOutputStyles,
             (_, _) => charStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOffStyle", BooleanOutputStyles,
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("onOff", BooleanOutputStyles,
             (_, _) => onOffStyle));
-        BooleanOutputStyles.AddStaticAttribute(new Attribute("binaryStyle", BooleanOutputStyles,
+        BooleanOutputStyles.AddStaticAttribute(new Attribute("binary", BooleanOutputStyles,
             (_, _) => binaryStyle));
     }
 

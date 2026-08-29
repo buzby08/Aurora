@@ -1,6 +1,6 @@
-using Aurora.Internals;
+using Aurora.Evaluator.Internals;
 
-namespace Aurora.BuiltinMethods;
+namespace Aurora.Evaluator.BuiltinObjects;
 
 internal class UnitObject : RuntimeObject
 {

@@ -1,22 +1,23 @@
 namespace Aurora.Core;
 
-public class Arguement
+public class Argument
 {
-    public readonly int Id = IdGenerator.GenerateId("Arguement");
+    public readonly int Id = IdGenerator.GenerateId("Argument");
 
     public WordToken? Identifier { get; }
-    public List<Ast> Value { get; }
+    public Ast[] Value { get; }
 
-    public Arguement(List<Ast> value) : this(null!, value)
+    public Argument(IEnumerable<Ast> value) : this(null!, value)
     {
     }
 
-    public Arguement(WordToken identifier, List<Ast> value)
+    public Argument(WordToken identifier, IEnumerable<Ast> value)
     {
+        Ast[] valueArr = value.ToArray();
         this.Identifier = identifier;
-        this.Value = value;
+        this.Value = valueArr;
 
-        if (value.Count == 0)
+        if (valueArr.Length == 0)
             Errors.AlwaysThrow(new SystemError("Argument must have at least one value"),
                 null);
     }

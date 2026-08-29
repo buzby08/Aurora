@@ -1,33 +1,32 @@
 using System.Diagnostics;
-using Aurora.BuiltinMethods;
+using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
-namespace Aurora.Internals;
+namespace Aurora.Evaluator.Internals;
 
-internal abstract class RuntimeObject
+public abstract class RuntimeObject
 {
     public Type Type;
 
-    public StringObject ConvertToStringObject(RuntimeContext context)
+    public StringObject ConvertToStringObject(RuntimeContext context, SourceLocation sourceLocation)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", context)
-                .Invoke(this, [],
-                    new RuntimeContext(InternalVariables.CodeFilePath, InternalVariables.LineNumber, context));
+            this.Type.GetInstanceMethod("toString", context, sourceLocation)
+                .Invoke(this, [], context, sourceLocation);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString;
     }
 
-    public string ConvertToCSharpString(RuntimeContext context)
+    public string ConvertToCSharpString(RuntimeContext context, SourceLocation location)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", context)
-                .Invoke(this, [],
-                    new RuntimeContext(InternalVariables.CodeFilePath, InternalVariables.LineNumber, context));
+            this.Type.GetInstanceMethod("toString", context, location)
+                .Invoke(this, [], context, location);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString.Value;
     }
 
-    public static RuntimeObject CreateFromToken(Token token, RuntimeContext context, int? position = null)
+    public static RuntimeObject CreateFromToken(Token token, RuntimeContext context)
     {
         return token switch
         {
@@ -35,15 +34,16 @@ internal abstract class RuntimeObject
             NumberToken n => CreateFromNumberToken(n),
             WordToken w => CreateFromWordToken(w, context),
             _ => Errors.AlwaysThrow<RuntimeObject>(
-                new SystemError($"{token.Type} cannot be converted to a runtime object."), context, position),
+                new SystemError($"{token.Type} cannot be converted to a runtime object."), token.StartLocation),
         };
     }
 
     public abstract bool Equals(RuntimeObject other);
 
-    public virtual RuntimeObject Invoke(List<Argument> arguments, RuntimeContext parentContext)
+    public virtual RuntimeObject Invoke(List<Argument> arguments, RuntimeContext parentContext, SourceLocation callSiteLocation)
     {
-        Errors.AlwaysThrow(new UnsupportedOperationError("Object is not invokable"), parentContext);
+        Errors.AlwaysThrow(new UnsupportedOperationError("Object is not invokable"),
+            null /* Todo: Try add a better source value*/);
         throw new UnreachableException();
     }
 
@@ -56,7 +56,7 @@ internal abstract class RuntimeObject
         if (token.ValueAsString == NullValue)
             return new NullObject();
 
-        return context.Get(token.ValueAsString);
+        return context.Get(token.ValueAsString, token.StartLocation);
     }
 
     private static RuntimeObject CreateFromNumberToken(NumberToken token)
