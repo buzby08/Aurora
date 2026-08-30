@@ -1,0 +1,4 @@
+// Testing keyword arguments
+
+Terminal.writeLine("Hello"; end=", ")
+Terminal.writeLine("World")
