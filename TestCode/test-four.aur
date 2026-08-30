@@ -1,4 +1,0 @@
-// Testing creating variables from user input
-
-String.create(name=Terminal.readLine("What is your name?"; default="N/A"))
-Terminal.writeLine("Name:".concat(name))

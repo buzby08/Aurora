@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 __TEST_CODE_PATH__ = "TestCode/"
 __TEST_RUNNER__ = "dotnet run --project Aurora/Aurora.csproj -- {}"
@@ -47,6 +48,9 @@ def main():
         print(succeeded_message + failed_message)
     
     print(__RESET_COLOR__)
+
+    if (failed > 0):
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

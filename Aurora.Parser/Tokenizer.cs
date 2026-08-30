@@ -32,6 +32,8 @@ public class Tokenizer
     /// </summary>
     private int ColumnNumber { get; set; } = 1;
 
+    private Dictionary<int, int> SkipPositions = [];
+
     /// <summary>
     /// Checks if the tokenizer has reached the end of its input.
     /// </summary>
@@ -305,6 +307,9 @@ public class Tokenizer
     {
         while (true)
         {
+            if (this.SkipPositions.Keys.Contains(this.Position))
+                this.Position = this.SkipPositions[this.Position];
+
             char? currentChar = this.GetCurrentChar();
 
             if (currentChar is null || this.IsEof()) return this.GetEofToken();
@@ -391,6 +396,8 @@ public class Tokenizer
     {
         if (this._cachedTokenList is not null) return this._cachedTokenList;
 
+        this.FillSkipPositions();
+
         List<Token> allTokens = [];
 
         Token currentToken = this.GetNextToken();
@@ -411,6 +418,29 @@ public class Tokenizer
         return allTokens;
     }
 
+    private void FillSkipPositions()
+    {
+        int? startPosition = null;
+        Dictionary<int, int> skipPositions = [];
+
+        for (int i = 0; i < this.Text.Length; i++)
+        {
+            char currentChar = this.Text[i];
+            char? nextChar = i < this.Text.Length - 1 ? this.Text[i + 1] : null;
+
+            if (startPosition is not null && currentChar == '\n')
+            {
+                skipPositions.Add(startPosition.Value, i);
+                startPosition = null;
+            }
+
+            if (startPosition is null && currentChar == '/' && nextChar == '/')
+                startPosition = i;
+        }
+
+        this.SkipPositions = skipPositions;
+    }
+
     /// <summary>
     /// Throws an error to the user that something has gone wrong with the tokenizer. This will be treated as a
     /// <see cref="SystemError"/>. This method exits execution.
@@ -423,5 +453,11 @@ public class Tokenizer
             new SystemError($"Tokenizer error: {message}"),
             InternalVariables.GetEmptySourceLocation());
         Environment.Exit(1);
+    }
+
+    private struct SkipPosition(int start, int end)
+    {
+        public int Start = start;
+        public int End = end;
     }
 }
