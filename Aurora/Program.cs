@@ -53,17 +53,17 @@ public static class Program
 
     private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
     {
-        globalContext.Create("Type", Builtins.Type, null);
-        globalContext.Create("Null", Builtins.Null, null);
-        globalContext.Create("Unit", Builtins.Unit, null);
-        globalContext.Create("Int", Builtins.Int, null);
-        globalContext.Create("Float", Builtins.Float, null);
-        globalContext.Create("String", Builtins.String, null);
-        globalContext.Create("Boolean", Builtins.Boolean, null);
-        globalContext.Create("Terminal", Builtins.Terminal, null);
-        globalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles, null);
-        globalContext.Create("Optional", Builtins.Optional, null);
-        globalContext.Create("Math", Builtins.Math, null);
+        globalContext.Create(nameof(Builtins.Type), Builtins.Type, null);
+        globalContext.Create(nameof(Builtins.Null), Builtins.Null, null);
+        globalContext.Create(nameof(Builtins.Unit), Builtins.Unit, null);
+        globalContext.Create(nameof(Builtins.Int), Builtins.Int, null);
+        globalContext.Create(nameof(Builtins.Float), Builtins.Float, null);
+        globalContext.Create(nameof(Builtins.String), Builtins.String, null);
+        globalContext.Create(nameof(Builtins.Boolean), Builtins.Boolean, null);
+        globalContext.Create(nameof(Builtins.Terminal), Builtins.Terminal, null);
+        globalContext.Create(nameof(Builtins.BooleanOutputStyles), Builtins.BooleanOutputStyles, null);
+        globalContext.Create(nameof(Builtins.Optional), Builtins.Optional, null);
+        globalContext.Create(nameof(Builtins.Math), Builtins.Math, null);
     }
 
     public static void Main(string[] args)

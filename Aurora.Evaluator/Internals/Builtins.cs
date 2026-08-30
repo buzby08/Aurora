@@ -18,33 +18,36 @@ public static class Builtins
     public static Type BooleanOutputStyles = null!;
     public static Type Optional = null!;
     public static Type Math = null!;
+    public static Type Block = null!;
 
     public static void InitialiseTypes()
     {
-        Type = new Type("Type");
+        Type = new Type(nameof(Type));
         Type.Type = Type;
 
-        Callable = new Type("Callable", type: Type);
+        Callable = new Type(nameof(Callable), type: Type);
 
-        Unit = new Type("Unit", type: Type);
+        Unit = new Type(nameof(Unit), type: Type);
 
-        Optional = new Type("Optional", type: Type);
+        Optional = new Type(nameof(Optional), type: Type);
 
-        Int = new Type("Int", type: Type);
+        Int = new Type(nameof(Int), type: Type);
 
-        Float = new Type("Float", type: Type);
+        Float = new Type(nameof(Float), type: Type);
 
-        String = new Type("String", type: Type);
+        String = new Type(nameof(String), type: Type);
 
-        Boolean = new Type("Boolean", type: Type);
+        Boolean = new Type(nameof(Boolean), type: Type);
 
-        Null = new Type("Null", type: Type);
+        Null = new Type(nameof(Null), type: Type);
 
-        Terminal = new Type("Terminal", type: Type);
+        Terminal = new Type(nameof(Terminal), type: Type);
 
-        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
+        BooleanOutputStyles = new Type(nameof(BooleanOutputStyles), type: Type);
 
-        Math = new Type("Math", type: Type);
+        Math = new Type(nameof(Math), type: Type);
+
+        Block = new Type(nameof(Block), type: Type);
 
         InitialiseTypeType();
         InitialiseOptionalType();
