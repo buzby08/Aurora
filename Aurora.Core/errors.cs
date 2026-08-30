@@ -7,6 +7,7 @@ public class Errors
 {
     public static string ConfigFilePath { get; set; } = "AuroraConfig.json";
     public static List<string> Warnings = [];
+    private static Logger _logger = new("Errors");
 
     [DoesNotReturn]
     public static void OutputWarningsAndExit()
@@ -51,12 +52,12 @@ public class Errors
 
         if (!isError || InternalVariables.DisableErrors)
         {
-            Logs.Warning(outputMessage);
+            _logger.Warning(outputMessage);
             Warnings.Add("[WARNING]" + outputMessage);
             return;
         }
 
-        Logs.Error(outputMessage);
+        _logger.Error(outputMessage, addCaller: false);
 
         Environment.Exit(1);
     }

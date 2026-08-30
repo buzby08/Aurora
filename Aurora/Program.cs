@@ -12,14 +12,14 @@ public static class Program
     {
         if (string.IsNullOrEmpty(filePath))
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
-                InternalVariables.GetEmptySourceLocation());
+                null);
 
         if (!File.Exists(filePath))
             Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"),
-                InternalVariables.GetEmptySourceLocation());
+                null);
 
         if (!filePath.EndsWith(".aur"))
-            Logs.Warning("Aurora code should be written in an aurora file (ending with .aur).");
+            InternalVariables.GlobalLogger.Warning("Aurora code should be written in an aurora file (ending with .aur).");
 
         // context.Create("__SCRIPT__", new StringObject(filePath));
         return File.ReadAllText(filePath);
