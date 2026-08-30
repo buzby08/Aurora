@@ -1,3 +1,0 @@
-// Testing a simple Hello, World! function
- 
-Terminal.writeLine("Hello, World!")

@@ -1,4 +1,2 @@
-// Testing variables
-
 String.create(name="Liam")
 Terminal.writeLine("Hello".concat(name))
