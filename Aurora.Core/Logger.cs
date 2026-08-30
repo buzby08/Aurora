@@ -6,12 +6,14 @@ public class Logger(string caller)
     private static string? FilePath = "aurora.log";
     private static bool ClearFile = true;
 
-    private static void Write(string message, ConsoleColor? color = null)
+    private static void Write(string message, ConsoleColor? color = null, bool useError = false)
     {
         if (color is not null)
             Console.ForegroundColor = color.Value;
-        if (UseConsole)
+        if (UseConsole && !useError)
             Console.WriteLine(message);
+        if (useError)
+            Console.Error.WriteLine(message);
 
         Console.ResetColor();
 
@@ -41,9 +43,10 @@ public class Logger(string caller)
         Write(FormatString(message, caller), ConsoleColor.Yellow);
     }
 
-    public void Error(string message)
+    public void Error(string message, bool addCaller = true)
     {
-        Write(FormatString(message, caller), ConsoleColor.Red);
+        string outputtedMessage = addCaller ? FormatString(message, caller) : message;
+        Write(outputtedMessage, ConsoleColor.Red, useError: true);
         Environment.Exit(1);
     }
 }
