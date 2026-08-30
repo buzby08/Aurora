@@ -1,169 +1,35 @@
-﻿using System.Reflection;
-using Aurora.BuiltinMethods;
-using Aurora.Internals;
-using CommandLine;
-using CommandLine.Text;
+﻿#define TESTING
+using Aurora.Core;
+using Aurora.Parser;
+using Aurora.Evaluator ;
+using Aurora.Evaluator.Internals;
 
 namespace Aurora;
 
 public static class Program
 {
-    private static string[] ReadCode(string filePath, RuntimeContext context)
+    private static string ReadCode(string filePath /*, RuntimeContext context*/)
     {
         if (string.IsNullOrEmpty(filePath))
-        {
-            Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"));
-        }
+            Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
+                null);
 
         if (!File.Exists(filePath))
-        {
-            Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"));
-        }
+            Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"),
+                null);
 
         if (!filePath.EndsWith(".aur"))
-        {
-            Logs.Warning("Aurora code should be written in an aurora file (ending with .aur).");
-        }
+            InternalVariables.GlobalLogger.Warning("Aurora code should be written in an aurora file (ending with .aur).");
 
-        context.Create("__SCRIPT__", new StringObject(filePath));
-        return File.ReadAllLines(filePath);
+        // context.Create("__SCRIPT__", new StringObject(filePath));
+        return File.ReadAllText(filePath);
     }
 
-    public static void ApplyOptions(bool noConsole, bool debug, bool verbose, bool warning, bool strict,
-        bool inlineStackTrace, bool disableEasterEggs, string? logFile)
+    private static void HandleArgumentEasterEggs(string[] args)
     {
-        if (noConsole)
-        {
-            Logs.NoConsole = true;
-        }
+        if (CommandLineArguments.DisableEasterEggs) return;
 
-        if (debug)
-        {
-            Logs.AllowDebug = true;
-            Logs.Debug("Debug messages enabled");
-
-            verbose = !strict || verbose;
-        }
-
-        if (verbose)
-        {
-            Logs.AllowVerbose = true;
-            Logs.Verbose("Verbose messages enabled");
-
-            warning = !strict || warning;
-        }
-
-        if (warning)
-        {
-            Logs.AllowWarning = true;
-            Logs.Warning("Warning messages enabled");
-        }
-
-        if (inlineStackTrace)
-        {
-            InternalVariables.InlineStackTrace = true;
-            Logs.Warning("Inline stack trace messages enabled");
-        }
-
-        if (disableEasterEggs)
-        {
-            InternalVariables.EasterEggs = false;
-            Logs.Warning("Easter eggs disabled");
-        }
-
-        if (!string.IsNullOrEmpty(logFile))
-        {
-            Logs.LogFilePath = logFile;
-        }
-    }
-
-    private static void RunOptionsAndReturnExitCode(Options opts)
-    {
-        if (opts.Version)
-        {
-            var version = Assembly
-                .GetExecutingAssembly()
-                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion ?? "Unknown";
-
-            Console.WriteLine($"Aurora version {version}");
-            Environment.Exit(0);
-        }
-
-        InternalVariables.CodeFilePath = opts.FilePath;
-
-        if (opts.FilePath == "nothing")
-        {
-            Console.WriteLine("You’ve run nothing. And yet... something happened. Think about it.");
-            Environment.Exit(-1);
-        }
-
-        if (opts.FilePath == "missing.aur")
-        {
-            Errors.AlwaysThrow(new FileNotFoundError("404: File intentionally not found."));
-        }
-
-        Errors.ConfigFilePath = string.IsNullOrEmpty(opts.ConfigFile) ? Errors.ConfigFilePath : opts.ConfigFile;
-
-        InternalVariables.StrictFlagMode = opts.Strict;
-
-        if (!string.IsNullOrEmpty(opts.ConfigFile))
-        {
-            // UserConfiguration.ApplyConfiguration(opts.ConfigFile);
-        }
-
-        ApplyOptions(opts.NoConsole, opts.Debug, opts.Verbose, opts.Warning, opts.Strict,
-            opts.InlineStackTrace, opts.DisableEasterEggs, opts.LogFile);
-    }
-
-    private static void HandleParseError(IEnumerable<Error> errs)
-    {
-        errs = errs.ToList();
-
-        if (errs.IsHelp() || errs.IsVersion())
-        {
-            Environment.Exit(0);
-        }
-
-        foreach (var err in errs)
-        {
-            Logs.ForceLog($"System Error: {err}");
-        }
-
-        Errors.RaiseError(new ConfigurationError("The system encountered an error it could not handle",
-            user: false));
-    }
-
-    private static void AttachBuiltinsToGlobalContext()
-    {
-        InternalVariables.GlobalContext.Create("Type", Builtins.Type);
-        InternalVariables.GlobalContext.Create("Null", Builtins.Null);
-        InternalVariables.GlobalContext.Create("Unit", Builtins.Unit);
-        InternalVariables.GlobalContext.Create("Int", Builtins.Int);
-        InternalVariables.GlobalContext.Create("Float", Builtins.Float);
-        InternalVariables.GlobalContext.Create("String", Builtins.String);
-        InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
-        InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
-        InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
-    }
-
-    public static void Main(string[] args)
-    {
-#if TESTING
-        Test.isTesting = true;
-        Test.Main();
-        Environment.Exit(0);
-#endif
-
-#if OWL
-        Owl.Show();
-        Environment.Exit(0);
-#endif
-
-        if (args.Contains("--supercalifragalisticexpialidocious"))
-        {
-            MaryPoppins.Supercalifragalisticexpialidocious();
-        }
+        if (args.Contains("--supercalifragalisticexpialidocious")) MaryPoppins.Supercalifragalisticexpialidocious();
 
         if (args.Contains("--teapot"))
         {
@@ -174,7 +40,7 @@ public static class Program
         if (args.Contains("--help-me"))
         {
             Console.WriteLine("It looks like you're trying to code. Would you like assistance from Clippy?");
-            Environment.Exit(-1);
+            Environment.Exit(0);
         }
 
         if (args.Contains("--praise"))
@@ -183,22 +49,64 @@ public static class Program
                 "You're doing amazing. Your code isn't perfect, but neither is the moon, and it still controls the tides.");
             Environment.Exit(0);
         }
+    }
+
+    private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
+    {
+        globalContext.Create("Type", Builtins.Type, null);
+        globalContext.Create("Null", Builtins.Null, null);
+        globalContext.Create("Unit", Builtins.Unit, null);
+        globalContext.Create("Int", Builtins.Int, null);
+        globalContext.Create("Float", Builtins.Float, null);
+        globalContext.Create("String", Builtins.String, null);
+        globalContext.Create("Boolean", Builtins.Boolean, null);
+        globalContext.Create("Terminal", Builtins.Terminal, null);
+        globalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles, null);
+        globalContext.Create("Optional", Builtins.Optional, null);
+        globalContext.Create("Math", Builtins.Math, null);
+    }
+
+    public static void Main(string[] args)
+    {
+#if OWL
+        Owl.Show();
+        Environment.Exit(0);
+#endif
+
+        Logger logger = new("Program.cs");
 
         try
         {
+
+            CommandLineArguments.HandleArgs(args);
+            string filePath = CommandLineArguments.File!;
+
+            HandleArgumentEasterEggs(args);
+
+            RuntimeContext.CreateGlobalContext(filePath);
             Builtins.InitialiseTypes();
-            AttachBuiltinsToGlobalContext();
+            AttachBuiltinsToGlobalContext(RuntimeContext.GlobalContext!);
 
-            Parser.Default.ParseArguments<Options>(args)
-                .WithParsed(RunOptionsAndReturnExitCode)
-                .WithNotParsed(HandleParseError);
-
-            string[] code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
+            string code = ReadCode(filePath /*, InternalVariables.GlobalContext*/);
             InternalVariables.Code = code;
 
-            InternalVariables.LineNumber = 0;
-            Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
-            
+            Tokenizer tokenizer = new()
+            {
+                Text = code,
+                FilePath = filePath,
+            };
+
+#if TESTING
+
+            Parser.Parser parser = new(tokenizer);
+            List<List<Ast>> expressions = parser.Parse();
+
+            Evaluator.Evaluator evaluator = new(RuntimeContext.GlobalContext!);
+            evaluator.EvaluateMultipleExpressions(expressions);
+
+            logger.Info("Program finished.");
+#endif
+
             Errors.OutputWarningsAndExit();
         }
         catch (Exception e)
@@ -213,7 +121,8 @@ public static class Program
 
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
-                new SystemError(InternalVariables.InlineStackTrace ? fullError : e.Message));
+                new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)),
+                null);
         }
     }
 }
@@ -226,6 +135,6 @@ public static class Program
 //
 //     public static void Main()
 //     {
-//         
+//
 //     }
 // }
