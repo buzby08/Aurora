@@ -1,25 +1,28 @@
-﻿using Aurora.BuiltinMethods;
-using Aurora.Internals;
+﻿#define TESTING
+using Aurora.Core;
+using Aurora.Parser;
+using Aurora.Evaluator ;
+using Aurora.Evaluator.Internals;
 
 namespace Aurora;
 
 public static class Program
 {
-    private static string[] ReadCode(string filePath, RuntimeContext context)
+    private static string ReadCode(string filePath /*, RuntimeContext context*/)
     {
         if (string.IsNullOrEmpty(filePath))
             Errors.RaiseError(new FileNotFoundError("Please provide a file path to execute"),
-                InternalVariables.GlobalContext);
+                InternalVariables.GetEmptySourceLocation());
 
         if (!File.Exists(filePath))
             Errors.RaiseError(new FileNotFoundError($"The file - {filePath} - was not found"),
-                InternalVariables.GlobalContext);
+                InternalVariables.GetEmptySourceLocation());
 
         if (!filePath.EndsWith(".aur"))
             Logs.Warning("Aurora code should be written in an aurora file (ending with .aur).");
 
-        context.Create("__SCRIPT__", new StringObject(filePath));
-        return File.ReadAllLines(filePath);
+        // context.Create("__SCRIPT__", new StringObject(filePath));
+        return File.ReadAllText(filePath);
     }
 
     private static void HandleArgumentEasterEggs(string[] args)
@@ -48,53 +51,61 @@ public static class Program
         }
     }
 
-    private static void AttachBuiltinsToGlobalContext()
+    private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
     {
-        InternalVariables.GlobalContext.Create("Type", Builtins.Type);
-        InternalVariables.GlobalContext.Create("Null", Builtins.Null);
-        InternalVariables.GlobalContext.Create("Unit", Builtins.Unit);
-        InternalVariables.GlobalContext.Create("Int", Builtins.Int);
-        InternalVariables.GlobalContext.Create("Float", Builtins.Float);
-        InternalVariables.GlobalContext.Create("String", Builtins.String);
-        InternalVariables.GlobalContext.Create("Boolean", Builtins.Boolean);
-        InternalVariables.GlobalContext.Create("Terminal", Builtins.Terminal);
-        InternalVariables.GlobalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles);
-        InternalVariables.GlobalContext.Create("Optional", Builtins.Optional);
-        InternalVariables.GlobalContext.Create("Math", Builtins.Math);
+        globalContext.Create("Type", Builtins.Type, null);
+        globalContext.Create("Null", Builtins.Null, null);
+        globalContext.Create("Unit", Builtins.Unit, null);
+        globalContext.Create("Int", Builtins.Int, null);
+        globalContext.Create("Float", Builtins.Float, null);
+        globalContext.Create("String", Builtins.String, null);
+        globalContext.Create("Boolean", Builtins.Boolean, null);
+        globalContext.Create("Terminal", Builtins.Terminal, null);
+        globalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles, null);
+        globalContext.Create("Optional", Builtins.Optional, null);
+        globalContext.Create("Math", Builtins.Math, null);
     }
 
     public static void Main(string[] args)
     {
-#if TESTING
-        Test.isTesting = true;
-        Test.Main();
-        Environment.Exit(0);
-#endif
-
 #if OWL
         Owl.Show();
         Environment.Exit(0);
 #endif
 
+        Logger logger = new("Program.cs");
+
         try
         {
-            Builtins.InitialiseTypes();
-            AttachBuiltinsToGlobalContext();
 
             CommandLineArguments.HandleArgs(args);
+            string filePath = CommandLineArguments.File!;
 
             HandleArgumentEasterEggs(args);
 
-            InternalVariables.CodeFilePath = CommandLineArguments.File!;
+            RuntimeContext.CreateGlobalContext(filePath);
+            Builtins.InitialiseTypes();
+            AttachBuiltinsToGlobalContext(RuntimeContext.GlobalContext!);
 
-            InternalVariables.GlobalContext.FileName = InternalVariables.CodeFilePath;
-            InternalVariables.GlobalContext.ShowInStackTrace = false;
-
-            string[] code = ReadCode(InternalVariables.CodeFilePath, InternalVariables.GlobalContext);
+            string code = ReadCode(filePath /*, InternalVariables.GlobalContext*/);
             InternalVariables.Code = code;
 
-            InternalVariables.LineNumber = 0;
-            Evaluator.EvaluateAllCode(code, InternalVariables.GlobalContext);
+            Tokenizer tokenizer = new()
+            {
+                Text = code,
+                FilePath = filePath,
+            };
+
+#if TESTING
+
+            Parser.Parser parser = new(tokenizer);
+            List<List<Ast>> expressions = parser.Parse();
+
+            Evaluator.Evaluator evaluator = new(RuntimeContext.GlobalContext!);
+            evaluator.EvaluateMultipleExpressions(expressions);
+
+            logger.Info("Program finished.");
+#endif
 
             Errors.OutputWarningsAndExit();
         }
@@ -111,19 +122,19 @@ public static class Program
             Errors.Log("System Error", fullError);
             Errors.RaiseError(
                 new SystemError("SE_001" + (InternalVariables.InlineStackTrace ? fullError : e.Message)),
-                InternalVariables.GlobalContext);
+                null);
         }
     }
 }
 
 // namespace Aurora;
-// 
+//
 // public static class Program
 // {
 //     public static int LineNumber = 1;
-// 
+//
 //     public static void Main()
 //     {
-//         
+//
 //     }
 // }
