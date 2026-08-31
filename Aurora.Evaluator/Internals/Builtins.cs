@@ -19,6 +19,7 @@ public static class Builtins
     public static Type Optional = null!;
     public static Type Math = null!;
     public static Type Block = null!;
+    public static Type Logic = null!;
 
     public static void InitialiseTypes()
     {
@@ -49,6 +50,8 @@ public static class Builtins
 
         Block = new Type(nameof(Block), type: Type);
 
+        Logic = new Type(nameof(Logic), type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -59,8 +62,23 @@ public static class Builtins
         InitialiseTerminalType();
         InitialiseBooleanOutputStylesType();
         InitialiseMathType();
+        InitialiseLogicType();
 
-        // Todo: Initialise all types
+    }
+
+    private static void InitialiseLogicType()
+    {
+        Method ifMethod = new(
+            name: "if",
+            returnType: Unit,
+            parameters:
+            [
+                new ParameterDefinition(name: "condition", type: Boolean),
+                new ParameterDefinition(name: "block", type: Block),
+            ],
+            body: (_, _, context) => InternalMethods.Logic.If(context));
+
+        Logic.AddStaticMethod(ifMethod);
     }
 
     private static void InitialiseTypeType()
@@ -171,7 +189,8 @@ public static class Builtins
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
                 if (selfAsOptional.HasValue)
-                    return new StringObject($"Optional({selfAsOptional.Value!.ConvertToCSharpString(context, context.CallSiteLocation)})");
+                    return new StringObject(
+                        $"Optional({selfAsOptional.Value!.ConvertToCSharpString(context, context.CallSiteLocation)})");
 
                 return new StringObject("Optional(Empty)");
             });
@@ -303,7 +322,8 @@ public static class Builtins
                 {
                     Evaluator evaluator = new(context.Parent!);
                     RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
-                    StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);
+                    StringObject valueAsStringObject =
+                        valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);
 
                     if (fullString != string.Empty)
                         fullString += ' ';

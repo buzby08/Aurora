@@ -328,7 +328,8 @@ public class Parser
             value.Add(nextTokenListItem);
         }
 
-        arguments.Add(this.ConvertToArgument(name, value, isName, currentLocation));
+        if (name.Count > 0)
+            arguments.Add(this.ConvertToArgument(name, value, isName, currentLocation));
 
         return arguments;
     }
@@ -369,13 +370,13 @@ public class Parser
 
         // if (valueIsEmpty && !isName)
         //     ThrowError(new InvalidSyntaxError("Expected a value"));
-        //
+        // 
         // if (!valueIsEmpty && nameIsExpression)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name but found an expression"));
-        //
+        // 
         // if (nameIsEmpty && valueIsEmpty)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name"));
-        //
+        // 
         // if (nameArray[0].Token is not WordToken nameAsWord)
         // {
         //     ThrowError(new InvalidSyntaxError("Argument name must be an identifier"));
