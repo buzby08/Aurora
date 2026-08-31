@@ -20,6 +20,7 @@ public static class Builtins
     public static Type Math = null!;
     public static Type Block = null!;
     public static Type Logic = null!;
+    public static Type LogicIfReturn = null!;
 
     public static void InitialiseTypes()
     {
@@ -52,6 +53,8 @@ public static class Builtins
 
         Logic = new Type(nameof(Logic), type: Type);
 
+        LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -63,14 +66,25 @@ public static class Builtins
         InitialiseBooleanOutputStylesType();
         InitialiseMathType();
         InitialiseLogicType();
+        InitialiseLogicIfReturnType();
+    }
 
+    private static void InitialiseLogicIfReturnType()
+    {
+        Method elseMethod = new(
+            name: "else",
+            returnType: LogicIfReturn,
+            parameters: [new ParameterDefinition(name: "block", type: Block),],
+            body: (self, _, context) => InternalMethods.Logic.Else(self, context));
+
+        LogicIfReturn.AddInstanceMethod(elseMethod);
     }
 
     private static void InitialiseLogicType()
     {
         Method ifMethod = new(
             name: "if",
-            returnType: Unit,
+            returnType: LogicIfReturn,
             parameters:
             [
                 new ParameterDefinition(name: "condition", type: Boolean),

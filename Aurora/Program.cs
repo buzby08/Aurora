@@ -56,7 +56,12 @@ public static class Program
     private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
     {
         foreach (FieldInfo property in typeof(Builtins).GetFields())
+        {
+            // if (property.GetType() != typeof(RuntimeObject))
+            //     continue;
+
             globalContext.Create(property.Name, (RuntimeObject)property.GetValue(null)!, null);
+        }
     }
 
     public static void Main(string[] args)
