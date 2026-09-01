@@ -1,1 +1,11 @@
-Caleb.moan()
+Logic.if(false; {
+	Terminal.writeLine("In the if block");
+})
+.else({
+	Logic.if(true; {
+		Terminal.writeLine("In the else if block")
+	})
+	.else({
+		Terminal.writeLine("In the else block")
+	})
+})
