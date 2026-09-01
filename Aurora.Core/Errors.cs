@@ -44,9 +44,13 @@ public class Errors
         string positionMessage = "";
 
         if (location is not null)
-            positionMessage = $"{location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber}";
+        {
+            positionMessage = $"File {location.FilePath} Line {location.LineNumber} : Column {location.ColumnNumber} \n";
+            positionMessage += CodeReader.GetMessagePointingAtPosition(location, prefix: "    ");
+        }
 
-        string outputMessage = $"{{{positionMessage}}} ({error.Code}) {error.Title} - {error.Message}";
+        string errorMessage = $"({error.Code}) {error.Title} - {error.Message}";
+        string outputMessage = positionMessage + "\n" + errorMessage;
 
         bool isError = error.AlwaysError /*|| UserConfiguration.Errors.Contains(error.Code)*/ || alwaysThrow;
 

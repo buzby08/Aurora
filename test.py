@@ -12,11 +12,29 @@ __RESET_COLOR__ = "\033[0m"
 def test_file(file: str) -> bool:
     print(f"{__RESET_COLOR__}Test {file}: ", end="", flush=True)
 
-    command_to_run = __TEST_RUNNER__.format(os.path.join(__TEST_CODE_PATH__, file))
+    fullPath = os.path.join(__TEST_CODE_PATH__, file)
+    failMessage = None
+
+    with open(fullPath) as f:
+        contents = f.readlines()
+        if contents[0].startswith("// FAIL"):
+            failMessage = contents[0].replace("// FAIL", "").strip()
+
+    command_to_run = __TEST_RUNNER__.format(fullPath)
     result = subprocess.run(command_to_run.split(" "), capture_output=True, text=True)
     return_code = result.returncode
     stdout = result.stdout
     stderr = result.stderr
+
+    if (failMessage and f"({failMessage})" in stderr):
+        print(f"{__GREEN_COLOR__}Passed")
+        return True
+
+    if (failMessage):
+        print(f"{__RED_COLOR__}Failed")
+        print(f"Did not throw error {failMessage}")
+        print(f"StdErr: {stderr}")
+        return False
 
     if return_code == 0:
         print(f"{__GREEN_COLOR__}Passed")
