@@ -370,13 +370,13 @@ public class Parser
 
         // if (valueIsEmpty && !isName)
         //     ThrowError(new InvalidSyntaxError("Expected a value"));
-        // 
+        //
         // if (!valueIsEmpty && nameIsExpression)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name but found an expression"));
-        // 
+        //
         // if (nameIsEmpty && valueIsEmpty)
         //     ThrowError(new InvalidSyntaxError("Expected an argument name"));
-        // 
+        //
         // if (nameArray[0].Token is not WordToken nameAsWord)
         // {
         //     ThrowError(new InvalidSyntaxError("Argument name must be an identifier"));
@@ -438,7 +438,6 @@ public class Parser
             {
                 this.Log($"Decreasing bracket depth from {bracketDepth} to {bracketDepth - 1}");
                 bracketDepth--;
-                continue;
             }
 
             if (token is BracketToken { IsCurly: true, IsOpen: true, })
@@ -446,6 +445,8 @@ public class Parser
                 this.Log($"Increasing bracket depth from {bracketDepth} to {bracketDepth + 1}");
                 bracketDepth++;
             }
+
+            if (bracketDepth == 0) continue;
 
             block.Add(token);
         }
