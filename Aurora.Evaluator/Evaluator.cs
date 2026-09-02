@@ -19,7 +19,6 @@ public class Evaluator : IDisposable
     private Evaluator? Parent { get; set; }
     private EvaluatorState State { get; set; }
     private bool BreakLoop { get; set; }
-    private bool ContinueLoop { get; set; }
     private bool Kill { get; set; }
 
 
@@ -151,9 +150,7 @@ public class Evaluator : IDisposable
 
     public void EvaluateWhile(Ast[] condition, BlockObject body)
     {
-        this.State = EvaluatorState.WhileLoop;
-
-        loopStart:
+        this.State = EvaluatorState.Loop;
 
         while (!this.BreakLoop && EvaluateCondition(condition))
         {
@@ -162,29 +159,22 @@ public class Evaluator : IDisposable
         }
 
         this.BreakLoop = false;
-
-        if (this.ContinueLoop)
-        {
-            this.ContinueLoop = false;
-            goto loopStart;
-        }
     }
 
     public static void ExecuteBreakLoop()
     {
-        Evaluator evaluator = RewindBackToWhileLoop();
+        Evaluator evaluator = RewindBackToLoop();
         evaluator.BreakLoop = true;
     }
 
     public static void ExecuteContinueLoop()
     {
-        Evaluator evaluator = RewindBackToWhileLoop();
-        evaluator.ContinueLoop = true;
+        RewindBackToLoop();
     }
 
-    private static Evaluator RewindBackToWhileLoop()
+    private static Evaluator RewindBackToLoop()
     {
-        while (Evaluators.Peek().State != EvaluatorState.WhileLoop)
+        while (Evaluators.Peek().State != EvaluatorState.Loop)
             Evaluators.Pop().Dispose();
 
         return Evaluators.Peek();
@@ -213,17 +203,7 @@ public class Evaluator : IDisposable
         NormalEval,
         Block,
         Function,
-        WhileLoop,
-        ForLoop,
-    }
-
-    private enum EvaluatorMode
-    {
-        ConditionEval,
-        ExpressionEval,
-        AstEval,
-        MultipleExpressionEval,
-        WhileEval,
+        Loop,
     }
 }
 
