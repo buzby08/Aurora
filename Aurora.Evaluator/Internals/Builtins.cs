@@ -21,6 +21,7 @@ public static class Builtins
     public static Type Block = null!;
     public static Type Logic = null!;
     public static Type LogicIfReturn = null!;
+    public static Type Loop = null!;
 
     public static void InitialiseTypes()
     {
@@ -55,6 +56,8 @@ public static class Builtins
 
         LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
 
+        Loop = new Type(nameof(Loop), type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -67,6 +70,24 @@ public static class Builtins
         InitialiseMathType();
         InitialiseLogicType();
         InitialiseLogicIfReturnType();
+        InitialiseLoopType();
+    }
+
+    private static void InitialiseLoopType()
+    {
+        Method whileMethod = new(
+            name: "while",
+            returnType: Unit,
+            parameters: null,
+            body: (_, args, context) => InternalMethods.Loop.While(args, context));
+        Loop.AddStaticMethod(whileMethod);
+
+        Method breakMethod = new(
+            name: "break",
+            returnType: Unit,
+            parameters: [],
+            body: (_, _, context) => InternalMethods.Loop.Break(context));
+        Loop.AddStaticMethod(breakMethod);
     }
 
     private static void InitialiseLogicIfReturnType()
@@ -285,6 +306,19 @@ public static class Builtins
             });
 
         Int.AddInstanceMethod(toString);
+
+        Method lessThan = new(
+            name: "lessThan",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value < right.Value);
+            });
+        Int.AddInstanceMethod(lessThan);
 
         // Todo: Add other IntType methods
     }

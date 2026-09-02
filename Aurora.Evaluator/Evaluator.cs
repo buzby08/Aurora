@@ -5,20 +5,46 @@ using Type = Aurora.Evaluator.Internals.Type;
 
 namespace Aurora.Evaluator;
 
-public class Evaluator
+public class Evaluator : IDisposable
 {
+    public static Stack<Evaluator> Evaluators { get; } = new();
+    public static Evaluator Current => Evaluators.Peek();
     public readonly int Id;
 
     private Logger _logger;
     private Ast? CurrentAst { get; set; }
     private RuntimeObject? PreviousResult { get; set; }
     private RuntimeContext Context;
+    private Evaluator? Parent { get; set; }
+    private EvaluatorState State { get; set; }
 
-    public Evaluator(RuntimeContext context)
+    // public Evaluator(RuntimeContext context)
+    // {
+    //     this.Context = context;
+    //     this.Id = IdGenerator.GenerateId("Evaluator");
+    //     this._logger = new Logger($"Evaluator #{this.Id}");
+    //     this.State = EvaluatorState.NormalEval;
+    // }
+
+    public static Evaluator CreateChild(RuntimeContext context, EvaluatorState state = EvaluatorState.NormalEval)
     {
-        this.Context = context;
-        this.Id = IdGenerator.GenerateId("Evaluator");
-        this._logger = new Logger($"Evaluator #{this.Id}");
+        Evaluator child = new(context)
+        {
+            Parent = Current,
+            State = state,
+        };
+        Evaluators.Push(child);
+        return child;
+    }
+
+    public void Dispose()
+    {
+        this.Destroy();
+    }
+
+    public void Destroy()
+    {
+        Evaluators.Pop();
     }
 
     public RuntimeObject? EvaluateMultipleExpressions(IEnumerable<IEnumerable<Ast>> expressions)
@@ -115,6 +141,15 @@ public class Evaluator
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
     {
         return new BlockObject(block);
+    }
+
+    public enum EvaluatorState
+    {
+        NormalEval,
+        Block,
+        Function,
+        WhileLoop,
+        ForLoop,
     }
 }
 
