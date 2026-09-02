@@ -1,0 +1,7 @@
+Logic.if(true; {
+    Terminal.writeLine("Condition is true")
+    })
+
+Logic.if(false; {
+    Terminal.writeLine("Condition is false")
+    })

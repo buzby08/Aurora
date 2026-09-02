@@ -2,15 +2,15 @@ using Aurora.Evaluator.Internals;
 
 namespace Aurora.Evaluator.BuiltinObjects;
 
-public class UnitObject : RuntimeObject
+internal class Logic : RuntimeObject
 {
-    public UnitObject()
+    public Logic()
     {
-        this.Type = Builtins.Unit;
+        this.Type = Builtins.Logic;
     }
 
     public override bool Equals(RuntimeObject other)
     {
-        return other is UnitObject;
+        return false;
     }
 }

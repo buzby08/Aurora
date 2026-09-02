@@ -1,7 +1,8 @@
 ﻿#define TESTING
+using System.Reflection;
 using Aurora.Core;
 using Aurora.Parser;
-using Aurora.Evaluator ;
+using Aurora.Evaluator;
 using Aurora.Evaluator.Internals;
 
 namespace Aurora;
@@ -19,7 +20,8 @@ public static class Program
                 null);
 
         if (!filePath.EndsWith(".aur"))
-            InternalVariables.GlobalLogger.Warning("Aurora code should be written in an aurora file (ending with .aur).");
+            InternalVariables.GlobalLogger.Warning(
+                "Aurora code should be written in an aurora file (ending with .aur).");
 
         // context.Create("__SCRIPT__", new StringObject(filePath));
         return File.ReadAllText(filePath);
@@ -53,17 +55,13 @@ public static class Program
 
     private static void AttachBuiltinsToGlobalContext(RuntimeContext globalContext)
     {
-        globalContext.Create("Type", Builtins.Type, null);
-        globalContext.Create("Null", Builtins.Null, null);
-        globalContext.Create("Unit", Builtins.Unit, null);
-        globalContext.Create("Int", Builtins.Int, null);
-        globalContext.Create("Float", Builtins.Float, null);
-        globalContext.Create("String", Builtins.String, null);
-        globalContext.Create("Boolean", Builtins.Boolean, null);
-        globalContext.Create("Terminal", Builtins.Terminal, null);
-        globalContext.Create("BooleanOutputStyles", Builtins.BooleanOutputStyles, null);
-        globalContext.Create("Optional", Builtins.Optional, null);
-        globalContext.Create("Math", Builtins.Math, null);
+        foreach (FieldInfo property in typeof(Builtins).GetFields())
+        {
+            // if (property.GetType() != typeof(RuntimeObject))
+            //     continue;
+
+            globalContext.Create(property.Name, (RuntimeObject)property.GetValue(null)!, null);
+        }
     }
 
     public static void Main(string[] args)
@@ -77,7 +75,6 @@ public static class Program
 
         try
         {
-
             CommandLineArguments.HandleArgs(args);
             string filePath = CommandLineArguments.File!;
 
@@ -103,6 +100,8 @@ public static class Program
 
             Evaluator.Evaluator evaluator = new(RuntimeContext.GlobalContext!);
             evaluator.EvaluateMultipleExpressions(expressions);
+
+            // Todo: Add test and fix nested blocks. E.g. Logic.if(true; {Logic.if(true; {Terminal.writeLine("Hey)})})
 
             logger.Info("Program finished.");
 #endif

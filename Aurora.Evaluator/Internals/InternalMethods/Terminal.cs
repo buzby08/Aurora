@@ -1,8 +1,7 @@
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
-using Aurora.Evaluator.Internals;
 
-namespace Aurora.Evaluator.InternalMethods;
+namespace Aurora.Evaluator.Internals.InternalMethods;
 
 internal static class Terminal
 {

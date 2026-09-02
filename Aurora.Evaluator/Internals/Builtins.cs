@@ -18,33 +18,42 @@ public static class Builtins
     public static Type BooleanOutputStyles = null!;
     public static Type Optional = null!;
     public static Type Math = null!;
+    public static Type Block = null!;
+    public static Type Logic = null!;
+    public static Type LogicIfReturn = null!;
 
     public static void InitialiseTypes()
     {
-        Type = new Type("Type");
+        Type = new Type(nameof(Type));
         Type.Type = Type;
 
-        Callable = new Type("Callable", type: Type);
+        Callable = new Type(nameof(Callable), type: Type);
 
-        Unit = new Type("Unit", type: Type);
+        Unit = new Type(nameof(Unit), type: Type);
 
-        Optional = new Type("Optional", type: Type);
+        Optional = new Type(nameof(Optional), type: Type);
 
-        Int = new Type("Int", type: Type);
+        Int = new Type(nameof(Int), type: Type);
 
-        Float = new Type("Float", type: Type);
+        Float = new Type(nameof(Float), type: Type);
 
-        String = new Type("String", type: Type);
+        String = new Type(nameof(String), type: Type);
 
-        Boolean = new Type("Boolean", type: Type);
+        Boolean = new Type(nameof(Boolean), type: Type);
 
-        Null = new Type("Null", type: Type);
+        Null = new Type(nameof(Null), type: Type);
 
-        Terminal = new Type("Terminal", type: Type);
+        Terminal = new Type(nameof(Terminal), type: Type);
 
-        BooleanOutputStyles = new Type("BooleanOutputStyles", type: Type);
+        BooleanOutputStyles = new Type(nameof(BooleanOutputStyles), type: Type);
 
-        Math = new Type("Math", type: Type);
+        Math = new Type(nameof(Math), type: Type);
+
+        Block = new Type(nameof(Block), type: Type);
+
+        Logic = new Type(nameof(Logic), type: Type);
+
+        LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
 
         InitialiseTypeType();
         InitialiseOptionalType();
@@ -56,8 +65,34 @@ public static class Builtins
         InitialiseTerminalType();
         InitialiseBooleanOutputStylesType();
         InitialiseMathType();
+        InitialiseLogicType();
+        InitialiseLogicIfReturnType();
+    }
 
-        // Todo: Initialise all types
+    private static void InitialiseLogicIfReturnType()
+    {
+        Method elseMethod = new(
+            name: "else",
+            returnType: LogicIfReturn,
+            parameters: [new ParameterDefinition(name: "block", type: Block),],
+            body: (self, _, context) => InternalMethods.Logic.Else(self, context));
+
+        LogicIfReturn.AddInstanceMethod(elseMethod);
+    }
+
+    private static void InitialiseLogicType()
+    {
+        Method ifMethod = new(
+            name: "if",
+            returnType: LogicIfReturn,
+            parameters:
+            [
+                new ParameterDefinition(name: "condition", type: Boolean),
+                new ParameterDefinition(name: "block", type: Block),
+            ],
+            body: (_, _, context) => InternalMethods.Logic.If(context));
+
+        Logic.AddStaticMethod(ifMethod);
     }
 
     private static void InitialiseTypeType()
@@ -168,7 +203,8 @@ public static class Builtins
                 OptionalObject selfAsOptional = (OptionalObject)self;
 
                 if (selfAsOptional.HasValue)
-                    return new StringObject($"Optional({selfAsOptional.Value!.ConvertToCSharpString(context, context.CallSiteLocation)})");
+                    return new StringObject(
+                        $"Optional({selfAsOptional.Value!.ConvertToCSharpString(context, context.CallSiteLocation)})");
 
                 return new StringObject("Optional(Empty)");
             });
@@ -300,7 +336,8 @@ public static class Builtins
                 {
                     Evaluator evaluator = new(context.Parent!);
                     RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
-                    StringObject valueAsStringObject = valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);
+                    StringObject valueAsStringObject =
+                        valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);
 
                     if (fullString != string.Empty)
                         fullString += ' ';

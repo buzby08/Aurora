@@ -73,6 +73,9 @@ public class Evaluator
         if (ast.State == AstState.Method && previousResult is not null)
             return this.EvaluateMethodCall(ast, previousResult);
 
+        if (ast.State == AstState.Block)
+            return this.EvaluateBlock(ast.GetBlockValue()!);
+
         throw new NotImplementedException(
             $"Ast state `{ast.State}`, previous result: {(previousResult is null ? 'n' : 'y')} is not implemented yet");
     }
@@ -107,6 +110,11 @@ public class Evaluator
             method = previousResult.Type.GetInstanceMethod(methodNameString, this.Context, methodName.StartLocation);
 
         return method.Invoke(previousResult, args, this.Context, methodName.StartLocation);
+    }
+
+    private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
+    {
+        return new BlockObject(block);
     }
 }
 

@@ -328,7 +328,8 @@ public class Parser
             value.Add(nextTokenListItem);
         }
 
-        arguments.Add(this.ConvertToArgument(name, value, isName, currentLocation));
+        if (name.Count > 0)
+            arguments.Add(this.ConvertToArgument(name, value, isName, currentLocation));
 
         return arguments;
     }
@@ -421,10 +422,7 @@ public class Parser
     {
         this.Log("Reached block start");
 
-        if (this.State != ParserState.Empty)
-        {
-            this.HandleNewAstStart();
-        }
+        if (this.State != ParserState.Empty) this.HandleNewAstStart();
 
         List<Token> block = [];
 
@@ -432,12 +430,15 @@ public class Parser
         while (bracketDepth > 0)
         {
             Token token = this.GetNextToken();
+            this.Log($"Token: {token}");
+
+            if (token is EofToken)
+                ThrowError(new UnclosedDelimiterError("{ was never closed"), Tokens.First().StartLocation);
 
             if (token is BracketToken { IsCurly: true, IsClosed: true, })
             {
                 this.Log($"Decreasing bracket depth from {bracketDepth} to {bracketDepth - 1}");
                 bracketDepth--;
-                continue;
             }
 
             if (token is BracketToken { IsCurly: true, IsOpen: true, })
@@ -446,7 +447,10 @@ public class Parser
                 bracketDepth++;
             }
 
+            if (bracketDepth == 0) break;
+
             block.Add(token);
+            this.Log($"Added token to block - count: {block.Count}");
         }
 
         Parser parser = new(block, InternalCallPoint.BlockParsing);
@@ -478,13 +482,14 @@ public class Parser
     {
         if (index >= 0 && index < this.Tokens.Count) return this.Tokens.ElementAtOrDefault(index)!;
 
-        SourceLocation location = new()
+        SourceLocation location = this.Tokens.LastOrDefault()?.EndLocation ?? new SourceLocation
         {
             LineNumber = 0,
             ColumnNumber = 0,
             Offset = 0,
             FilePath = "",
         };
+
         return new EofToken
         {
             StartLocation = location,
