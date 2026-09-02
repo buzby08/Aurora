@@ -3,7 +3,7 @@ using Aurora.Evaluator.Internals;
 
 namespace Aurora.Evaluator.BuiltinObjects;
 
-internal class BlockObject : RuntimeObject
+public class BlockObject : RuntimeObject
 {
     public Ast[][] Value;
 

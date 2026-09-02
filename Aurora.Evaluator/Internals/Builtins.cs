@@ -368,7 +368,7 @@ public static class Builtins
 
                 foreach ((string _, RawMethodArgument rawArg) in args)
                 {
-                    Evaluator evaluator = new(context.Parent!);
+                    using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
                     RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
                     StringObject valueAsStringObject =
                         valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);

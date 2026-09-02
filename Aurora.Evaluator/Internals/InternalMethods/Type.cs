@@ -12,7 +12,7 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            Evaluator evaluator = new(context.Parent!);
+            using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
 
             if (variableObject.Type != targetType)
@@ -33,7 +33,7 @@ internal static class Type
 
         foreach (var (_, rawVar) in args)
         {
-            Evaluator evaluator = new(context.Parent!);
+            using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
             if (variableObject.Type != targetType)
                 Errors.AlwaysThrow(

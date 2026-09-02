@@ -88,7 +88,7 @@ public class Method
 
         if (!this.IsBuiltin)
         {
-            Evaluator evaluator = new(methodContext);
+            using Evaluator evaluator = Evaluator.CreateChild(methodContext);
             returnedObject = evaluator.EvaluateMultipleExpressions(this._userDefinedBody!);
         }
 
@@ -122,7 +122,7 @@ public class Method
 
         foreach (var (key, rawArg) in matchedArgs)
         {
-            Evaluator evaluator = new(context);
+            using Evaluator evaluator = Evaluator.CreateChild(context);
             RuntimeObject argObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
             ParameterDefinition? paramDefinition = this.Parameters.FirstOrDefault(x => x.Name == key);
 
@@ -156,7 +156,7 @@ public class Method
 
         foreach ((string key, RawMethodArgument rawArg) in matchedArgs)
         {
-            Evaluator evaluator = new(context);
+            using Evaluator evaluator = Evaluator.CreateChild(context);
             RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
@@ -179,7 +179,7 @@ public class Method
 
         foreach ((string key, RawMethodArgument rawArg) in matchedArgs)
         {
-            Evaluator evaluator = new(context);
+            using Evaluator evaluator = Evaluator.CreateChild(context);
             RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedPositionalArgsType))

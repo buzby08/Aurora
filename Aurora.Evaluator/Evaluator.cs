@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
 using Aurora.Evaluator.Internals;
@@ -17,14 +18,17 @@ public class Evaluator : IDisposable
     private RuntimeContext Context;
     private Evaluator? Parent { get; set; }
     private EvaluatorState State { get; set; }
+    private bool BreakWhileLoop { get; set; }
 
-    // public Evaluator(RuntimeContext context)
-    // {
-    //     this.Context = context;
-    //     this.Id = IdGenerator.GenerateId("Evaluator");
-    //     this._logger = new Logger($"Evaluator #{this.Id}");
-    //     this.State = EvaluatorState.NormalEval;
-    // }
+
+    public Evaluator(RuntimeContext context)
+    {
+        this.Context = context;
+        this.Id = IdGenerator.GenerateId("Evaluator");
+        this._logger = new Logger($"Evaluator #{this.Id}");
+        this.State = EvaluatorState.NormalEval;
+        Evaluators.Push(this);
+    }
 
     public static Evaluator CreateChild(RuntimeContext context, EvaluatorState state = EvaluatorState.NormalEval)
     {
@@ -33,20 +37,13 @@ public class Evaluator : IDisposable
             Parent = Current,
             State = state,
         };
-        Evaluators.Push(child);
         return child;
     }
 
     public void Dispose()
     {
-        this.Destroy();
-    }
-
-    public void Destroy()
-    {
         Evaluators.Pop();
     }
-
     public RuntimeObject? EvaluateMultipleExpressions(IEnumerable<IEnumerable<Ast>> expressions)
     {
         Ast[][] expressionsArr = expressions.Select(x => x.ToArray()).ToArray();
@@ -64,6 +61,7 @@ public class Evaluator : IDisposable
 
     public RuntimeObject? EvaluateExpression(Ast[] expression)
     {
+        this.State = EvaluatorState.NormalEval;
         RuntimeObject? previousResult = null;
 
         foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
@@ -75,6 +73,7 @@ public class Evaluator : IDisposable
 
     public RuntimeObject EvaluateExpressionForValue(Ast[] expression)
     {
+        this.State = EvaluatorState.NormalEval;
         RuntimeObject? previousResult = null;
 
         foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
@@ -141,6 +140,37 @@ public class Evaluator : IDisposable
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
     {
         return new BlockObject(block);
+    }
+
+    public void EvaluateWhile(Ast[] condition, BlockObject body)
+    {
+        this.State = EvaluatorState.WhileLoop;
+
+        while (!BreakWhileLoop && EvaluateCondition(condition))
+        {
+            using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.Block);
+            evaluator.EvaluateMultipleExpressions(body.Value);
+        }
+    }
+
+    // public static void ExecuteBreakWhileLoop
+
+    private bool EvaluateCondition(Ast[] condition)
+    {
+        using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.WhileLoop);
+        RuntimeObject evaluatedObject = evaluator.EvaluateExpressionForValue(condition);
+
+        if (evaluatedObject is BooleanObject booleanObject) return booleanObject.Value;
+
+        Errors.AlwaysThrow(
+            new UnsupportedOperationError($"Argument 1 to while must evaluate be a boolean"),
+            this.Context.CallSiteLocation);
+        throw new UnreachableException();
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(Evaluator)}(#{this.Id}, {this.State})";
     }
 
     public enum EvaluatorState
