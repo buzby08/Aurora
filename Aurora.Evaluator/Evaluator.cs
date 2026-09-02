@@ -18,7 +18,8 @@ public class Evaluator : IDisposable
     private RuntimeContext Context;
     private Evaluator? Parent { get; set; }
     private EvaluatorState State { get; set; }
-    private bool BreakWhileLoop { get; set; }
+    private bool BreakLoop { get; set; }
+    private bool Kill { get; set; }
 
 
     public Evaluator(RuntimeContext context)
@@ -42,7 +43,10 @@ public class Evaluator : IDisposable
 
     public void Dispose()
     {
-        Evaluators.Pop();
+        if (Evaluators.Peek().Id == this.Id)
+            Evaluators.Pop();
+
+        this.Kill = true;
     }
     public RuntimeObject? EvaluateMultipleExpressions(IEnumerable<IEnumerable<Ast>> expressions)
     {
@@ -50,6 +54,8 @@ public class Evaluator : IDisposable
 
         foreach (Ast[] expression in expressionsArr)
         {
+            if (this.Kill) return null;
+
             RuntimeObject? returnValue = EvaluateExpression(expression);
 
             if (returnValue is not null)
@@ -146,18 +152,26 @@ public class Evaluator : IDisposable
     {
         this.State = EvaluatorState.WhileLoop;
 
-        while (!BreakWhileLoop && EvaluateCondition(condition))
+        while (!this.BreakLoop && EvaluateCondition(condition))
         {
             using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.Block);
             evaluator.EvaluateMultipleExpressions(body.Value);
         }
+
+        this.BreakLoop = false;
     }
 
-    // public static void ExecuteBreakWhileLoop
+    public static void ExecuteBreakLoop()
+    {
+        while (Evaluators.Peek().State != EvaluatorState.WhileLoop)
+            Evaluators.Pop().Dispose();
+
+        Evaluators.Peek().BreakLoop = true;
+    }
 
     private bool EvaluateCondition(Ast[] condition)
     {
-        using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.WhileLoop);
+        using Evaluator evaluator = CreateChild(this.Context);
         RuntimeObject evaluatedObject = evaluator.EvaluateExpressionForValue(condition);
 
         if (evaluatedObject is BooleanObject booleanObject) return booleanObject.Value;
@@ -180,6 +194,15 @@ public class Evaluator : IDisposable
         Function,
         WhileLoop,
         ForLoop,
+    }
+
+    private enum EvaluatorMode
+    {
+        ConditionEval,
+        ExpressionEval,
+        AstEval,
+        MultipleExpressionEval,
+        WhileEval,
     }
 }
 

@@ -16,7 +16,7 @@ internal static class Loop
 
         RuntimeObject body;
 
-        using (Evaluator evaluatorOne = Evaluator.CreateChild(context, Evaluator.EvaluatorState.WhileLoop))
+        using (Evaluator evaluatorOne = Evaluator.CreateChild(context))
         {
             body = evaluatorOne.EvaluateExpressionForValue(bodyArg.Value);
         }
@@ -39,6 +39,7 @@ internal static class Loop
 
     public static UnitObject Break(RuntimeContext context)
     {
+        Evaluator.ExecuteBreakLoop();
         return new UnitObject();
     }
 }
