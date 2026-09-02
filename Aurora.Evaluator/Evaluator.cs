@@ -19,6 +19,7 @@ public class Evaluator : IDisposable
     private Evaluator? Parent { get; set; }
     private EvaluatorState State { get; set; }
     private bool BreakLoop { get; set; }
+    private bool ContinueLoop { get; set; }
     private bool Kill { get; set; }
 
 
@@ -152,6 +153,8 @@ public class Evaluator : IDisposable
     {
         this.State = EvaluatorState.WhileLoop;
 
+        loopStart:
+
         while (!this.BreakLoop && EvaluateCondition(condition))
         {
             using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.Block);
@@ -159,14 +162,32 @@ public class Evaluator : IDisposable
         }
 
         this.BreakLoop = false;
+
+        if (this.ContinueLoop)
+        {
+            this.ContinueLoop = false;
+            goto loopStart;
+        }
     }
 
     public static void ExecuteBreakLoop()
     {
+        Evaluator evaluator = RewindBackToWhileLoop();
+        evaluator.BreakLoop = true;
+    }
+
+    public static void ExecuteContinueLoop()
+    {
+        Evaluator evaluator = RewindBackToWhileLoop();
+        evaluator.ContinueLoop = true;
+    }
+
+    private static Evaluator RewindBackToWhileLoop()
+    {
         while (Evaluators.Peek().State != EvaluatorState.WhileLoop)
             Evaluators.Pop().Dispose();
 
-        Evaluators.Peek().BreakLoop = true;
+        return Evaluators.Peek();
     }
 
     private bool EvaluateCondition(Ast[] condition)

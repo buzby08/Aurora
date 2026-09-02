@@ -86,8 +86,15 @@ public static class Builtins
             name: "break",
             returnType: Unit,
             parameters: [],
-            body: (_, _, context) => InternalMethods.Loop.Break(context));
+            body: (_, _, _) => InternalMethods.Loop.Break());
         Loop.AddStaticMethod(breakMethod);
+
+        Method continueMethod = new(
+            name: "continue",
+            returnType: Unit,
+            parameters: [],
+            body: (_, _, _) => InternalMethods.Loop.Continue());
+        Loop.AddStaticMethod(continueMethod);
     }
 
     private static void InitialiseLogicIfReturnType()

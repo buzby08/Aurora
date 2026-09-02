@@ -37,9 +37,15 @@ internal static class Loop
 
     }
 
-    public static UnitObject Break(RuntimeContext context)
+    public static UnitObject Break()
     {
         Evaluator.ExecuteBreakLoop();
+        return new UnitObject();
+    }
+
+    public static UnitObject Continue()
+    {
+        Evaluator.ExecuteContinueLoop();
         return new UnitObject();
     }
 }
