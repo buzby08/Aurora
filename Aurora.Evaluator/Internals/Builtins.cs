@@ -82,6 +82,13 @@ public static class Builtins
             body: (_, args, context) => InternalMethods.Loop.While(args, context));
         Loop.AddStaticMethod(whileMethod);
 
+        Method forMethod = new(
+            name: "for",
+            returnType: Unit,
+            parameters: null,
+            body: (_, args, context) => InternalMethods.Loop.For(args, context));
+        Loop.AddStaticMethod(forMethod);
+
         Method breakMethod = new(
             name: "break",
             returnType: Unit,

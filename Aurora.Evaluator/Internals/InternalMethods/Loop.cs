@@ -37,6 +37,37 @@ internal static class Loop
 
     }
 
+    public static UnitObject For(Dictionary<string, RawMethodArgument> args, RuntimeContext context)
+    {
+        if (args.Count <= 3)
+            Errors.AlwaysThrow(new ArgumentDeficitError($"{nameof(While)} requires four arguments"), context.CallSiteLocation);
+
+        RawMethodArgument initArg = args["ARG_0"];
+        RawMethodArgument conditionArg = args["ARG_1"];
+        RawMethodArgument incrementArg = args["ARG_2"];
+        RawMethodArgument bodyArg = args["ARG_3"];
+
+        RuntimeObject body;
+
+        using (Evaluator evaluatorOne = Evaluator.CreateChild(context))
+        {
+            body = evaluatorOne.EvaluateExpressionForValue(bodyArg.Value);
+        }
+
+
+        if (body is not BlockObject blockObject)
+        {
+            Errors.AlwaysThrow(new ArgumentTypeMismatchError($"Argument 2 to {nameof(While)} must be a block"),
+                context.CallSiteLocation);
+            throw new UnreachableException();
+        }
+
+        using Evaluator evaluator = Evaluator.CreateChild(context);
+        evaluator.EvaluateFor(initArg.Value, conditionArg.Value, incrementArg.Value, blockObject);
+
+        return new UnitObject();
+    }
+
     public static UnitObject Break()
     {
         Evaluator.ExecuteBreakLoop();

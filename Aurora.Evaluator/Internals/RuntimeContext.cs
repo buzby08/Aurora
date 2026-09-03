@@ -38,6 +38,16 @@ public class RuntimeContext
         return new RuntimeContext(this, callSiteLocation);
     }
 
+    public string[] GetVariables()
+    {
+        return this._variables.Keys.ToArray();
+    }
+
+    public string[] GetNewVariables(string[] oldVariables)
+    {
+        return this._variables.Keys.Except(oldVariables).ToArray();
+    }
+
 
     private RuntimeObject? GetOrNull(string name)
     {

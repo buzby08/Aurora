@@ -161,6 +161,36 @@ public class Evaluator : IDisposable
         this.BreakLoop = false;
     }
 
+    public void EvaluateFor(Ast[] initialiser, Ast[] condition, Ast[] incrementer, BlockObject body)
+    {
+        this.State = EvaluatorState.Loop;
+        string[] variables = this.Context.GetVariables();
+        Evaluator initialiseEvaluator = CreateChild(this.Context);
+        initialiseEvaluator.EvaluateExpression(initialiser);
+
+        string[] newVariables = this.Context.GetVariables();
+        if (newVariables.Length != 1)
+            Errors.AlwaysThrow(new SystemError("For loop initializer must create exactly one variable"),
+                this.Context.CallSiteLocation);
+
+        string variableName = newVariables.First();
+
+        while (!this.BreakLoop && EvaluateCondition(condition))
+        {
+            Evaluator blockEvaluator = CreateChild(this.Context, EvaluatorState.Block);
+            blockEvaluator.EvaluateMultipleExpressions(body.Value);
+            RunIncrementer(incrementer);
+        }
+
+        this.BreakLoop = false;
+    }
+
+    private void RunIncrementer(Ast[] incrementer)
+    {
+        Evaluator incrementerEvaluator = CreateChild(this.Context);
+        incrementerEvaluator.EvaluateExpression(incrementer);
+    }
+
     public static void ExecuteBreakLoop()
     {
         Evaluator evaluator = RewindBackToLoop();
