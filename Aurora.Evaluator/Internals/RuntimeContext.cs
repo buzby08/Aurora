@@ -12,6 +12,7 @@ public class RuntimeContext
                                            throw new InvalidOperationException("Global context not initialized");
 
     private readonly Dictionary<string, RuntimeObject> _variables = [];
+    private string? thisVariable = null;
 
     public RuntimeContext? Parent { get; }
     public SourceLocation CallSiteLocation { get; }
@@ -181,15 +182,22 @@ public class RuntimeContext
         this._variables[name] = value;
     }
 
-    internal void SetThis(RuntimeObject value, SourceLocation? location)
+    internal void SetThis(string variable)
     {
-        // if (!this._variables.ContainsKey("this"))
-        // {
-        //     this.InternalSet("this", value, location);
-        //     return;
-        // }
-        //
-        // this.InternalCreate("this", value, location);
+        if (this.GetOrNull(variable) is null)
+            return;
+
+        this.thisVariable = variable;
+    }
+
+    internal void UpdateThis(RuntimeObject value)
+    {
+        if (this.thisVariable is null)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError("Cannot set a value to this where this hasnt been set", user: false),
+                null);
+
+        this.Set(this.thisVariable, value, null);
     }
 
     private static readonly string[] ReservedKeywords = ["this",];

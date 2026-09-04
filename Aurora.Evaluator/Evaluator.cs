@@ -15,6 +15,7 @@ public class Evaluator : IDisposable
     private Logger _logger;
     private Ast? CurrentAst { get; set; }
     private RuntimeObject? PreviousResult { get; set; }
+    private string? PreviousVariableName { get; set; }
     private RuntimeContext Context;
     private Evaluator? Parent { get; set; }
     private EvaluatorState State { get; set; }
@@ -96,7 +97,12 @@ public class Evaluator : IDisposable
             Errors.AlwaysThrow(new SystemError("Ast has no state"), null);
 
         if (ast.State == AstState.Literal && previousResult is null)
-            return RuntimeObject.CreateFromToken(ast.GetAction()!, this.Context);
+        {
+            RuntimeObject token =
+                RuntimeObject.CreateFromToken(ast.GetAction()!, this.Context, out string? previousVariableName);
+            this.PreviousVariableName = previousVariableName;
+            return token;
+        }
 
         if (ast.State == AstState.Literal && previousResult is not null)
             return this.EvaluateAttributeAccess(ast.GetAction()!, previousResult);
@@ -140,7 +146,7 @@ public class Evaluator : IDisposable
         if (previousResult is not Type)
             method = previousResult.Type.GetInstanceMethod(methodNameString, this.Context, methodName.StartLocation);
 
-        return method.Invoke(previousResult, args, this.Context, methodName.StartLocation);
+        return method.Invoke(previousResult, PreviousVariableName, args, this.Context, methodName.StartLocation);
     }
 
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)

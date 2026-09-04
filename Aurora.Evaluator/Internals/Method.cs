@@ -53,13 +53,15 @@ public class Method
 
     public RuntimeObject Invoke(
         RuntimeObject self,
+        string? selfName,
         Argument[] args,
         RuntimeContext parentContext,
         SourceLocation callSite)
     {
         RuntimeContext methodContext = parentContext.CreateChild(callSite);
 
-        methodContext.SetThis(self, callSite); // Todo: Figure out what 'this' should resolve to.
+        if (selfName is not null)
+            methodContext.SetThis(selfName);
 
         Dictionary<string, RawMethodArgument> matchedArgs = this.MatchArgumentsToParameter(args, parentContext, callSite);
 

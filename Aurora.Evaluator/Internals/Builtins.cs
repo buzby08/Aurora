@@ -334,6 +334,73 @@ public static class Builtins
             });
         Int.AddInstanceMethod(lessThan);
 
+        Method lessThanOrEqual = new(
+            name: "lessThanOrEqual",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value <= right.Value);
+            });
+        Int.AddInstanceMethod(lessThanOrEqual);
+
+        Method greaterThan = new(
+            name: "greaterThan",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value > right.Value);
+            });
+        Int.AddInstanceMethod(greaterThan);
+
+        Method greaterThanOrEqual = new(
+            name: "greaterThanOrEqual",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value >= right.Value);
+            });
+        Int.AddInstanceMethod(greaterThanOrEqual);
+
+        Method incrementInstance = new(
+            name: "increment",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: new IntObject(1)),],
+            body: (self, _, context) =>
+            {
+                IntObject selfAsInt = (IntObject)self;
+                IntObject amount = context.GetParam<IntObject>("amount");
+
+                context.UpdateThis(new IntObject(selfAsInt.Value + amount.Value));
+                return new UnitObject();
+            });
+        Int.AddInstanceMethod(incrementInstance);
+
+        Method decrementInstance = new(
+            name: "decrement",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: new IntObject(1)),],
+            body: (self, _, context) =>
+            {
+                IntObject selfAsInt = (IntObject)self;
+                IntObject amount = context.GetParam<IntObject>("amount");
+
+                context.UpdateThis(new IntObject(selfAsInt.Value - amount.Value));
+                return new UnitObject();
+            });
+        Int.AddInstanceMethod(decrementInstance);
+
         // Todo: Add other IntType methods
     }
 
