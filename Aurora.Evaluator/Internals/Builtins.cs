@@ -21,6 +21,7 @@ public static class Builtins
     public static Type Block = null!;
     public static Type Logic = null!;
     public static Type LogicIfReturn = null!;
+    public static Type Loop = null!;
 
     public static void InitialiseTypes()
     {
@@ -55,6 +56,8 @@ public static class Builtins
 
         LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
 
+        Loop = new Type(nameof(Loop), type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -67,6 +70,38 @@ public static class Builtins
         InitialiseMathType();
         InitialiseLogicType();
         InitialiseLogicIfReturnType();
+        InitialiseLoopType();
+    }
+
+    private static void InitialiseLoopType()
+    {
+        Method whileMethod = new(
+            name: "while",
+            returnType: Unit,
+            parameters: null,
+            body: (_, args, context) => InternalMethods.Loop.While(args, context));
+        Loop.AddStaticMethod(whileMethod);
+
+        Method forMethod = new(
+            name: "for",
+            returnType: Unit,
+            parameters: null,
+            body: (_, args, context) => InternalMethods.Loop.For(args, context));
+        Loop.AddStaticMethod(forMethod);
+
+        Method breakMethod = new(
+            name: "break",
+            returnType: Unit,
+            parameters: [],
+            body: (_, _, _) => InternalMethods.Loop.Break());
+        Loop.AddStaticMethod(breakMethod);
+
+        Method continueMethod = new(
+            name: "continue",
+            returnType: Unit,
+            parameters: [],
+            body: (_, _, _) => InternalMethods.Loop.Continue());
+        Loop.AddStaticMethod(continueMethod);
     }
 
     private static void InitialiseLogicIfReturnType()
@@ -286,6 +321,86 @@ public static class Builtins
 
         Int.AddInstanceMethod(toString);
 
+        Method lessThan = new(
+            name: "lessThan",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value < right.Value);
+            });
+        Int.AddInstanceMethod(lessThan);
+
+        Method lessThanOrEqual = new(
+            name: "lessThanOrEqual",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value <= right.Value);
+            });
+        Int.AddInstanceMethod(lessThanOrEqual);
+
+        Method greaterThan = new(
+            name: "greaterThan",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value > right.Value);
+            });
+        Int.AddInstanceMethod(greaterThan);
+
+        Method greaterThanOrEqual = new(
+            name: "greaterThanOrEqual",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Int),],
+            body: (self, _, context) =>
+            {
+                IntObject left = (IntObject)self;
+                IntObject right = context.GetParam<IntObject>("other");
+
+                return new BooleanObject(left.Value >= right.Value);
+            });
+        Int.AddInstanceMethod(greaterThanOrEqual);
+
+        Method incrementInstance = new(
+            name: "increment",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: new IntObject(1)),],
+            body: (self, _, context) =>
+            {
+                IntObject selfAsInt = (IntObject)self;
+                IntObject amount = context.GetParam<IntObject>("amount");
+
+                context.UpdateThis(new IntObject(selfAsInt.Value + amount.Value));
+                return new UnitObject();
+            });
+        Int.AddInstanceMethod(incrementInstance);
+
+        Method decrementInstance = new(
+            name: "decrement",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: new IntObject(1)),],
+            body: (self, _, context) =>
+            {
+                IntObject selfAsInt = (IntObject)self;
+                IntObject amount = context.GetParam<IntObject>("amount");
+
+                context.UpdateThis(new IntObject(selfAsInt.Value - amount.Value));
+                return new UnitObject();
+            });
+        Int.AddInstanceMethod(decrementInstance);
+
         // Todo: Add other IntType methods
     }
 
@@ -334,7 +449,7 @@ public static class Builtins
 
                 foreach ((string _, RawMethodArgument rawArg) in args)
                 {
-                    Evaluator evaluator = new(context.Parent!);
+                    using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
                     RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
                     StringObject valueAsStringObject =
                         valueAsObject.ConvertToStringObject(context, context.CallSiteLocation);

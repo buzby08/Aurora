@@ -30,7 +30,8 @@ public static class Logic
 
     private static void ExecuteBlock(BlockObject blockObject, RuntimeContext context)
     {
-        Evaluator evaluator = new(context.CreateChild(context.CallSiteLocation));
+        RuntimeContext blockContext = context.CreateChild(context.CallSiteLocation);
+        using Evaluator evaluator = Evaluator.CreateChild(blockContext, Evaluator.EvaluatorState.Block);
         evaluator.EvaluateMultipleExpressions(blockObject.Value);
     }
 }

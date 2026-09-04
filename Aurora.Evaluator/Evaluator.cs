@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
 using Aurora.Evaluator.Internals;
@@ -5,28 +6,57 @@ using Type = Aurora.Evaluator.Internals.Type;
 
 namespace Aurora.Evaluator;
 
-public class Evaluator
+public class Evaluator : IDisposable
 {
+    public static Stack<Evaluator> Evaluators { get; } = new();
+    public static Evaluator Current => Evaluators.Peek();
     public readonly int Id;
 
     private Logger _logger;
     private Ast? CurrentAst { get; set; }
     private RuntimeObject? PreviousResult { get; set; }
+    private string? PreviousVariableName { get; set; }
     private RuntimeContext Context;
+    private Evaluator? Parent { get; set; }
+    private EvaluatorState State { get; set; }
+    private bool BreakLoop { get; set; }
+    private bool Kill { get; set; }
+
 
     public Evaluator(RuntimeContext context)
     {
         this.Context = context;
         this.Id = IdGenerator.GenerateId("Evaluator");
         this._logger = new Logger($"Evaluator #{this.Id}");
+        this.State = EvaluatorState.NormalEval;
+        Evaluators.Push(this);
     }
 
+    public static Evaluator CreateChild(RuntimeContext context, EvaluatorState state = EvaluatorState.NormalEval)
+    {
+        Evaluator child = new(context)
+        {
+            Parent = Current,
+            State = state,
+        };
+        return child;
+    }
+
+    public void Dispose()
+    {
+        if (Evaluators.Peek().Id == this.Id)
+            Evaluators.Pop();
+
+        this.Kill = true;
+    }
     public RuntimeObject? EvaluateMultipleExpressions(IEnumerable<IEnumerable<Ast>> expressions)
     {
         Ast[][] expressionsArr = expressions.Select(x => x.ToArray()).ToArray();
 
         foreach (Ast[] expression in expressionsArr)
         {
+            if (this.Kill) return null;
+
             RuntimeObject? returnValue = EvaluateExpression(expression);
 
             if (returnValue is not null)
@@ -38,6 +68,7 @@ public class Evaluator
 
     public RuntimeObject? EvaluateExpression(Ast[] expression)
     {
+        this.State = EvaluatorState.NormalEval;
         RuntimeObject? previousResult = null;
 
         foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
@@ -49,6 +80,7 @@ public class Evaluator
 
     public RuntimeObject EvaluateExpressionForValue(Ast[] expression)
     {
+        this.State = EvaluatorState.NormalEval;
         RuntimeObject? previousResult = null;
 
         foreach (Ast ast in expression) previousResult = EvaluateAst(ast, previousResult);
@@ -65,7 +97,12 @@ public class Evaluator
             Errors.AlwaysThrow(new SystemError("Ast has no state"), null);
 
         if (ast.State == AstState.Literal && previousResult is null)
-            return RuntimeObject.CreateFromToken(ast.GetAction()!, this.Context);
+        {
+            RuntimeObject token =
+                RuntimeObject.CreateFromToken(ast.GetAction()!, this.Context, out string? previousVariableName);
+            this.PreviousVariableName = previousVariableName;
+            return token;
+        }
 
         if (ast.State == AstState.Literal && previousResult is not null)
             return this.EvaluateAttributeAccess(ast.GetAction()!, previousResult);
@@ -109,12 +146,100 @@ public class Evaluator
         if (previousResult is not Type)
             method = previousResult.Type.GetInstanceMethod(methodNameString, this.Context, methodName.StartLocation);
 
-        return method.Invoke(previousResult, args, this.Context, methodName.StartLocation);
+        return method.Invoke(previousResult, PreviousVariableName, args, this.Context, methodName.StartLocation);
     }
 
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
     {
         return new BlockObject(block);
+    }
+
+    public void EvaluateWhile(Ast[] condition, BlockObject body)
+    {
+        this.State = EvaluatorState.Loop;
+
+        while (!this.BreakLoop && EvaluateCondition(condition))
+        {
+            using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.Block);
+            evaluator.EvaluateMultipleExpressions(body.Value);
+        }
+
+        this.BreakLoop = false;
+    }
+
+    public void EvaluateFor(Ast[] initialiser, Ast[] condition, Ast[] incrementer, BlockObject body)
+    {
+        this.State = EvaluatorState.Loop;
+        string[] variables = this.Context.GetVariables();
+        Evaluator initialiseEvaluator = CreateChild(this.Context);
+        initialiseEvaluator.EvaluateExpression(initialiser);
+
+        string[] newVariables = this.Context.GetVariables();
+        if (newVariables.Length != 1)
+            Errors.AlwaysThrow(new SystemError("For loop initializer must create exactly one variable"),
+                this.Context.CallSiteLocation);
+
+        string variableName = newVariables.First();
+
+        while (!this.BreakLoop && EvaluateCondition(condition))
+        {
+            Evaluator blockEvaluator = CreateChild(this.Context, EvaluatorState.Block);
+            blockEvaluator.EvaluateMultipleExpressions(body.Value);
+            RunIncrementer(incrementer);
+        }
+
+        this.BreakLoop = false;
+    }
+
+    private void RunIncrementer(Ast[] incrementer)
+    {
+        Evaluator incrementerEvaluator = CreateChild(this.Context);
+        incrementerEvaluator.EvaluateExpression(incrementer);
+    }
+
+    public static void ExecuteBreakLoop()
+    {
+        Evaluator evaluator = RewindBackToLoop();
+        evaluator.BreakLoop = true;
+    }
+
+    public static void ExecuteContinueLoop()
+    {
+        RewindBackToLoop();
+    }
+
+    private static Evaluator RewindBackToLoop()
+    {
+        while (Evaluators.Peek().State != EvaluatorState.Loop)
+            Evaluators.Pop().Dispose();
+
+        return Evaluators.Peek();
+    }
+
+    private bool EvaluateCondition(Ast[] condition)
+    {
+        using Evaluator evaluator = CreateChild(this.Context);
+        RuntimeObject evaluatedObject = evaluator.EvaluateExpressionForValue(condition);
+
+        if (evaluatedObject is BooleanObject booleanObject) return booleanObject.Value;
+
+        Errors.AlwaysThrow(
+            new UnsupportedOperationError($"Argument 1 to while must evaluate be a boolean"),
+            this.Context.CallSiteLocation);
+        throw new UnreachableException();
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(Evaluator)}(#{this.Id}, {this.State})";
+    }
+
+    public enum EvaluatorState
+    {
+        NormalEval,
+        Block,
+        Function,
+        Loop,
     }
 }
 

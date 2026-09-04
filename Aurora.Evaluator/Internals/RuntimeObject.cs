@@ -12,7 +12,7 @@ public abstract class RuntimeObject
     {
         RuntimeObject evaluatedValueAsObject =
             this.Type.GetInstanceMethod("toString", context, sourceLocation)
-                .Invoke(this, [], context, sourceLocation);
+                .Invoke(this, null, [], context, sourceLocation);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString;
     }
@@ -21,18 +21,19 @@ public abstract class RuntimeObject
     {
         RuntimeObject evaluatedValueAsObject =
             this.Type.GetInstanceMethod("toString", context, location)
-                .Invoke(this, [], context, location);
+                .Invoke(this, null, [], context, location);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString.Value;
     }
 
-    public static RuntimeObject CreateFromToken(Token token, RuntimeContext context)
+    public static RuntimeObject CreateFromToken(Token token, RuntimeContext context, out string? variableName)
     {
+        variableName = null;
         return token switch
         {
             StringToken s => new StringObject(s.ValueAsString),
             NumberToken n => CreateFromNumberToken(n),
-            WordToken w => CreateFromWordToken(w, context),
+            WordToken w => CreateFromWordToken(w, context, out variableName),
             _ => Errors.AlwaysThrow<RuntimeObject>(
                 new SystemError($"{token.Type} cannot be converted to a runtime object."), token.StartLocation),
         };
@@ -47,14 +48,18 @@ public abstract class RuntimeObject
         throw new UnreachableException();
     }
 
-    private static RuntimeObject CreateFromWordToken(WordToken token, RuntimeContext context)
+    private static RuntimeObject CreateFromWordToken(WordToken token, RuntimeContext context, out string? variableName)
     {
+        variableName = null;
+
         if (token.ValueAsString == TrueValue)
             return new BooleanObject(true);
         if (token.ValueAsString == FalseValue)
             return new BooleanObject(false);
         if (token.ValueAsString == NullValue)
             return new NullObject();
+
+        variableName = token.ValueAsString;
 
         return context.Get(token.ValueAsString, token.StartLocation);
     }
