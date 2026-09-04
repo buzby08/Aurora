@@ -22,6 +22,7 @@ public static class Builtins
     public static Type Logic = null!;
     public static Type LogicIfReturn = null!;
     public static Type Loop = null!;
+    public static Type Array = null!;
 
     public static void InitialiseTypes()
     {
@@ -58,6 +59,8 @@ public static class Builtins
 
         Loop = new Type(nameof(Loop), type: Type);
 
+        Array = new Type(nameof(Array), type: Type);
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -71,6 +74,12 @@ public static class Builtins
         InitialiseLogicType();
         InitialiseLogicIfReturnType();
         InitialiseLoopType();
+        InitialiseArrayType();
+    }
+
+    private static void InitialiseArrayType()
+    {
+        throw new NotImplementedException();
     }
 
     private static void InitialiseLoopType()
