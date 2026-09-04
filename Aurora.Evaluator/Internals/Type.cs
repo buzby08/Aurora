@@ -61,7 +61,7 @@ public class Type : RuntimeObject
         this.InstanceAttributes.Add(value.Name, value);
     }
 
-    public Method GetStaticMethod(string name, RuntimeContext context, SourceLocation location)
+    public Method GetStaticMethod(string name, SourceLocation location)
     {
         Method? method = this.GetStaticMethodOrDefault(name);
 
@@ -72,11 +72,11 @@ public class Type : RuntimeObject
         return method;
     }
 
-    public Method GetInstanceMethod(string name, RuntimeContext context, SourceLocation location)
+    public Method GetInstanceMethod(string name, SourceLocation location)
     {
         if (this.IsStatic)
             Errors.AlwaysThrow(
-                new InvalidMethodError($"Static object {this.Name} has no instance methods"), null);
+                new InvalidMethodError($"Static object {this.Name} has no instance methods"), location);
 
         Method? method = this.GetInstanceMethodOrDefault(name);
 
@@ -87,7 +87,7 @@ public class Type : RuntimeObject
         return method;
     }
 
-    public Attribute GetStaticAttribute(string name, RuntimeContext context, SourceLocation location)
+    public Attribute GetStaticAttribute(string name, SourceLocation location)
     {
         // Todo: Make it so a method cannot have the same name as an attribute and vice versa.
 
@@ -103,11 +103,11 @@ public class Type : RuntimeObject
         return attribute;
     }
 
-    public Attribute GetInstanceAttribute(string name, RuntimeContext context, SourceLocation location)
+    public Attribute GetInstanceAttribute(string name, SourceLocation location)
     {
         if (this.IsStatic)
             Errors.AlwaysThrow(
-                new InvalidMethodError($"Static object {this.Name} has no instance attributes"), null);
+                new InvalidMethodError($"Static object {this.Name} has no instance attributes"), location);
 
         Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
 
