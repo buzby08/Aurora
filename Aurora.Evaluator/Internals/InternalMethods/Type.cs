@@ -10,6 +10,10 @@ internal static class Type
     {
         Internals.Type targetType = (Internals.Type)self;
 
+        if (targetType.IsStatic)
+            Errors.AlwaysThrow(new UnsupportedOperationError($"{targetType.Name} is static and cannot be instantiated"),
+                context.CallSiteLocation);
+
         foreach (var (_, rawVar) in args)
         {
             using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
