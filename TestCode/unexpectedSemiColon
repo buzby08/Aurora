@@ -1,0 +1,5 @@
+// FAIL Aurora.UnclosedDelimiter
+
+Logic.if(true; {
+	Terminal.writeLine("Hey");
+})
