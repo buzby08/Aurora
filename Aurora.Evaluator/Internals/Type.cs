@@ -7,17 +7,20 @@ public class Type : RuntimeObject
     public string Name { get; }
     public bool CanAccessParentValues;
 
+    public bool IsStatic { get; set; }
+
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
 
     public readonly Dictionary<string, Attribute> InstanceAttributes = [];
     public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
-    public Type(string name, Type type, bool canAccessParentValues = true)
+    public Type(string name, Type type, bool canAccessParentValues = true, bool isStatic = false)
     {
         this.Name = name;
         this.Type = type;
         this.CanAccessParentValues = canAccessParentValues;
+        this.IsStatic = isStatic;
     }
 
     public Type(string name)
@@ -38,6 +41,10 @@ public class Type : RuntimeObject
 
     public void AddInstanceMethod(Method method)
     {
+        if (this.IsStatic)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Cannot add instance method {method.Name} to static type {this.Name}",
+                    user: false), null);
         this.InstanceMethods.Add(method.Name, method);
     }
 
@@ -47,7 +54,10 @@ public class Type : RuntimeObject
     }
 
     public void AddInstanceAttribute(Attribute value)
-    {
+    {if (this.IsStatic)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Cannot add instance attribute {value.Name} to static type {this.Name}",
+                    user: false), null);
         this.InstanceAttributes.Add(value.Name, value);
     }
 
@@ -64,6 +74,10 @@ public class Type : RuntimeObject
 
     public Method GetInstanceMethod(string name, RuntimeContext context, SourceLocation location)
     {
+        if (this.IsStatic)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Static object {this.Name} has no instance methods"), null);
+
         Method? method = this.GetInstanceMethodOrDefault(name);
 
         if (method is null)
@@ -91,6 +105,10 @@ public class Type : RuntimeObject
 
     public Attribute GetInstanceAttribute(string name, RuntimeContext context, SourceLocation location)
     {
+        if (this.IsStatic)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Static object {this.Name} has no instance attributes"), null);
+
         Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
 
         if (attribute is null)
