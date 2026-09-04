@@ -31,7 +31,7 @@ public static class Builtins
 
         Callable = new Type(nameof(Callable), type: Type);
 
-        Unit = new Type(nameof(Unit), type: Type);
+        Unit = new Type(nameof(Unit), type: Type, isStatic: true);
 
         Optional = new Type(nameof(Optional), type: Type);
 
@@ -45,19 +45,19 @@ public static class Builtins
 
         Null = new Type(nameof(Null), type: Type);
 
-        Terminal = new Type(nameof(Terminal), type: Type);
+        Terminal = new Type(nameof(Terminal), type: Type, isStatic: true);
 
-        BooleanOutputStyles = new Type(nameof(BooleanOutputStyles), type: Type);
+        BooleanOutputStyles = new Type(nameof(BooleanOutputStyles), type: Type, isStatic: true);
 
-        Math = new Type(nameof(Math), type: Type);
+        Math = new Type(nameof(Math), type: Type, isStatic: true);
 
         Block = new Type(nameof(Block), type: Type);
 
-        Logic = new Type(nameof(Logic), type: Type);
+        Logic = new Type(nameof(Logic), type: Type, isStatic: true);
 
         LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
 
-        Loop = new Type(nameof(Loop), type: Type);
+        Loop = new Type(nameof(Loop), type: Type, isStatic: true);
 
         Array = new Type(nameof(Array), type: Type);
 
