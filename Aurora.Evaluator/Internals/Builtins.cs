@@ -79,7 +79,39 @@ public static class Builtins
 
     private static void InitialiseArrayType()
     {
-        throw new NotImplementedException();
+        Method fromMethod = new(
+            name: "from",
+            returnType: Array,
+            parameters: [new ParameterDefinition(name: "type", type: Type),],
+            unlimitedPositionalArgumentsType: Type,
+            unlimitedKeywordArgumentsType: null,
+            body: (_, _, context) =>
+            {
+                Type type = context.GetParam<Type>("type");
+                List<RuntimeObject> positionals = context.GetPositionalArgs();
+
+                if (positionals.Count == 0)
+                    return new ArrayObject(positionals.ToArray());
+
+                if (!positionals.TrueForAll(x => x.Type.Name == type.Name))
+                    Errors.AlwaysThrow(new TypeMismatchError($"An array can only store one type"), context.CallSiteLocation);
+
+                return new ArrayObject(positionals.ToArray());
+            });
+        Array.AddStaticMethod(fromMethod);
+
+        Method toString = new(
+            name: "toString",
+            returnType: String,
+            parameters: [],
+            body: (self, _, _) =>
+            {
+                ArrayObject selfAsArray = (ArrayObject)self;
+
+                return new StringObject($"Array<type: {selfAsArray.Type.Name}, length: {selfAsArray.Value.Length}>");
+            });
+
+        Array.AddInstanceMethod(toString);
     }
 
     private static void InitialiseLoopType()

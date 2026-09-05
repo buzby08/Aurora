@@ -1,14 +1,17 @@
 using Aurora.Evaluator.Internals;
+using Type = Aurora.Evaluator.Internals.Type;
 
 namespace Aurora.Evaluator.BuiltinObjects;
 
 public class ArrayObject : RuntimeObject
 {
     public RuntimeObject[] Value;
+    public Type ArrayType;
 
     public ArrayObject(RuntimeObject[] value)
     {
         this.Value = value;
+        this.ArrayType = value.First().Type;
         Type = Builtins.Array;
     }
 
