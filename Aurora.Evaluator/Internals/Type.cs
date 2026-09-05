@@ -29,6 +29,11 @@ public class Type : RuntimeObject
         this.Name = name;
     }
 
+    public void MarkFinal()
+    {
+        this.IsFinalized = true;
+    }
+
     public bool IsSubclassOf(Type type)
     {
         if (this.Type == this && this != type) return false;
