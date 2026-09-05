@@ -35,57 +35,57 @@ public class Type : RuntimeObject
         return this == type || this.Type.IsSubclassOf(type);
     }
 
-    public void AddStaticMethod(Method method)
+    public void AddStaticMethod(Method method, SourceLocation? location)
     {
         if (this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
-                null);
+                location);
 
         this.StaticMethods.Add(method.Name, method);
     }
 
-    public void AddInstanceMethod(Method method)
+    public void AddInstanceMethod(Method method, SourceLocation? location)
     {
         if (this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
-                null);
+                location);
 
         if (this.IsStatic)
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Cannot add instance method {method.Name} to static type {this.Name}",
-                    user: false), null);
+                    user: false), location);
         this.InstanceMethods.Add(method.Name, method);
     }
 
-    public void AddStaticAttribute(Attribute value)
+    public void AddStaticAttribute(Attribute value, SourceLocation? location)
     {
         if (this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
-                null);
+                location);
 
         this.StaticAttributes.Add(value.Name, value);
     }
 
-    public void AddInstanceAttribute(Attribute value)
+    public void AddInstanceAttribute(Attribute value, SourceLocation? location)
     {
         if (this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
-                null);
+                location);
 
         if (this.IsStatic)
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Cannot add instance attribute {value.Name} to static type {this.Name}",
-                    user: false), null);
+                    user: false), location);
         this.InstanceAttributes.Add(value.Name, value);
     }
 
     public Method GetStaticMethod(string name, SourceLocation location)
     {
-        Method? method = this.GetStaticMethodOrDefault(name);
+        Method? method = this.GetStaticMethodOrDefault(name, location);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no static method {name}"),
@@ -100,7 +100,7 @@ public class Type : RuntimeObject
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Static object {this.Name} has no instance methods"), location);
 
-        Method? method = this.GetInstanceMethodOrDefault(name);
+        Method? method = this.GetInstanceMethodOrDefault(name, location);
 
         if (method is null)
             Errors.AlwaysThrow(new InvalidMethodError($"Object {this.Name} has no instance method {name}"),
@@ -116,7 +116,7 @@ public class Type : RuntimeObject
         // Todo: Make it so that if an attribute is not found, the method is returned, somehow.
         //  So, `Terminal.writeLine` would return `Method: writeLine (class Terminal)` or something similar, that can be
         //  stored as a variable and then invoked later.
-        Attribute? attribute = this.GetStaticAttributeOrDefault(name);
+        Attribute? attribute = this.GetStaticAttributeOrDefault(name, location);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no static attribute {name}"),
@@ -131,7 +131,7 @@ public class Type : RuntimeObject
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Static object {this.Name} has no instance attributes"), location);
 
-        Attribute? attribute = this.GetInstanceAttributeOrDefault(name);
+        Attribute? attribute = this.GetInstanceAttributeOrDefault(name, location);
 
         if (attribute is null)
             Errors.AlwaysThrow(new InvalidAttributeError($"Object {this.Name} has no instance attribute {name}"),
@@ -140,12 +140,12 @@ public class Type : RuntimeObject
         return attribute;
     }
 
-    private Method? GetStaticMethodOrDefault(string name)
+    private Method? GetStaticMethodOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
-                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
 
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
@@ -153,15 +153,15 @@ public class Type : RuntimeObject
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetStaticMethodOrDefault(name);
+        return method ?? this.Type.GetStaticMethodOrDefault(name, location);
     }
 
-    private Method? GetInstanceMethodOrDefault(string name)
+    private Method? GetInstanceMethodOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
-                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
 
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
@@ -169,15 +169,15 @@ public class Type : RuntimeObject
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetInstanceMethodOrDefault(name);
+        return method ?? this.Type.GetInstanceMethodOrDefault(name, location);
     }
 
-    private Attribute? GetStaticAttributeOrDefault(string name)
+    private Attribute? GetStaticAttributeOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
-                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
 
         Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
@@ -185,15 +185,15 @@ public class Type : RuntimeObject
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetStaticAttributeOrDefault(name);
+        return attribute ?? this.Type.GetStaticAttributeOrDefault(name, location);
     }
 
-    private Attribute? GetInstanceAttributeOrDefault(string name)
+    private Attribute? GetInstanceAttributeOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
-                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
 
         Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
@@ -201,7 +201,7 @@ public class Type : RuntimeObject
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetInstanceAttributeOrDefault(name);
+        return attribute ?? this.Type.GetInstanceAttributeOrDefault(name, location);
     }
 
     public override bool Equals(RuntimeObject other)

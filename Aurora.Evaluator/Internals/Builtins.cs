@@ -98,7 +98,7 @@ public static class Builtins
 
                 return new ArrayObject(positionals.ToArray());
             });
-        Array.AddStaticMethod(fromMethod);
+        Array.AddStaticMethod(fromMethod, null);
 
         Method toString = new(
             name: "toString",
@@ -111,7 +111,7 @@ public static class Builtins
                 return new StringObject($"Array<type: {selfAsArray.Type.Name}, length: {selfAsArray.Value.Length}>");
             });
 
-        Array.AddInstanceMethod(toString);
+        Array.AddInstanceMethod(toString, null);
     }
 
     private static void InitialiseLoopType()
@@ -121,28 +121,28 @@ public static class Builtins
             returnType: Unit,
             parameters: null,
             body: (_, args, context) => InternalMethods.Loop.While(args, context));
-        Loop.AddStaticMethod(whileMethod);
+        Loop.AddStaticMethod(whileMethod, null);
 
         Method forMethod = new(
             name: "for",
             returnType: Unit,
             parameters: null,
             body: (_, args, context) => InternalMethods.Loop.For(args, context));
-        Loop.AddStaticMethod(forMethod);
+        Loop.AddStaticMethod(forMethod, null);
 
         Method breakMethod = new(
             name: "break",
             returnType: Unit,
             parameters: [],
             body: (_, _, _) => InternalMethods.Loop.Break());
-        Loop.AddStaticMethod(breakMethod);
+        Loop.AddStaticMethod(breakMethod, null);
 
         Method continueMethod = new(
             name: "continue",
             returnType: Unit,
             parameters: [],
             body: (_, _, _) => InternalMethods.Loop.Continue());
-        Loop.AddStaticMethod(continueMethod);
+        Loop.AddStaticMethod(continueMethod, null);
     }
 
     private static void InitialiseLogicIfReturnType()
@@ -153,7 +153,7 @@ public static class Builtins
             parameters: [new ParameterDefinition(name: "block", type: Block),],
             body: (self, _, context) => InternalMethods.Logic.Else(self, context));
 
-        LogicIfReturn.AddInstanceMethod(elseMethod);
+        LogicIfReturn.AddInstanceMethod(elseMethod, null);
     }
 
     private static void InitialiseLogicType()
@@ -168,7 +168,7 @@ public static class Builtins
             ],
             body: (_, _, context) => InternalMethods.Logic.If(context));
 
-        Logic.AddStaticMethod(ifMethod);
+        Logic.AddStaticMethod(ifMethod, null);
     }
 
     private static void InitialiseTypeType()
@@ -179,7 +179,7 @@ public static class Builtins
             parameters: null,
             body: InternalMethods.Type.Create);
 
-        Type.AddStaticMethod(typeCreateMethod);
+        Type.AddStaticMethod(typeCreateMethod, null);
 
         Method typeSetMethod = new(
             name: "set",
@@ -187,7 +187,7 @@ public static class Builtins
             parameters: null,
             body: InternalMethods.Type.Set);
 
-        Type.AddStaticMethod(typeSetMethod);
+        Type.AddStaticMethod(typeSetMethod, null);
 
         Method toString = new(
             name: "toString",
@@ -195,16 +195,16 @@ public static class Builtins
             parameters: [],
             body: (self, _, _) => InternalMethods.Type.ToString(self));
 
-        Type.AddInstanceMethod(toString);
-        Type.AddStaticMethod(toString);
+        Type.AddInstanceMethod(toString, null);
+        Type.AddStaticMethod(toString, null);
 
         Method equals = new(
             name: "equals",
             returnType: Boolean,
             parameters: [new ParameterDefinition(name: "other", type: Type),],
             body: (self, _, context) => InternalMethods.Type.Equals(self, context));
-        Type.AddInstanceMethod(equals);
-        Type.AddStaticMethod(equals);
+        Type.AddInstanceMethod(equals, null);
+        Type.AddStaticMethod(equals, null);
     }
 
     private static void InitialiseOptionalType()
@@ -218,7 +218,7 @@ public static class Builtins
 
                 return new BooleanObject(selfAsOptional.HasValue);
             });
-        Optional.AddInstanceAttribute(isEmptyAttribute);
+        Optional.AddInstanceAttribute(isEmptyAttribute, null);
 
         Method fromMethod = new(
             name: "of",
@@ -229,14 +229,14 @@ public static class Builtins
                 RuntimeObject valueObject = context.GetParam("value");
                 return new OptionalObject(valueObject);
             });
-        Optional.AddStaticMethod(fromMethod);
+        Optional.AddStaticMethod(fromMethod, null);
 
         Method emptyOptionalMethod = new(
             name: "empty",
             returnType: Optional,
             parameters: [],
             body: (_, _, _) => new OptionalObject(null));
-        Optional.AddStaticMethod(emptyOptionalMethod);
+        Optional.AddStaticMethod(emptyOptionalMethod, null);
 
         Attribute valueAttribute = new(
             name: "value",
@@ -252,7 +252,7 @@ public static class Builtins
 
                 return selfAsOptional.Value!;
             });
-        Optional.AddInstanceAttribute(valueAttribute);
+        Optional.AddInstanceAttribute(valueAttribute, null);
 
         Method valueOrDefaultMethod = new(
             name: "valueOrDefault",
@@ -268,7 +268,7 @@ public static class Builtins
 
                 return defaultObject;
             });
-        Optional.AddInstanceMethod(valueOrDefaultMethod);
+        Optional.AddInstanceMethod(valueOrDefaultMethod, null);
 
         Method toStringMethod = new(
             name: "toString",
@@ -284,7 +284,7 @@ public static class Builtins
 
                 return new StringObject("Optional(Empty)");
             });
-        Optional.AddInstanceMethod(toStringMethod);
+        Optional.AddInstanceMethod(toStringMethod, null);
     }
 
     private static void InitialiseIntType()
@@ -302,7 +302,7 @@ public static class Builtins
                     left.Value + right.Value);
             });
 
-        Int.AddInstanceMethod(addMethod);
+        Int.AddInstanceMethod(addMethod, null);
 
         Method subtractMethod = new(
             name: "subtract",
@@ -317,7 +317,7 @@ public static class Builtins
                     left.Value - right.Value);
             });
 
-        Int.AddInstanceMethod(subtractMethod);
+        Int.AddInstanceMethod(subtractMethod, null);
 
         Method multiplyByMethod = new(
             name: "multiplyBy",
@@ -332,7 +332,7 @@ public static class Builtins
                     left.Value * right.Value);
             });
 
-        Int.AddInstanceMethod(multiplyByMethod);
+        Int.AddInstanceMethod(multiplyByMethod, null);
 
         Method divideByMethod = new(
             name: "divideBy",
@@ -347,7 +347,7 @@ public static class Builtins
                     (decimal)left.Value / right.Value);
             });
 
-        Int.AddInstanceMethod(divideByMethod);
+        Int.AddInstanceMethod(divideByMethod, null);
 
         Method toString = new(
             name: "toString",
@@ -360,7 +360,7 @@ public static class Builtins
                 return new StringObject(selfAsInt.Value.ToString());
             });
 
-        Int.AddInstanceMethod(toString);
+        Int.AddInstanceMethod(toString, null);
 
         Method lessThan = new(
             name: "lessThan",
@@ -373,7 +373,7 @@ public static class Builtins
 
                 return new BooleanObject(left.Value < right.Value);
             });
-        Int.AddInstanceMethod(lessThan);
+        Int.AddInstanceMethod(lessThan, null);
 
         Method lessThanOrEqual = new(
             name: "lessThanOrEqual",
@@ -386,7 +386,7 @@ public static class Builtins
 
                 return new BooleanObject(left.Value <= right.Value);
             });
-        Int.AddInstanceMethod(lessThanOrEqual);
+        Int.AddInstanceMethod(lessThanOrEqual, null);
 
         Method greaterThan = new(
             name: "greaterThan",
@@ -399,7 +399,7 @@ public static class Builtins
 
                 return new BooleanObject(left.Value > right.Value);
             });
-        Int.AddInstanceMethod(greaterThan);
+        Int.AddInstanceMethod(greaterThan, null);
 
         Method greaterThanOrEqual = new(
             name: "greaterThanOrEqual",
@@ -412,7 +412,7 @@ public static class Builtins
 
                 return new BooleanObject(left.Value >= right.Value);
             });
-        Int.AddInstanceMethod(greaterThanOrEqual);
+        Int.AddInstanceMethod(greaterThanOrEqual, null);
 
         Method incrementInstance = new(
             name: "increment",
@@ -426,7 +426,7 @@ public static class Builtins
                 context.UpdateThis(new IntObject(selfAsInt.Value + amount.Value));
                 return new UnitObject();
             });
-        Int.AddInstanceMethod(incrementInstance);
+        Int.AddInstanceMethod(incrementInstance, null);
 
         Method decrementInstance = new(
             name: "decrement",
@@ -440,7 +440,7 @@ public static class Builtins
                 context.UpdateThis(new IntObject(selfAsInt.Value - amount.Value));
                 return new UnitObject();
             });
-        Int.AddInstanceMethod(decrementInstance);
+        Int.AddInstanceMethod(decrementInstance, null);
 
         // Todo: Add other IntType methods
     }
@@ -462,7 +462,7 @@ public static class Builtins
                     combinedObject);
             });
 
-        String.AddInstanceMethod(stringAddMethod);
+        String.AddInstanceMethod(stringAddMethod, null);
 
         Method toString = new(
             name: "toString",
@@ -475,7 +475,7 @@ public static class Builtins
                 return selfAsString;
             });
 
-        String.AddInstanceMethod(toString);
+        String.AddInstanceMethod(toString, null);
 
         Method staticConcatMethod = new(
             name: "concat",
@@ -504,7 +504,7 @@ public static class Builtins
                 return new StringObject(fullString);
             });
 
-        String.AddStaticMethod(staticConcatMethod);
+        String.AddStaticMethod(staticConcatMethod, null);
 
         Method instanceConcatMethod = new(
             name: "concat",
@@ -520,7 +520,7 @@ public static class Builtins
                 return new StringObject(left.Value + ' ' + rightAsStringObject.Value);
             });
 
-        String.AddInstanceMethod(instanceConcatMethod);
+        String.AddInstanceMethod(instanceConcatMethod, null);
 
         Method substringMethod = new(
             name: "substring",
@@ -557,7 +557,7 @@ public static class Builtins
                 string substring = selfAsString.Value[start.Value..end.Value];
                 return new StringObject(substring);
             });
-        String.AddInstanceMethod(substringMethod);
+        String.AddInstanceMethod(substringMethod, null);
 
         Method elementAtMethod = new(
             name: "elementAt",
@@ -586,7 +586,7 @@ public static class Builtins
 
                 return new StringObject(selfAsString.Value[index.Value].ToString());
             });
-        String.AddInstanceMethod(elementAtMethod);
+        String.AddInstanceMethod(elementAtMethod, null);
 
         Method findMethod = new(
             name: "find",
@@ -610,7 +610,7 @@ public static class Builtins
 
                 return new OptionalObject(new IntObject(index));
             });
-        String.AddInstanceMethod(findMethod);
+        String.AddInstanceMethod(findMethod, null);
 
         Method containsMethod = new(
             name: "contains",
@@ -623,7 +623,7 @@ public static class Builtins
 
                 return new BooleanObject(selfAsString.Value.Contains(containsValue.Value, StringComparison.Ordinal));
             });
-        String.AddInstanceMethod(containsMethod);
+        String.AddInstanceMethod(containsMethod, null);
 
         Attribute lengthAttribute = new(
             name: "length",
@@ -633,7 +633,7 @@ public static class Builtins
                 StringObject selfAsString = (StringObject)self;
                 return new IntObject(selfAsString.Value.Length);
             });
-        String.AddInstanceAttribute(lengthAttribute);
+        String.AddInstanceAttribute(lengthAttribute, null);
 
         // Todo: Add other StringType methods
     }
@@ -653,7 +653,7 @@ public static class Builtins
             unlimitedKeywordArgumentsType: null,
             body: (_, _, context) => InternalMethods.Terminal.WriteLine(context));
 
-        Terminal.AddStaticMethod(writeMethod);
+        Terminal.AddStaticMethod(writeMethod, null);
 
         Method readMethod = new(
             name: "readLine",
@@ -665,7 +665,7 @@ public static class Builtins
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadLine(context));
 
-        Terminal.AddStaticMethod(readMethod);
+        Terminal.AddStaticMethod(readMethod, null);
 
         Method readIntMethod = new(
             name: "readInt",
@@ -678,7 +678,7 @@ public static class Builtins
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadInteger(context));
 
-        Terminal.AddStaticMethod(readIntMethod);
+        Terminal.AddStaticMethod(readIntMethod, null);
 
         Method readFloatMethod = new(
             name: "readFloat",
@@ -691,7 +691,7 @@ public static class Builtins
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadFloat(context));
 
-        Terminal.AddStaticMethod(readFloatMethod);
+        Terminal.AddStaticMethod(readFloatMethod, null);
 
         Method readBooleanMethod = new(
             name: "readBoolean",
@@ -707,21 +707,21 @@ public static class Builtins
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadBoolean(context));
 
-        Terminal.AddStaticMethod(readBooleanMethod);
+        Terminal.AddStaticMethod(readBooleanMethod, null);
 
         Method readKeyMethod = new(
             name: "readKey",
             returnType: String,
             parameters: [new ParameterDefinition(name: "message", type: String),],
             body: (_, _, context) => InternalMethods.Terminal.ReadKey(context));
-        Terminal.AddStaticMethod(readKeyMethod);
+        Terminal.AddStaticMethod(readKeyMethod, null);
 
         Method clearMethod = new(
             name: "clear",
             returnType: Unit,
             parameters: [],
             body: (_, _, _) => InternalMethods.Terminal.Clear());
-        Terminal.AddStaticMethod(clearMethod);
+        Terminal.AddStaticMethod(clearMethod, null);
     }
 
     private static void InitialiseFloatType()
@@ -742,7 +742,7 @@ public static class Builtins
                 return new StringObject(valueAsString);
             });
 
-        Float.AddInstanceMethod(toString);
+        Float.AddInstanceMethod(toString, null);
     }
 
     private static void InitialiseBooleanType()
@@ -758,7 +758,7 @@ public static class Builtins
                 return new StringObject(selfAsBoolean.Value ? "true" : "false");
             });
 
-        Boolean.AddInstanceMethod(toString);
+        Boolean.AddInstanceMethod(toString, null);
 
         // Todo: Add more BooleanType methods
     }
@@ -771,15 +771,15 @@ public static class Builtins
         BooleanOutputStyleObject onOffStyle = new(BooleanOutputStyleObject.Style.OnOff);
         BooleanOutputStyleObject binaryStyle = new(BooleanOutputStyleObject.Style.Binary);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("word", BooleanOutputStyles,
-            (_, _) => wordStyle));
+            (_, _) => wordStyle), null);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("yesNo", BooleanOutputStyles,
-            (_, _) => yesNoStyle));
+            (_, _) => yesNoStyle), null);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("char", BooleanOutputStyles,
-            (_, _) => charStyle));
+            (_, _) => charStyle), null);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("onOff", BooleanOutputStyles,
-            (_, _) => onOffStyle));
+            (_, _) => onOffStyle), null);
         BooleanOutputStyles.AddStaticAttribute(new Attribute("binary", BooleanOutputStyles,
-            (_, _) => binaryStyle));
+            (_, _) => binaryStyle), null);
     }
 
     private static void InitialiseNullType()
@@ -790,7 +790,7 @@ public static class Builtins
             parameters: [],
             body: (_, _, _) => new StringObject("null"));
 
-        Null.AddInstanceMethod(toString);
+        Null.AddInstanceMethod(toString, null);
 
         // Todo: Add more NullType methods
     }
@@ -806,6 +806,6 @@ public static class Builtins
                 new ParameterDefinition(name: "places", type: Int, defaultValue: new IntObject(0)),
             ],
             body: (_, _, context) => MathFunctions.Truncate(context));
-        Math.AddStaticMethod(truncateMethod);
+        Math.AddStaticMethod(truncateMethod, null);
     }
 }
