@@ -8,6 +8,7 @@ public class Type : RuntimeObject
     public bool CanAccessParentValues;
 
     public bool IsStatic { get; set; }
+    public bool IsFinalized { get; set; }
 
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
@@ -36,11 +37,21 @@ public class Type : RuntimeObject
 
     public void AddStaticMethod(Method method)
     {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                null);
+
         this.StaticMethods.Add(method.Name, method);
     }
 
     public void AddInstanceMethod(Method method)
     {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                null);
+
         if (this.IsStatic)
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Cannot add instance method {method.Name} to static type {this.Name}",
@@ -50,11 +61,22 @@ public class Type : RuntimeObject
 
     public void AddStaticAttribute(Attribute value)
     {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                null);
+
         this.StaticAttributes.Add(value.Name, value);
     }
 
     public void AddInstanceAttribute(Attribute value)
-    {if (this.IsStatic)
+    {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                null);
+
+        if (this.IsStatic)
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Cannot add instance attribute {value.Name} to static type {this.Name}",
                     user: false), null);
@@ -120,6 +142,11 @@ public class Type : RuntimeObject
 
     private Method? GetStaticMethodOrDefault(string name)
     {
+        if (!this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError(
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
         if (this == this.Type) return method;
@@ -131,6 +158,11 @@ public class Type : RuntimeObject
 
     private Method? GetInstanceMethodOrDefault(string name)
     {
+        if (!this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError(
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
         if (this == this.Type) return method;
@@ -142,6 +174,11 @@ public class Type : RuntimeObject
 
     private Attribute? GetStaticAttributeOrDefault(string name)
     {
+        if (!this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError(
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+
         Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
         if (this == this.Type) return attribute;
@@ -153,6 +190,11 @@ public class Type : RuntimeObject
 
     private Attribute? GetInstanceAttributeOrDefault(string name)
     {
+        if (!this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError(
+                    $"Cannot use type {this.Name} because it has not yet been declared as final"), null);
+
         Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
         if (this == this.Type) return attribute;
