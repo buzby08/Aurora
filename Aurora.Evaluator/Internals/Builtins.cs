@@ -68,6 +68,8 @@ public static class Builtins
         ICollection = new RuntimeInterface(nameof(ICollection));
         // Todo: Figure out about ICollection being an instance of RuntimeType or RuntimeInterface.
 
+        // Todo: Add tests for interfaces.
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
