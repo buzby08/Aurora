@@ -299,7 +299,7 @@ public class Method
         if (this.Name != other.Name) return false;
         if (this.DeclaringType != other.DeclaringType) return false;
         if (this.Parameters is not null && other.Parameters is null) return false;
-        if (!this.Parameters?.SequenceEqual(other.Parameters!) ?? true) return false;
+        if (!this.Parameters?.SequenceEqual(other.Parameters!) ?? false) return false;
         if (this.UnlimitedPositionalArgsType != other.UnlimitedPositionalArgsType) return false;
         if (this.UnlimitedKeywordArgumentsType != other.UnlimitedKeywordArgumentsType) return false;
         return true;
