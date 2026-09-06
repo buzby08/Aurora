@@ -178,9 +178,9 @@ public class RuntimeType : RuntimeObject
         return method ?? this.Type.GetStaticMethodOrDefault(name, location);
     }
 
-    internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location)
+    internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location, bool throwNotFinalError = true)
     {
-        if (!this.IsFinalized)
+        if (!this.IsFinalized && throwNotFinalError)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
                     $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
