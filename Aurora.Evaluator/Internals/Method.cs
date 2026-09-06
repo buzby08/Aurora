@@ -294,6 +294,17 @@ public class Method
         return matchedArgs;
     }
 
+    public bool Equals(Method other)
+    {
+        if (this.Name != other.Name) return false;
+        if (this.DeclaringType != other.DeclaringType) return false;
+        if (this.Parameters is not null && other.Parameters is null) return false;
+        if (!this.Parameters?.SequenceEqual(other.Parameters!) ?? true) return false;
+        if (this.UnlimitedPositionalArgsType != other.UnlimitedPositionalArgsType) return false;
+        if (this.UnlimitedKeywordArgumentsType != other.UnlimitedKeywordArgumentsType) return false;
+        return true;
+    }
+
 
     private readonly MethodBody? _builtinBody;
     private readonly List<List<Ast>>? _userDefinedBody;
