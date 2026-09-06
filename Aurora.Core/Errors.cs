@@ -572,10 +572,13 @@ public class ContractError : ErrorTypes
     public override string Code => "Aurora.ContractError";
     public override bool AlwaysError => true;
 
-    public ContractError(string contractProvider, string className, string[] missingMembers, bool user = false)
+    public ContractError(string contractProvider, string className, string[] invalidMembers, bool user = false)
     {
-        this.Message =
-            $"The contract provided by {contractProvider} `{className}` was violated. Missing members: {string.Join(", ", missingMembers)}";
+        this.Message = $"The contract provided by {contractProvider} `{className}` was violated.";
+
+        if (invalidMembers.Length > 0)
+            this.Message += $"\nInvalid members: {string.Join(", ", invalidMembers)}";
+
         this.Title = "Contract Error" + (user ? " (User)" : " (System)");
     }
 
