@@ -23,6 +23,8 @@ public static class Builtins
     public static RuntimeType LogicIfReturn = null!;
     public static RuntimeType Loop = null!;
     public static RuntimeType Array = null!;
+    public static RuntimeType Interface = null!;
+    public static RuntimeInterface ICollection = null!;
 
     public static void InitialiseTypes()
     {
@@ -61,6 +63,11 @@ public static class Builtins
 
         Array = new RuntimeType(nameof(Array), type: Type);
 
+        Interface = new RuntimeType(nameof(Interface), type: Type);
+
+        ICollection = new RuntimeInterface(nameof(ICollection));
+        // Todo: Figure out about ICollection being an instance of RuntimeType or RuntimeInterface.
+
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -75,8 +82,11 @@ public static class Builtins
         InitialiseLogicIfReturnType();
         InitialiseLoopType();
         InitialiseArrayType();
+        InitialiseInterfaceType();
+        InitialiseICollectionInterface();
 
         Type.MarkFinal(null);
+        Interface.MarkFinal(null);
         Optional.MarkFinal(null);
         Int.MarkFinal(null);
         Float.MarkFinal(null);
@@ -92,8 +102,19 @@ public static class Builtins
         Array.MarkFinal(null);
     }
 
+    private static void InitialiseICollectionInterface()
+    {
+        ICollection.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
+    }
+
+    private static void InitialiseInterfaceType()
+    {
+        // Todo: Not implemented yet
+    }
+
     private static void InitialiseArrayType()
     {
+        Array.AddInterface(ICollection, null);
         Method fromMethod = new(
             name: "from",
             returnType: Array,
@@ -134,7 +155,7 @@ public static class Builtins
 
                 return value[indexValue];
             });
-        Array.AddInstanceMethod(atMethod, null);
+        // Array.AddInstanceMethod(atMethod, null);
 
         Method toString = new(
             name: "toString",
