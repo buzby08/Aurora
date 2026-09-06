@@ -6,7 +6,7 @@ namespace Aurora.Evaluator.Internals;
 
 public abstract class RuntimeObject
 {
-    public Type Type;
+    public RuntimeType Type;
 
     public StringObject ConvertToStringObject(RuntimeContext context, SourceLocation sourceLocation)
     {

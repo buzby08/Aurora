@@ -2,7 +2,7 @@ using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals;
 
-public class Type : RuntimeObject
+public class RuntimeType : RuntimeObject
 {
     public string Name { get; }
     public bool CanAccessParentValues;
@@ -16,7 +16,7 @@ public class Type : RuntimeObject
     public readonly Dictionary<string, Attribute> InstanceAttributes = [];
     public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
-    public Type(string name, Type type, bool canAccessParentValues = true, bool isStatic = false)
+    public RuntimeType(string name, RuntimeType type, bool canAccessParentValues = true, bool isStatic = false)
     {
         this.Name = name;
         this.Type = type;
@@ -24,7 +24,7 @@ public class Type : RuntimeObject
         this.IsStatic = isStatic;
     }
 
-    public Type(string name)
+    public RuntimeType(string name)
     {
         this.Name = name;
     }
@@ -34,7 +34,7 @@ public class Type : RuntimeObject
         this.IsFinalized = true;
     }
 
-    public bool IsSubclassOf(Type type)
+    public bool IsSubclassOf(RuntimeType type)
     {
         if (this.Type == this && this != type) return false;
         return this == type || this.Type.IsSubclassOf(type);
@@ -211,7 +211,7 @@ public class Type : RuntimeObject
 
     public override bool Equals(RuntimeObject other)
     {
-        if (other is not Type typeObject)
+        if (other is not RuntimeType typeObject)
             return false;
 
         if (this.Name != typeObject.Name) return false;

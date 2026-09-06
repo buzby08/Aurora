@@ -8,7 +8,7 @@ internal static class Type
     public static UnitObject Create(RuntimeObject self, Dictionary<string, RawMethodArgument> args,
                                     RuntimeContext context)
     {
-        Internals.Type targetType = (Internals.Type)self;
+        Internals.RuntimeType targetType = (Internals.RuntimeType)self;
 
         if (targetType.IsStatic)
             Errors.AlwaysThrow(new UnsupportedOperationError($"{targetType.Name} is static and cannot be instantiated"),
@@ -33,7 +33,7 @@ internal static class Type
 
     public static UnitObject Set(RuntimeObject self, Dictionary<string, RawMethodArgument> args, RuntimeContext context)
     {
-        Internals.Type targetType = (Internals.Type)self;
+        Internals.RuntimeType targetType = (Internals.RuntimeType)self;
 
         foreach (var (_, rawVar) in args)
         {
@@ -53,7 +53,7 @@ internal static class Type
 
     public static StringObject ToString(RuntimeObject self)
     {
-        if (self is Internals.Type selfType)
+        if (self is Internals.RuntimeType selfType)
             return new StringObject($"<{self.Type.Name} {selfType.Name}>");
 
         return new StringObject($"Object<{self.Type.Name}>");

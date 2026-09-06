@@ -6,12 +6,12 @@ namespace Aurora.Evaluator.Internals;
 public class Method
 {
     public string Name { get; }
-    public Type DeclaringType { get; }
+    public RuntimeType DeclaringType { get; }
     public readonly List<ParameterDefinition>? Parameters;
-    public Type? UnlimitedPositionalArgsType { get; }
-    public Type? UnlimitedKeywordArgumentsType { get; }
+    public RuntimeType? UnlimitedPositionalArgsType { get; }
+    public RuntimeType? UnlimitedKeywordArgumentsType { get; }
 
-    public Method(string name, Type returnType, List<ParameterDefinition>? parameters, MethodBody body)
+    public Method(string name, RuntimeType returnType, List<ParameterDefinition>? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -19,8 +19,8 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, Type returnType, Type? unlimitedPositionalArgumentsType,
-                  Type? unlimitedKeywordArgumentsType, MethodBody body)
+    public Method(string name, RuntimeType returnType, RuntimeType? unlimitedPositionalArgumentsType,
+                  RuntimeType? unlimitedKeywordArgumentsType, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -30,8 +30,8 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, Type returnType, Type? unlimitedPositionalArgumentsType,
-                  Type? unlimitedKeywordArgumentsType, List<ParameterDefinition>? parameters, MethodBody body)
+    public Method(string name, RuntimeType returnType, RuntimeType? unlimitedPositionalArgumentsType,
+                  RuntimeType? unlimitedKeywordArgumentsType, List<ParameterDefinition>? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -41,7 +41,7 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, Type returnType, List<ParameterDefinition> parameters, List<List<Ast>> body)
+    public Method(string name, RuntimeType returnType, List<ParameterDefinition> parameters, List<List<Ast>> body)
     {
         this.Name = name;
         this.DeclaringType = returnType;

@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
 using Aurora.Evaluator.Internals;
-using Type = Aurora.Evaluator.Internals.Type;
 
 namespace Aurora.Evaluator;
 
@@ -124,7 +123,7 @@ public class Evaluator : IDisposable
 
         string attributeName = literal.ValueAsString;
 
-        if (previousResult is Type type)
+        if (previousResult is RuntimeType type)
             return type.GetStaticAttribute(attributeName, literal.StartLocation)
                 .GetValue(previousResult, this.Context, literal.StartLocation);
 
@@ -140,10 +139,10 @@ public class Evaluator : IDisposable
 
         Method method = null!;
 
-        if (previousResult is Type type)
+        if (previousResult is RuntimeType type)
             method = type.GetStaticMethod(methodNameString, methodName.StartLocation);
 
-        if (previousResult is not Type)
+        if (previousResult is not RuntimeType)
             method = previousResult.Type.GetInstanceMethod(methodNameString, methodName.StartLocation);
 
         return method.Invoke(previousResult, PreviousVariableName, args, this.Context, methodName.StartLocation);

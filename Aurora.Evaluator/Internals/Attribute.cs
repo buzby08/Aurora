@@ -3,10 +3,10 @@ using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals;
 
-public class Attribute(string name, Type type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
+public class Attribute(string name, RuntimeType type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
 {
     public string Name = name;
-    public Type Type = type;
+    public RuntimeType Type = type;
     public Func<RuntimeObject, RuntimeContext, RuntimeObject> ValueGetter = valueGetter;
 
     public RuntimeObject GetValue(
