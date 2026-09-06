@@ -10,6 +10,8 @@ public class RuntimeType : RuntimeObject
     public bool IsStatic { get; set; }
     public bool IsFinalized { get; set; }
 
+    public RuntimeInterface? Interface { get; set; }
+
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
 
@@ -31,6 +33,9 @@ public class RuntimeType : RuntimeObject
 
     public void MarkFinal()
     {
+        if (this.Interface is not null)
+            this.Interface.EnsureTypeMeetsContract(this, null);
+
         this.IsFinalized = true;
     }
 
@@ -161,7 +166,7 @@ public class RuntimeType : RuntimeObject
         return method ?? this.Type.GetStaticMethodOrDefault(name, location);
     }
 
-    private Method? GetInstanceMethodOrDefault(string name, SourceLocation? location)
+    internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
