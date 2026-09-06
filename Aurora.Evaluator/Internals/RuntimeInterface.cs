@@ -6,9 +6,14 @@ namespace Aurora.Evaluator.Internals;
 
 public class RuntimeInterface : RuntimeObject
 {
-    public required string Name;
+    public string Name;
 
     private Dictionary<string, Method> _methods = new();
+
+    public RuntimeInterface(string name)
+    {
+        this.Name = name;
+    }
 
     public void AddMethod(string name, RuntimeType returnType, ParameterDefinition[] parameters)
     {
@@ -52,21 +57,22 @@ public class RuntimeInterface : RuntimeObject
         foreach (string methodName in this._methods.Keys)
         {
             Method method = this._methods[methodName];
-            Method? methodFromType = type.GetInstanceMethodOrDefault(methodName, location);
+            Method? methodFromType = type.GetInstanceMethodOrDefault(methodName, location, throwNotFinalError: false);
 
             if (methodFromType is null || !methodFromType.Equals(method)) invalidMethods.Add(methodName);
         }
 
-        if (invalidMethods.Count > 0) ThrowContractViolation(invalidMethods.ToArray(), location);
+        if (invalidMethods.Count > 0) ThrowContractViolation(invalidMethods.ToArray(), type.Name, location);
     }
 
     [DoesNotReturn]
-    private void ThrowContractViolation(string[] invalidMembers, SourceLocation? location)
+    private void ThrowContractViolation(string[] invalidMembers, string violatorName, SourceLocation? location)
     {
         Errors.AlwaysThrow(new ContractError(
             contractProvider: "interface",
             className: this.Name,
-            invalidMembers: invalidMembers
+            invalidMembers: invalidMembers,
+            violatorName: violatorName
         ), location);
         throw new UnreachableException();
     }
