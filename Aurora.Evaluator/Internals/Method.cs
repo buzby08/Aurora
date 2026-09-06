@@ -97,7 +97,7 @@ public class Method
         if (returnedObject is null)
             Errors.AlwaysThrow(new InvalidReturnTypeError($"Method {this.Name} did not return a value"), callSite);
 
-        if (returnedObject.Type != this.DeclaringType)
+        if (!returnedObject.Type.IsSubclassOf(this.DeclaringType))
             Errors.AlwaysThrow(new TypeMismatchError(
                     $"Callable is declared to return a value of type {this.DeclaringType.Name}, but a value of " +
                     $"type {returnedObject.Type.Name} was returned",
