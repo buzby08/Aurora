@@ -1,8 +1,10 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals;
 
-internal class RuntimeInterface : RuntimeObject
+public class RuntimeInterface : RuntimeObject
 {
     public required string Name;
 
@@ -41,6 +43,32 @@ internal class RuntimeInterface : RuntimeObject
             body: body);
 
         return newMethod;
+    }
+
+    public void EnsureTypeMeetsContract(RuntimeType type, SourceLocation? location)
+    {
+        List<string> invalidMethods = [];
+
+        foreach (string methodName in this._methods.Keys)
+        {
+            Method method = this._methods[methodName];
+            Method? methodFromType = type.GetInstanceMethodOrDefault(methodName, location);
+
+            if (methodFromType is null || !methodFromType.Equals(method)) invalidMethods.Add(methodName);
+        }
+
+        if (invalidMethods.Count > 0) ThrowContractViolation(invalidMethods.ToArray(), location);
+    }
+
+    [DoesNotReturn]
+    private void ThrowContractViolation(string[] invalidMembers, SourceLocation? location)
+    {
+        Errors.AlwaysThrow(new ContractError(
+            contractProvider: "interface",
+            className: this.Name,
+            invalidMembers: invalidMembers
+        ), location);
+        throw new UnreachableException();
     }
 
     public override string ToString() => $"{nameof(RuntimeObject)} {nameof(RuntimeInterface)}({this.Name})";
