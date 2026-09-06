@@ -11,7 +11,7 @@ public abstract class RuntimeObject
     public StringObject ConvertToStringObject(RuntimeContext context, SourceLocation sourceLocation)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", context, sourceLocation)
+            this.Type.GetInstanceMethod("toString", sourceLocation)
                 .Invoke(this, null, [], context, sourceLocation);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString;
@@ -20,7 +20,7 @@ public abstract class RuntimeObject
     public string ConvertToCSharpString(RuntimeContext context, SourceLocation location)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", context, location)
+            this.Type.GetInstanceMethod("toString", location)
                 .Invoke(this, null, [], context, location);
         StringObject valueAsString = (StringObject)evaluatedValueAsObject;
         return valueAsString.Value;

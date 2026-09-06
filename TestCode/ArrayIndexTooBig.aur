@@ -1,0 +1,4 @@
+// FAIL Aurora.OutOfRange
+
+Array.create(myArray=Array.from(1; 2; 3; type=Int))
+Terminal.writeLine("Element at 3 of array is"; myArray.at(3))
