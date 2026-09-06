@@ -148,6 +148,12 @@ public static class Builtins
             });
 
         Array.AddInstanceMethod(toString, null);
+
+        Attribute lengthAttribute = new(
+            name: "length",
+            type: Int,
+            valueGetter: ArrayObject.LengthGetter);
+        Array.AddInstanceAttribute(lengthAttribute, null);
     }
 
     private static void InitialiseLoopType()

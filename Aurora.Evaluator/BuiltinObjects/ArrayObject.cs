@@ -8,6 +8,9 @@ public class ArrayObject : RuntimeObject
     public RuntimeObject[] Value;
     public Type ArrayType;
 
+    public static Func<RuntimeObject, RuntimeContext, RuntimeObject> LengthGetter =>
+        (obj, _) => new IntObject(((ArrayObject)obj).Value.Length);
+
     public ArrayObject(RuntimeObject[] value)
     {
         this.Value = value;
