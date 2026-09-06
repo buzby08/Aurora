@@ -10,7 +10,7 @@ public class RuntimeType : RuntimeObject
     public bool IsStatic { get; set; }
     public bool IsFinalized { get; set; }
 
-    public RuntimeInterface? Interface { get; set; }
+    public List<RuntimeInterface>? Interface { get; set; }
 
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
@@ -31,10 +31,11 @@ public class RuntimeType : RuntimeObject
         this.Name = name;
     }
 
-    public void MarkFinal()
+    public void MarkFinal(SourceLocation? location)
     {
         if (this.Interface is not null)
-            this.Interface.EnsureTypeMeetsContract(this, null);
+            foreach (RuntimeInterface @interface in this.Interface)
+                @interface.EnsureTypeMeetsContract(this, location);
 
         this.IsFinalized = true;
     }
@@ -43,6 +44,17 @@ public class RuntimeType : RuntimeObject
     {
         if (this.Type == this && this != type) return false;
         return this == type || this.Type.IsSubclassOf(type);
+    }
+
+    public void AddInterface(RuntimeInterface type, SourceLocation? location)
+    {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                location);
+
+        this.Interface ??= [];
+        this.Interface.Add(type);
     }
 
     public void AddStaticMethod(Method method, SourceLocation? location)
