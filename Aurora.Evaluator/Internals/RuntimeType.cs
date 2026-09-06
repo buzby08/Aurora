@@ -222,5 +222,5 @@ public class RuntimeType : RuntimeObject
         return true;
     }
 
-    public override string ToString() => $"{nameof(RuntimeObject)} {nameof(Type)}({this.Name})";
+    public override string ToString() => $"{nameof(RuntimeObject)} {nameof(RuntimeType)}({this.Name})";
 }
