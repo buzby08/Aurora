@@ -76,20 +76,20 @@ public static class Builtins
         InitialiseLoopType();
         InitialiseArrayType();
 
-        Type.MarkFinal();
-        Optional.MarkFinal();
-        Int.MarkFinal();
-        Float.MarkFinal();
-        String.MarkFinal();
-        Boolean.MarkFinal();
-        Null.MarkFinal();
-        Terminal.MarkFinal();
-        BooleanOutputStyles.MarkFinal();
-        Math.MarkFinal();
-        Logic.MarkFinal();
-        LogicIfReturn.MarkFinal();
-        Loop.MarkFinal();
-        Array.MarkFinal();
+        Type.MarkFinal(null);
+        Optional.MarkFinal(null);
+        Int.MarkFinal(null);
+        Float.MarkFinal(null);
+        String.MarkFinal(null);
+        Boolean.MarkFinal(null);
+        Null.MarkFinal(null);
+        Terminal.MarkFinal(null);
+        BooleanOutputStyles.MarkFinal(null);
+        Math.MarkFinal(null);
+        Logic.MarkFinal(null);
+        LogicIfReturn.MarkFinal(null);
+        Loop.MarkFinal(null);
+        Array.MarkFinal(null);
     }
 
     private static void InitialiseArrayType()
