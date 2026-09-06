@@ -7,11 +7,11 @@ public class Method
 {
     public string Name { get; }
     public RuntimeType DeclaringType { get; }
-    public readonly List<ParameterDefinition>? Parameters;
+    public readonly ParameterDefinition[]? Parameters;
     public RuntimeType? UnlimitedPositionalArgsType { get; }
     public RuntimeType? UnlimitedKeywordArgumentsType { get; }
 
-    public Method(string name, RuntimeType returnType, List<ParameterDefinition>? parameters, MethodBody body)
+    public Method(string name, RuntimeType returnType, ParameterDefinition[]? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -31,7 +31,7 @@ public class Method
     }
 
     public Method(string name, RuntimeType returnType, RuntimeType? unlimitedPositionalArgumentsType,
-                  RuntimeType? unlimitedKeywordArgumentsType, List<ParameterDefinition>? parameters, MethodBody body)
+                  RuntimeType? unlimitedKeywordArgumentsType, ParameterDefinition[]? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -41,7 +41,7 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, RuntimeType returnType, List<ParameterDefinition> parameters, List<List<Ast>> body)
+    public Method(string name, RuntimeType returnType, ParameterDefinition[] parameters, List<List<Ast>> body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -228,7 +228,7 @@ public class Method
             if (param is null && this.UnlimitedPositionalArgsType is null)
             {
                 Errors.RaiseError(new ArgumentSurplusError(
-                        $"Callable {this.Name} takes {this.Parameters!.Count} parameters, but {arguments.Length} were provided."),
+                        $"Callable {this.Name} takes {this.Parameters!.Length} parameters, but {arguments.Length} were provided."),
                     location);
                 break;
             }
