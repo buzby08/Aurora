@@ -1,0 +1,14 @@
+Int.create(x=1)
+
+Loop.while(x.lessThan(5); {
+    Terminal.writeLine("INSIDE: x is"; x)
+
+    Logic.if(x.equals(3); {
+        Terminal.writeLine("x is"; x; "Now breaking from loop")
+        Loop.break()
+    })
+
+    Int.set(x=x.add(1))
+})
+
+Terminal.writeLine("OUTSIDE: x is"; x)

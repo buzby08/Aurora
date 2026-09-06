@@ -1,89 +1,154 @@
 # Aurora
 
-Aurora is version 1 of a custom programming language and interpreter built with C# and .NET 9.
+Aurora is a custom programming language and interpreter built with C# and .NET 9. Its current design treats types as first-class runtime objects and expresses most operations through method calls on those types or on instances created from them.
 
-The language is designed around a strict object-oriented idea: everything is expressed through types and methods, including variable creation. Instead of primitive-style declarations, Aurora code uses calls such as `String.create(...)` to introduce values into scope.
+This README reflects the interpreter as it is currently implemented, with the built-in runtime surface based primarily on [`Aurora/Internals/Builtins.cs`](/home/busby08/Documents/Aurora/Aurora/Internals/Builtins.cs) and the example program in [`Aurora/code.aur`](/home/busby08/Documents/Aurora/Aurora/code.aur).
 
-## Current V1 Design
+## Language Style
 
-- Fully object-oriented surface syntax
-- Types are first-class runtime objects
-- Variables are created through type methods such as `String.create`
-- Method calls use `Type.method(...)` or `instance.method(...)`
-- Arguments are separated with semicolons: `method(a; b; name=value)`
-- Scripts are stored in `.aur` files
+- Variables are introduced through type methods such as `String.create(...)` and `Int.create(...)`.
+- Existing variables can be updated through `Type.set(...)`.
+- Method calls use `Type.method(...)` and `instance.method(...)`.
+- Arguments are separated with semicolons: `method(a; b; name=value)`.
+- Scripts are stored in `.aur` files.
 
 ## Example
 
-[`Aurora/code.aur`](/home/busby08/Documents/Aurora/Aurora/code.aur) contains a minimal example:
+[`Aurora/code.aur`](/home/busby08/Documents/Aurora/Aurora/code.aur) shows Aurora's interactive terminal features:
 
 ```aurora
-String.create(a="one"; b="two"; c="three")
+String.create(name=Terminal.readLine("What is your name? "; default="N/A"))
+Int.create(age=Terminal.readInt("How old are you? "; min=0))
+Boolean.create(robot=Terminal.readBoolean("Are you a robot? "; outputStyle=BooleanOutputStyles.charStyle; immediate=false))
 
-Terminal.writeLine(a)
-Terminal.writeLine(b)
-Terminal.writeLine(c)
+Terminal.writeLine("You are called"; name)
+Terminal.writeLine("Your name is"; name.length; "characters long")
+Terminal.writeLine("This year you are"; age; "years old, but next year you will be"; age.add(1); "years old.")
+Terminal.writeLine("You are a robot:"; robot)
 ```
 
-This shows the core style of Aurora V1:
+This example demonstrates several core ideas:
 
-- `String.create(...)` creates named variables in the current scope
-- `a`, `b`, and `c` are string objects, not primitive values
-- output is done through the `Terminal` type
+- input is read through the `Terminal` type
+- named variables are created through type methods
+- values expose attributes and instance methods, such as `name.length` and `age.add(1)`
+- boolean input formatting is configurable through `BooleanOutputStyles`
 
-## Built-in Types
+## Built-in Types And Features
 
-The interpreter currently attaches these built-ins to the global context:
+The global runtime currently exposes these built-in types:
 
 - `Type`
 - `Unit`
-- `Null`
+- `Optional`
 - `Int`
 - `Float`
 - `String`
 - `Boolean`
+- `Null`
 - `Terminal`
+- `BooleanOutputStyles`
+- `Math`
 
-## Built-in Methods Implemented Today
+Implemented built-in behavior currently includes:
 
-The current codebase includes these working methods:
-
-- `Type.create(name=value)` creates variables of a specific type
-- `Type.set(name=value)` updates existing variables of a specific type
-- `String.add(other)` concatenates strings
+- `Type.create(name=value)` creates one or more variables of a specific type
+- `Type.set(name=value)` updates one or more existing variables of a specific type
+- `Type.toString()`
+- `Optional.of(value)`
+- `Optional.empty()`
+- `optional.isEmpty`
+- `optional.value`
+- `optional.valueOrDefault(default)`
+- `optional.toString()`
 - `Int.add(other)`
 - `Int.subtract(other)`
 - `Int.multiplyBy(other)`
-- `Int.divideBy(other)` returns a `Float`
+- `Int.divideBy(other)` returning a `Float`
 - `Int.toString()`
 - `Float.toString()`
-- `Terminal.writeLine(value; end="\n")`
+- `String.add(other)`
+- `String.concat(...)`
+- `string.concat(other)`
+- `string.substring(start; end)`
+- `string.elementAt(index)`
+- `string.find(value)` returning an `Optional`
+- `string.contains(substring)`
+- `string.length`
+- `string.toString()`
+- `Boolean.toString()`
+- `Null.toString()`
+- `Terminal.writeLine(...; separator=" "; end="\n")`
+- `Terminal.readLine(message=""; default=null)`
+- `Terminal.readInt(message=""; min=null; max=null)`
+- `Terminal.readFloat(message=""; min=null; max=null)`
+- `Terminal.readBoolean(message; outputStyle=BooleanOutputStyles.wordStyle; immediate=false)`
+- `Terminal.readKey(message)`
+- `Terminal.clear()`
+- `BooleanOutputStyles.wordStyle`
+- `BooleanOutputStyles.yesNoStyle`
+- `BooleanOutputStyles.charStyle`
+- `BooleanOutputStyles.onOffStyle`
+- `BooleanOutputStyles.binaryStyle`
+- `Math.truncate(value; places=0)`
 
 ## Running Aurora
 
+Aurora can be used either through the prebuilt standalone binaries included in the repository or by compiling the interpreter from source.
+
+### Option 1: Use A Standalone Binary
+
+This repository includes standalone binaries under [`Aurora/dist/`](/home/busby08/Documents/Aurora/Aurora/dist):
+
+- Linux: [`Aurora/dist/linux/Aurora`](/home/busby08/Documents/Aurora/Aurora/dist/linux/Aurora)
+- macOS: [`Aurora/dist/macOS/Aurora`](/home/busby08/Documents/Aurora/Aurora/dist/macOS/Aurora)
+- Windows: [`Aurora/dist/windows/Aurora.exe`](/home/busby08/Documents/Aurora/Aurora/dist/windows/Aurora.exe)
+
+From the repository root, run the binary for your platform and pass it a `.aur` file:
+
+```bash
+./Aurora/dist/linux/Aurora Aurora/code.aur
+```
+
+```bash
+./Aurora/dist/macOS/Aurora Aurora/code.aur
+```
+
+```powershell
+.\Aurora\dist\windows\Aurora.exe .\Aurora\code.aur
+```
+
+### Option 2: Compile From Source
+
 Prerequisite: .NET 9 SDK
 
-Run a script from the repository root:
+Build the interpreter from the repository root:
+
+```bash
+dotnet build Aurora/Aurora.csproj
+```
+
+Run a script directly through `dotnet run`:
 
 ```bash
 dotnet run --project Aurora -- Aurora/code.aur
 ```
 
-Build the interpreter:
+You can also run the built output after compiling:
 
 ```bash
-dotnet build Aurora.sln
+dotnet Aurora/bin/Debug/net9.0/Aurora.dll Aurora/code.aur
 ```
 
-Run tests:
+## Command-Line Options
+
+Aurora expects a script path as its main positional argument:
 
 ```bash
-dotnet test Aurora.sln
+dotnet run --project Aurora -- Aurora/code.aur
 ```
 
-## CLI Notes
-
-The interpreter accepts a `.aur` file path as its main argument. It also currently supports flags including:
+Available options include:
 
 - `--version`
 - `-v`, `--verbose`
@@ -99,16 +164,16 @@ The interpreter accepts a `.aur` file path as its main argument. It also current
 Example:
 
 ```bash
-dotnet run --project Aurora -- Aurora/code.aur --version
+dotnet run --project Aurora -- Aurora/code.aur --verbose --warn
 ```
 
-## Project Layout
+## Repository Layout
 
-- [`Aurora/`](/home/busby08/Documents/Aurora/Aurora) contains the interpreter
-- [`Aurora/code.aur`](/home/busby08/Documents/Aurora/Aurora/code.aur) is the main syntax example
-- [`Aurora.Tests/`](/home/busby08/Documents/Aurora/Aurora.Tests) contains tests
+- [`Aurora/`](/home/busby08/Documents/Aurora/Aurora) contains the interpreter source
+- [`Aurora/code.aur`](/home/busby08/Documents/Aurora/Aurora/code.aur) contains the current example program
+- [`Aurora/Internals/Builtins.cs`](/home/busby08/Documents/Aurora/Aurora/Internals/Builtins.cs) defines the built-in runtime types, attributes, and methods
 - [`Aurora.sln`](/home/busby08/Documents/Aurora/Aurora.sln) is the solution file
 
 ## Status
 
-This repository is the first version of Aurora. The language direction is broader than the currently implemented surface area, so this README documents the interpreter as it exists now rather than the full intended roadmap.
+Aurora is still evolving. The language direction is broader than the implemented runtime today, so this document intentionally describes the current executable behavior rather than the longer-term roadmap.
