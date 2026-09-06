@@ -564,6 +564,28 @@ public class MemoryError : ErrorTypes
     }
 }
 
+public class ContractError : ErrorTypes
+{
+    public override string Title { get; }
+    public sealed override string Description => "A contract, such as one provided from an interface, was violated.";
+    public override string Message { get; }
+    public override string Code => "Aurora.ContractError";
+    public override bool AlwaysError => true;
+
+    public ContractError(string contractProvider, string className, string[] missingMembers, bool user = false)
+    {
+        this.Message =
+            $"The contract provided by {contractProvider} `{className}` was violated. Missing members: {string.Join(", ", missingMembers)}";
+        this.Title = "Contract Error" + (user ? " (User)" : " (System)");
+    }
+
+    public ContractError(string? message = null, bool user = false)
+    {
+        this.Message = string.IsNullOrEmpty(message) ? this.Description : message;
+        this.Title = "Contract Error" + (user ? " (User)" : " (System)");
+    }
+}
+
 public class EofError : ErrorTypes
 {
     public override string Title { get; }
