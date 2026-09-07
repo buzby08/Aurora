@@ -10,7 +10,7 @@ public class BlockObject : RuntimeObject
     public BlockObject(IEnumerable<IEnumerable<Ast>> value)
     {
         this.Value = this.ConvertToArray(value);
-        Type = Builtins.Block;
+        Type = Builtins.Block.Value;
     }
 
     private Ast[][] ConvertToArray(IEnumerable<IEnumerable<Ast>> value) => value.Select(x => x.ToArray()).ToArray();

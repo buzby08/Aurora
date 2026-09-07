@@ -10,13 +10,13 @@ internal class FloatObject : RuntimeObject
     public FloatObject(decimal value)
     {
         this.Value = value;
-        this.Type = Builtins.Float;
+        this.Type = Builtins.Float.Value;
     }
 
     public FloatObject(float value)
     {
         this.Value = (decimal)value;
-        this.Type = Builtins.Float;
+        this.Type = Builtins.Float.Value;
     }
 
     public FloatObject(string value)
@@ -29,7 +29,7 @@ internal class FloatObject : RuntimeObject
 
         this.Value = floatValue;
 
-        this.Type = Builtins.Float;
+        this.Type = Builtins.Float.Value;
     }
 
     public override bool Equals(RuntimeObject other)

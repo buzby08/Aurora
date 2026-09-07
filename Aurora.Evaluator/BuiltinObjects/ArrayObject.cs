@@ -14,7 +14,7 @@ public class ArrayObject : RuntimeObject
     {
         this.Value = value;
         this.ArrayType = value.First().Type;
-        Type = Builtins.Array;
+        Type = Builtins.Array.Value;
     }
 
     public override bool Equals(RuntimeObject other)

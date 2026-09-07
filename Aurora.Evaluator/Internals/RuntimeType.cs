@@ -1,14 +1,17 @@
 using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
 namespace Aurora.Evaluator.Internals;
 
-public class RuntimeType : RuntimeObject
+public class RuntimeType
 {
     public string Name { get; }
     public bool CanAccessParentValues;
 
     public bool IsStatic { get; set; }
     public bool IsFinalized { get; set; }
+
+    public TypeObject? ParentType { get; set; }
 
     public List<RuntimeInterface>? Interface { get; set; }
 
@@ -18,12 +21,12 @@ public class RuntimeType : RuntimeObject
     public readonly Dictionary<string, Attribute> InstanceAttributes = [];
     public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
-    public RuntimeType(string name, RuntimeType type, bool canAccessParentValues = true, bool isStatic = false)
+    public RuntimeType(string name, TypeObject? type, bool canAccessParentValues = true, bool isStatic = false)
     {
         this.Name = name;
-        this.Type = type;
         this.CanAccessParentValues = canAccessParentValues;
         this.IsStatic = isStatic;
+        this.ParentType = type;
     }
 
     public RuntimeType(string name)
@@ -40,10 +43,10 @@ public class RuntimeType : RuntimeObject
         this.IsFinalized = true;
     }
 
-    public bool IsSubclassOf(RuntimeType type)
+    public bool IsSubclassOf(RuntimeObject other)
     {
-        if (this.Type == this && this != type) return false;
-        return this == type || this.Type.IsSubclassOf(type);
+        if (this.ParentType?.Type == this && this != other.Type) return false;
+        return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
     }
 
     public void AddInterface(RuntimeInterface type, SourceLocation? location)
@@ -171,11 +174,11 @@ public class RuntimeType : RuntimeObject
 
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
-        if (this == this.Type) return method;
+        if (this == this.ParentType?.Type) return method;
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetStaticMethodOrDefault(name, location);
+        return method ?? this.ParentType?.Type.GetStaticMethodOrDefault(name, location);
     }
 
     internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location, bool throwNotFinalError = true)
@@ -187,11 +190,11 @@ public class RuntimeType : RuntimeObject
 
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
-        if (this == this.Type) return method;
+        if (this == this.ParentType?.Type) return method;
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetInstanceMethodOrDefault(name, location);
+        return method ?? this.ParentType?.Type.GetInstanceMethodOrDefault(name, location);
     }
 
     private Attribute? GetStaticAttributeOrDefault(string name, SourceLocation? location)
@@ -203,11 +206,11 @@ public class RuntimeType : RuntimeObject
 
         Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
-        if (this == this.Type) return attribute;
+        if (this == this.ParentType?.Type) return attribute;
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetStaticAttributeOrDefault(name, location);
+        return attribute ?? this.ParentType?.Type.GetStaticAttributeOrDefault(name, location);
     }
 
     private Attribute? GetInstanceAttributeOrDefault(string name, SourceLocation? location)
@@ -219,23 +222,20 @@ public class RuntimeType : RuntimeObject
 
         Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
-        if (this == this.Type) return attribute;
+        if (this == this.ParentType?.Type) return attribute;
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetInstanceAttributeOrDefault(name, location);
+        return attribute ?? this.ParentType?.Type.GetInstanceAttributeOrDefault(name, location);
     }
 
-    public override bool Equals(RuntimeObject other)
+    public bool Equals(RuntimeType other)
     {
-        if (other is not RuntimeType typeObject)
-            return false;
-
-        if (this.Name != typeObject.Name) return false;
-        if (this.StaticAttributes != typeObject.StaticAttributes) return false;
-        if (this.StaticMethods != typeObject.StaticMethods) return false;
-        if (this.InstanceAttributes != typeObject.InstanceAttributes) return false;
-        if (this.InstanceMethods != typeObject.InstanceMethods) return false;
+        if (this.Name != other.Name) return false;
+        if (this.StaticAttributes != other.StaticAttributes) return false;
+        if (this.StaticMethods != other.StaticMethods) return false;
+        if (this.InstanceAttributes != other.InstanceAttributes) return false;
+        if (this.InstanceMethods != other.InstanceMethods) return false;
         return true;
     }
 

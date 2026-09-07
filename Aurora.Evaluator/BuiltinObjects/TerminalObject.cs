@@ -9,7 +9,7 @@ internal class TerminalObject : RuntimeObject
     public TerminalObject(string? errorMessage)
     {
         this.ErrorMessage = errorMessage;
-        this.Type = Builtins.Terminal;
+        this.Type = Builtins.Terminal.Value;
     }
 
     public override bool Equals(RuntimeObject other)

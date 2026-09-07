@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
 namespace Aurora.Evaluator.Internals;
 
-public class RuntimeInterface : RuntimeObject
+public class RuntimeInterface
 {
     public string Name;
 
@@ -15,7 +16,7 @@ public class RuntimeInterface : RuntimeObject
         this.Name = name;
     }
 
-    public void AddMethod(string name, RuntimeType returnType, ParameterDefinition[] parameters)
+    public void AddMethod(string name, TypeObject returnType, ParameterDefinition[] parameters)
     {
         Method method = new(
             name: name,
@@ -78,9 +79,4 @@ public class RuntimeInterface : RuntimeObject
     }
 
     public override string ToString() => $"{nameof(RuntimeObject)} {nameof(RuntimeInterface)}({this.Name})";
-
-    public override bool Equals(RuntimeObject other)
-    {
-        throw new NotImplementedException();
-    }
 }

@@ -11,10 +11,10 @@ internal class OptionalObject : RuntimeObject
     public OptionalObject(RuntimeObject? value, bool createdFromEmpty = false)
     {
         this.Value = value;
-        this.Type = Builtins.Optional;
+        this.Type = Builtins.Optional.Value;
         this.CreatedFromEmpty = createdFromEmpty;
     }
-    
+
     public override bool Equals(RuntimeObject other)
     {
         if (other is not OptionalObject optionalObject)

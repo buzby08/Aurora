@@ -6,66 +6,67 @@ namespace Aurora.Evaluator.Internals;
 
 public static class Builtins
 {
-    public static RuntimeType Type = null!;
-    public static RuntimeType Int = null!;
-    public static RuntimeType Float = null!;
-    public static RuntimeType String = null!;
-    public static RuntimeType Boolean = null!;
-    public static RuntimeType Null = null!;
-    public static RuntimeType Unit = null!;
-    public static RuntimeType Callable = null!;
-    public static RuntimeType Terminal = null!;
-    public static RuntimeType BooleanOutputStyles = null!;
-    public static RuntimeType Optional = null!;
-    public static RuntimeType Math = null!;
-    public static RuntimeType Block = null!;
-    public static RuntimeType Logic = null!;
-    public static RuntimeType LogicIfReturn = null!;
-    public static RuntimeType Loop = null!;
-    public static RuntimeType Array = null!;
-    public static RuntimeType Interface = null!;
+    public static TypeObject Type = null!;
+    public static TypeObject Int = null!;
+    public static TypeObject Float = null!;
+    public static TypeObject String = null!;
+    public static TypeObject Boolean = null!;
+    public static TypeObject Null = null!;
+    public static TypeObject Unit = null!;
+    public static TypeObject Callable = null!;
+    public static TypeObject Terminal = null!;
+    public static TypeObject BooleanOutputStyles = null!;
+    public static TypeObject Optional = null!;
+    public static TypeObject Math = null!;
+    public static TypeObject Block = null!;
+    public static TypeObject Logic = null!;
+    public static TypeObject LogicIfReturn = null!;
+    public static TypeObject Loop = null!;
+    public static TypeObject Array = null!;
+    public static TypeObject Interface = null!;
     public static RuntimeInterface ICollection = null!;
 
     public static void InitialiseTypes()
     {
-        Type = new RuntimeType(nameof(Type));
-        Type.Type = Type;
 
-        Callable = new RuntimeType(nameof(Callable), type: Type);
+        RuntimeType typeType = new RuntimeType(nameof(Type));
+        Type = new TypeObject(typeType, typeType);
 
-        Unit = new RuntimeType(nameof(Unit), type: Type, isStatic: true);
+        Callable = new TypeObject(new RuntimeType(nameof(Callable), type: Type));
 
-        Optional = new RuntimeType(nameof(Optional), type: Type);
+        Unit = new TypeObject(new RuntimeType(nameof(Unit), type: Type, isStatic: true));
 
-        Int = new RuntimeType(nameof(Int), type: Type);
+        Optional = new TypeObject(new RuntimeType(nameof(Optional), type: Type));
 
-        Float = new RuntimeType(nameof(Float), type: Type);
+        Int = new TypeObject(new RuntimeType(nameof(Int), type: Type));
 
-        String = new RuntimeType(nameof(String), type: Type);
+        Float = new TypeObject(new RuntimeType(nameof(Float), type: Type));
 
-        Boolean = new RuntimeType(nameof(Boolean), type: Type);
+        String = new TypeObject(new RuntimeType(nameof(String), type: Type));
 
-        Null = new RuntimeType(nameof(Null), type: Type);
+        Boolean = new TypeObject(new RuntimeType(nameof(Boolean), type: Type));
 
-        Terminal = new RuntimeType(nameof(Terminal), type: Type, isStatic: true);
+        Null = new TypeObject(new RuntimeType(nameof(Null), type: Type));
 
-        BooleanOutputStyles = new RuntimeType(nameof(BooleanOutputStyles), type: Type, isStatic: true);
+        Terminal = new TypeObject(new RuntimeType(nameof(Terminal), type: Type, isStatic: true));
 
-        Math = new RuntimeType(nameof(Math), type: Type, isStatic: true);
+        BooleanOutputStyles = new TypeObject(new RuntimeType(nameof(BooleanOutputStyles), type: Type, isStatic: true));
 
-        Block = new RuntimeType(nameof(Block), type: Type);
+        Math = new TypeObject(new RuntimeType(nameof(Math), type: Type, isStatic: true));
 
-        Logic = new RuntimeType(nameof(Logic), type: Type, isStatic: true);
+        Block = new TypeObject(new RuntimeType(nameof(Block), type: Type));
 
-        LogicIfReturn = new RuntimeType(nameof(LogicIfReturn), type: Type);
+        Logic = new TypeObject(new RuntimeType(nameof(Logic), type: Type, isStatic: true));
 
-        Loop = new RuntimeType(nameof(Loop), type: Type, isStatic: true);
+        LogicIfReturn = new TypeObject(new RuntimeType(nameof(LogicIfReturn), type: Type));
 
-        Array = new RuntimeType(nameof(Array), type: Type);
+        Loop = new TypeObject(new RuntimeType(nameof(Loop), type: Type, isStatic: true));
 
-        Interface = new RuntimeType(nameof(Interface), type: Type);
+        Array = new TypeObject(new RuntimeType(nameof(Array), type: Type));
 
-        ICollection = new RuntimeInterface(nameof(ICollection));
+        Interface = new TypeObject(new RuntimeType(nameof(Interface), type: Type));
+
+        // ICollection = new RuntimeInterface(nameof(ICollection));
         // Todo: Figure out about ICollection being an instance of RuntimeType or RuntimeInterface.
 
         // Todo: Add tests for interfaces.
@@ -85,12 +86,13 @@ public static class Builtins
         InitialiseLoopType();
         InitialiseArrayType();
         InitialiseInterfaceType();
-        InitialiseICollectionInterface();
+        // InitialiseICollectionInterface();
 
         Type.MarkFinal(null);
         Interface.MarkFinal(null);
         Optional.MarkFinal(null);
         Int.MarkFinal(null);
+        Unit.MarkFinal(null);
         Float.MarkFinal(null);
         String.MarkFinal(null);
         Boolean.MarkFinal(null);
@@ -101,7 +103,7 @@ public static class Builtins
         Logic.MarkFinal(null);
         LogicIfReturn.MarkFinal(null);
         Loop.MarkFinal(null);
-        Array.MarkFinal(null);
+        // Array.MarkFinal(null);
     }
 
     private static void InitialiseICollectionInterface()
@@ -125,7 +127,7 @@ public static class Builtins
             unlimitedKeywordArgumentsType: null,
             body: (_, _, context) =>
             {
-                RuntimeType type = context.GetParam<RuntimeType>("type");
+                TypeObject type = context.GetParam<TypeObject>("type");
                 List<RuntimeObject> positionals = context.GetPositionalArgs();
 
                 if (positionals.Count == 0)

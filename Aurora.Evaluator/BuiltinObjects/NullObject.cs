@@ -6,9 +6,9 @@ internal class NullObject : RuntimeObject
 {
     public NullObject()
     {
-        this.Type = Builtins.Null;
+        this.Type = Builtins.Null.Value;
     }
-    
+
     public override bool Equals(RuntimeObject other)
     {
         return other is NullObject;

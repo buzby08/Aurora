@@ -10,7 +10,7 @@ internal class IntObject : RuntimeObject
     public IntObject(int value)
     {
         this.Value = value;
-        Type = Builtins.Int;
+        Type = Builtins.Int.Value;
     }
 
     public IntObject(string value)
@@ -20,7 +20,7 @@ internal class IntObject : RuntimeObject
             Errors.AlwaysThrow(new SystemError($"`{value}` is not an integer."), null); // Todo: Try add a source value
 
         this.Value = intValue;
-        Type = Builtins.Int;
+        Type = Builtins.Int.Value;
     }
 
     public override bool Equals(RuntimeObject other)
