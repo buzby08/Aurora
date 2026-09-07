@@ -45,7 +45,8 @@ public class RuntimeType
 
     public bool IsSubclassOf(RuntimeObject other)
     {
-        if (this.ParentType?.Type == this && this != other.Type) return false;
+        if (this.ParentType?.Type == null && this != other.Type) return false;
+        if (this == other.Type) return true;
         return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
     }
 
