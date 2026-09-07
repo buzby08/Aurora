@@ -25,9 +25,9 @@ public class TypeObject : RuntimeObject
         this.Value.MarkFinal(location);
     }
 
-    public void AddInterface(RuntimeInterface type, SourceLocation? location)
+    public void AddInterface(InterfaceObject @interface, SourceLocation? location)
     {
-        this.Value.AddInterface(type, location);
+        this.Value.AddInterface(@interface.Value, location);
     }
 
     public bool IsSubclassOf(RuntimeObject other)

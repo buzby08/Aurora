@@ -24,7 +24,7 @@ public static class Builtins
     public static TypeObject Loop = null!;
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
-    public static RuntimeInterface ICollection = null!;
+    public static InterfaceObject ICollection = null!;
 
     public static void InitialiseTypes()
     {
@@ -66,8 +66,7 @@ public static class Builtins
 
         Interface = new TypeObject(new RuntimeType(nameof(Interface), type: Type));
 
-        // ICollection = new RuntimeInterface(nameof(ICollection));
-        // Todo: Figure out about ICollection being an instance of RuntimeType or RuntimeInterface.
+        ICollection = new InterfaceObject(new RuntimeInterface(nameof(ICollection)));
 
         // Todo: Add tests for interfaces.
 
@@ -86,7 +85,7 @@ public static class Builtins
         InitialiseLoopType();
         InitialiseArrayType();
         InitialiseInterfaceType();
-        // InitialiseICollectionInterface();
+        InitialiseICollectionInterface();
 
         Type.MarkFinal(null);
         Interface.MarkFinal(null);
@@ -103,12 +102,12 @@ public static class Builtins
         Logic.MarkFinal(null);
         LogicIfReturn.MarkFinal(null);
         Loop.MarkFinal(null);
-        // Array.MarkFinal(null);
+        Array.MarkFinal(null);
     }
 
     private static void InitialiseICollectionInterface()
     {
-        ICollection.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
+        ICollection.Value.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
     }
 
     private static void InitialiseInterfaceType()
@@ -159,7 +158,7 @@ public static class Builtins
 
                 return value[indexValue];
             });
-        // Array.AddInstanceMethod(atMethod, null);
+        Array.AddInstanceMethod(atMethod, null);
 
         Method toString = new(
             name: "toString",
