@@ -6,7 +6,7 @@ internal class Logic : RuntimeObject
 {
     public Logic()
     {
-        this.Type = Builtins.Logic;
+        this.Type = Builtins.Logic.Value;
     }
 
     public override bool Equals(RuntimeObject other)

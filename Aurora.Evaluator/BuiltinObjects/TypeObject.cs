@@ -1,13 +1,83 @@
+using Aurora.Core;
 using Aurora.Evaluator.Internals;
+using Attribute = Aurora.Evaluator.Internals.Attribute;
 
 namespace Aurora.Evaluator.BuiltinObjects;
 
-internal class TypeObject : RuntimeObject
+public class TypeObject : RuntimeObject
 {
-    public TypeObject()
+    public RuntimeType Value;
+
+    public TypeObject(RuntimeType value)
     {
-        this.Type = Builtins.Type;
+        this.Value = value;
+        this.Type = Builtins.Type.Value;
     }
+
+    public TypeObject(RuntimeType value, RuntimeType type)
+    {
+        this.Value = value;
+        this.Type = type;
+    }
+
+    public void MarkFinal(SourceLocation? location)
+    {
+        this.Value.MarkFinal(location);
+    }
+
+    public void AddInterface(RuntimeInterface type, SourceLocation? location)
+    {
+        this.Value.AddInterface(type, location);
+    }
+
+    public bool IsSubclassOf(RuntimeObject other)
+    {
+        return this.Value.IsSubclassOf(other);
+    }
+
+    public void AddStaticMethod(Method method, SourceLocation? location)
+    {
+        this.Value.AddStaticMethod(method, location);
+    }
+
+    public void AddInstanceMethod(Method method, SourceLocation? location)
+    {
+        this.Value.AddInstanceMethod(method, location);
+    }
+
+    public void AddStaticAttribute(Attribute attribute, SourceLocation? location)
+    {
+        this.Value.AddStaticAttribute(attribute, location);
+    }
+
+    public void AddInstanceAttribute(Attribute attribute, SourceLocation? location)
+    {
+        this.Value.AddInstanceAttribute(attribute, location);
+    }
+
+    public Method GetStaticMethod(string name, SourceLocation location)
+    {
+        return this.Value.GetStaticMethod(name, location);
+    }
+
+    public Method GetInstanceMethod(string name, SourceLocation location)
+    {
+        return this.Value.GetInstanceMethod(name, location);
+    }
+
+    public Attribute GetStaticAttribute(string name, SourceLocation location)
+    {
+        return this.Value.GetStaticAttribute(name, location);
+    }
+
+    public Attribute GetInstanceAttribute(string name, SourceLocation location)
+    {
+        return this.Value.GetInstanceAttribute(name, location);
+    }
+
+    public string Name => this.Value.Name;
+    public bool IsStatic => this.Value.IsStatic;
+
 
     public override bool Equals(RuntimeObject other)
     {

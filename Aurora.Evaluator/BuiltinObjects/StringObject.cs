@@ -9,7 +9,7 @@ public class StringObject : RuntimeObject
     public StringObject(string value)
     {
         this.Value = value;
-        Type = Builtins.String;
+        Type = Builtins.String.Value;
     }
 
     public override bool Equals(RuntimeObject other)

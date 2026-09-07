@@ -123,7 +123,7 @@ public class Evaluator : IDisposable
 
         string attributeName = literal.ValueAsString;
 
-        if (previousResult is RuntimeType type)
+        if (previousResult is TypeObject type)
             return type.GetStaticAttribute(attributeName, literal.StartLocation)
                 .GetValue(previousResult, this.Context, literal.StartLocation);
 
@@ -139,10 +139,10 @@ public class Evaluator : IDisposable
 
         Method method = null!;
 
-        if (previousResult is RuntimeType type)
+        if (previousResult is TypeObject type)
             method = type.GetStaticMethod(methodNameString, methodName.StartLocation);
 
-        if (previousResult is not RuntimeType)
+        if (previousResult is not TypeObject)
             method = previousResult.Type.GetInstanceMethod(methodNameString, methodName.StartLocation);
 
         return method.Invoke(previousResult, PreviousVariableName, args, this.Context, methodName.StartLocation);

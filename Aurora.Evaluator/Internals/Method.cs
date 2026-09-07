@@ -6,12 +6,12 @@ namespace Aurora.Evaluator.Internals;
 public class Method
 {
     public string Name { get; }
-    public RuntimeType DeclaringType { get; }
+    public TypeObject DeclaringType { get; }
     public readonly ParameterDefinition[]? Parameters;
-    public RuntimeType? UnlimitedPositionalArgsType { get; }
-    public RuntimeType? UnlimitedKeywordArgumentsType { get; }
+    public TypeObject? UnlimitedPositionalArgsType { get; }
+    public TypeObject? UnlimitedKeywordArgumentsType { get; }
 
-    public Method(string name, RuntimeType returnType, ParameterDefinition[]? parameters, MethodBody body)
+    public Method(string name, TypeObject returnType, ParameterDefinition[]? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -19,8 +19,8 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, RuntimeType returnType, RuntimeType? unlimitedPositionalArgumentsType,
-                  RuntimeType? unlimitedKeywordArgumentsType, MethodBody body)
+    public Method(string name, TypeObject returnType, TypeObject? unlimitedPositionalArgumentsType,
+                  TypeObject? unlimitedKeywordArgumentsType, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -30,8 +30,8 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, RuntimeType returnType, RuntimeType? unlimitedPositionalArgumentsType,
-                  RuntimeType? unlimitedKeywordArgumentsType, ParameterDefinition[]? parameters, MethodBody body)
+    public Method(string name, TypeObject returnType, TypeObject? unlimitedPositionalArgumentsType,
+                  TypeObject? unlimitedKeywordArgumentsType, ParameterDefinition[]? parameters, MethodBody body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -41,7 +41,7 @@ public class Method
         this._builtinBody = body;
     }
 
-    public Method(string name, RuntimeType returnType, ParameterDefinition[] parameters, List<List<Ast>> body)
+    public Method(string name, TypeObject returnType, ParameterDefinition[] parameters, List<List<Ast>> body)
     {
         this.Name = name;
         this.DeclaringType = returnType;
@@ -99,7 +99,7 @@ public class Method
 
         if (!returnedObject.Type.IsSubclassOf(this.DeclaringType))
             Errors.AlwaysThrow(new TypeMismatchError(
-                    $"Callable is declared to return a value of type {this.DeclaringType.Name}, but a value of " +
+                    $"Callable is declared to return a value of type {this.DeclaringType.Value.Name}, but a value of " +
                     $"type {returnedObject.Type.Name} was returned",
                     user: false),
                 callSite);
@@ -136,7 +136,7 @@ public class Method
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
                         $"Cannot assign {argObject.Type.Name} to parameter {paramDefinition.Name} of " +
-                        $"type {paramDefinition.Type.Name}"), location);
+                        $"type {paramDefinition.Type.Value.Name}"), location);
 
             validatedArgs[key] = argObject;
         }
@@ -163,7 +163,7 @@ public class Method
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
-                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedKeywordArgumentsType.Name}"), location);
+                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedKeywordArgumentsType.Value.Name}"), location);
 
             validatedArgs[key] = valueAsObject;
         }
@@ -186,7 +186,7 @@ public class Method
 
             if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedPositionalArgsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
-                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedPositionalArgsType.Name}"), location);
+                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedPositionalArgsType.Value.Name}"), location);
 
             validatedArgs[key] = valueAsObject;
         }

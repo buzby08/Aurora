@@ -6,7 +6,7 @@ public class UnitObject : RuntimeObject
 {
     public UnitObject()
     {
-        this.Type = Builtins.Unit;
+        this.Type = Builtins.Unit.Value;
     }
 
     public override bool Equals(RuntimeObject other)

@@ -6,7 +6,7 @@ internal class LoopObject : RuntimeObject
 {
     public LoopObject()
     {
-        this.Type = Builtins.Loop;
+        this.Type = Builtins.Loop.Value;
     }
 
     public override bool Equals(RuntimeObject other)
