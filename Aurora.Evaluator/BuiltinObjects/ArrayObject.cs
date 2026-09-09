@@ -17,6 +17,8 @@ public class ArrayObject : RuntimeObject
         Type = Builtins.Array.Value;
     }
 
+    public IntObject Length => new(Value.Length);
+
     public override bool Equals(RuntimeObject other)
     {
         if (other is not ArrayObject arrayObject)
