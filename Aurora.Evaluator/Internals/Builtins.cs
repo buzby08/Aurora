@@ -83,9 +83,9 @@ public static class Builtins
         InitialiseLogicType();
         InitialiseLogicIfReturnType();
         InitialiseLoopType();
+        InitialiseICollectionInterface();
         InitialiseArrayType();
         InitialiseInterfaceType();
-        InitialiseICollectionInterface();
 
         Type.MarkFinal(null);
         Interface.MarkFinal(null);
@@ -108,6 +108,7 @@ public static class Builtins
     private static void InitialiseICollectionInterface()
     {
         ICollection.Value.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
+        ICollection.Value.AddMethod(name: "length", returnType: Int, []);
     }
 
     private static void InitialiseInterfaceType()
@@ -139,26 +140,29 @@ public static class Builtins
             });
         Array.AddStaticMethod(fromMethod, null);
 
-        Method atMethod = new(
-            name: "at",
-            returnType: Type,
-            parameters: [new ParameterDefinition(name: "index", type: Int),],
-            body: (self, _, context) =>
-            {
-                ArrayObject selfAsArray = (ArrayObject)self;
-                IntObject index = context.GetParam<IntObject>("index");
+        Method atMethod = ICollection.Value.GetFilledMethod("at", (self, _, context) =>
+        {
+            ArrayObject selfAsArray = (ArrayObject)self;
+            IntObject index = context.GetParam<IntObject>("index");
 
-                RuntimeObject[] value = selfAsArray.Value;
-                int indexValue = index.Value;
+            RuntimeObject[] value = selfAsArray.Value;
+            int indexValue = index.Value;
 
-                if (indexValue >= value.Length || indexValue < 0)
-                    Errors.AlwaysThrow(
-                        new OutOfRangeError($"Index {indexValue} is out of bounds for array of length {value.Length}"),
-                        context.CallSiteLocation);
+            if (indexValue >= value.Length || indexValue < 0)
+                Errors.AlwaysThrow(
+                    new OutOfRangeError($"Index {indexValue} is out of bounds for array of length {value.Length}"),
+                    context.CallSiteLocation);
 
-                return value[indexValue];
-            });
+            return value[indexValue];
+        }, null);
         Array.AddInstanceMethod(atMethod, null);
+
+        Method lengthMethod = ICollection.Value.GetFilledMethod("length", (self, _, _) =>
+        {
+            ArrayObject selfAsArray = (ArrayObject)self;
+            return selfAsArray.Length;
+        }, null);
+        Array.AddInstanceMethod(lengthMethod, null);
 
         Method toString = new(
             name: "toString",
