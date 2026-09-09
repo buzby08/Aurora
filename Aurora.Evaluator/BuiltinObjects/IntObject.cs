@@ -3,7 +3,7 @@ using Aurora.Evaluator.Internals;
 
 namespace Aurora.Evaluator.BuiltinObjects;
 
-internal class IntObject : RuntimeObject
+public class IntObject : RuntimeObject
 {
     public int Value;
 
