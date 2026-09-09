@@ -8,7 +8,7 @@ public class LogicIfReturnObject : RuntimeObject
 
     public LogicIfReturnObject(bool conditionExecuted)
     {
-        this.Type = Builtins.LogicIfReturn;
+        this.Type = Builtins.LogicIfReturn.Value;
         this.ConditionExecuted = conditionExecuted;
     }
 

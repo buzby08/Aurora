@@ -1,8 +1,9 @@
 using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
 namespace Aurora.Evaluator.Internals;
 
-public class Type : RuntimeObject
+public class RuntimeType
 {
     public string Name { get; }
     public bool CanAccessParentValues;
@@ -10,34 +11,54 @@ public class Type : RuntimeObject
     public bool IsStatic { get; set; }
     public bool IsFinalized { get; set; }
 
+    public TypeObject? ParentType { get; set; }
+
+    public List<RuntimeInterface>? Interface { get; set; }
+
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
 
     public readonly Dictionary<string, Attribute> InstanceAttributes = [];
     public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
-    public Type(string name, Type type, bool canAccessParentValues = true, bool isStatic = false)
+    public RuntimeType(string name, TypeObject? type, bool canAccessParentValues = true, bool isStatic = false)
     {
         this.Name = name;
-        this.Type = type;
         this.CanAccessParentValues = canAccessParentValues;
         this.IsStatic = isStatic;
+        this.ParentType = type;
     }
 
-    public Type(string name)
+    public RuntimeType(string name)
     {
         this.Name = name;
     }
 
-    public void MarkFinal()
+    public void MarkFinal(SourceLocation? location)
     {
+        if (this.Interface is not null)
+            foreach (RuntimeInterface @interface in this.Interface)
+                @interface.EnsureTypeMeetsContract(this, location);
+
         this.IsFinalized = true;
     }
 
-    public bool IsSubclassOf(Type type)
+    public bool IsSubclassOf(RuntimeObject other)
     {
-        if (this.Type == this && this != type) return false;
-        return this == type || this.Type.IsSubclassOf(type);
+        if (this.ParentType?.Type == null && this != other.Type) return false;
+        if (this == other.Type) return true;
+        return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
+    }
+
+    public void AddInterface(RuntimeInterface type, SourceLocation? location)
+    {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                location);
+
+        this.Interface ??= [];
+        this.Interface.Add(type);
     }
 
     public void AddStaticMethod(Method method, SourceLocation? location)
@@ -154,27 +175,27 @@ public class Type : RuntimeObject
 
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
-        if (this == this.Type) return method;
+        if (this == this.ParentType?.Type) return method;
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetStaticMethodOrDefault(name, location);
+        return method ?? this.ParentType?.Type.GetStaticMethodOrDefault(name, location);
     }
 
-    private Method? GetInstanceMethodOrDefault(string name, SourceLocation? location)
+    internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location, bool throwNotFinalError = true)
     {
-        if (!this.IsFinalized)
+        if (!this.IsFinalized && throwNotFinalError)
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
                     $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
 
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
-        if (this == this.Type) return method;
+        if (this == this.ParentType?.Type) return method;
 
         if (!this.CanAccessParentValues) return method;
 
-        return method ?? this.Type.GetInstanceMethodOrDefault(name, location);
+        return method ?? this.ParentType?.Type.GetInstanceMethodOrDefault(name, location);
     }
 
     private Attribute? GetStaticAttributeOrDefault(string name, SourceLocation? location)
@@ -186,11 +207,11 @@ public class Type : RuntimeObject
 
         Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
-        if (this == this.Type) return attribute;
+        if (this == this.ParentType?.Type) return attribute;
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetStaticAttributeOrDefault(name, location);
+        return attribute ?? this.ParentType?.Type.GetStaticAttributeOrDefault(name, location);
     }
 
     private Attribute? GetInstanceAttributeOrDefault(string name, SourceLocation? location)
@@ -202,25 +223,22 @@ public class Type : RuntimeObject
 
         Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
-        if (this == this.Type) return attribute;
+        if (this == this.ParentType?.Type) return attribute;
 
         if (!this.CanAccessParentValues) return attribute;
 
-        return attribute ?? this.Type.GetInstanceAttributeOrDefault(name, location);
+        return attribute ?? this.ParentType?.Type.GetInstanceAttributeOrDefault(name, location);
     }
 
-    public override bool Equals(RuntimeObject other)
+    public bool Equals(RuntimeType other)
     {
-        if (other is not Type typeObject)
-            return false;
-
-        if (this.Name != typeObject.Name) return false;
-        if (this.StaticAttributes != typeObject.StaticAttributes) return false;
-        if (this.StaticMethods != typeObject.StaticMethods) return false;
-        if (this.InstanceAttributes != typeObject.InstanceAttributes) return false;
-        if (this.InstanceMethods != typeObject.InstanceMethods) return false;
+        if (this.Name != other.Name) return false;
+        if (this.StaticAttributes != other.StaticAttributes) return false;
+        if (this.StaticMethods != other.StaticMethods) return false;
+        if (this.InstanceAttributes != other.InstanceAttributes) return false;
+        if (this.InstanceMethods != other.InstanceMethods) return false;
         return true;
     }
 
-    public override string ToString() => $"{nameof(RuntimeObject)} {nameof(Type)}({this.Name})";
+    public override string ToString() => $"{nameof(RuntimeObject)} {nameof(RuntimeType)}({this.Name})";
 }

@@ -18,7 +18,7 @@ internal class BooleanOutputStyleObject : RuntimeObject
     public BooleanOutputStyleObject(Style value)
     {
         this.Value = value;
-        this.Type = Builtins.BooleanOutputStyles;
+        this.Type = Builtins.BooleanOutputStyles.Value;
     }
 
     public static bool ReadWordOption() => ReadWord("true", "false");

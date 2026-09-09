@@ -9,7 +9,7 @@ internal class BooleanObject : RuntimeObject
     public BooleanObject(bool value)
     {
         this.Value = value;
-        Type = Builtins.Boolean;
+        Type = Builtins.Boolean.Value;
     }
 
     public override bool Equals(RuntimeObject other)

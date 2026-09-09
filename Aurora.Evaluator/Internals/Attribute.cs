@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using Aurora.Core;
+using Aurora.Evaluator.BuiltinObjects;
 
 namespace Aurora.Evaluator.Internals;
 
-public class Attribute(string name, Type type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
+public class Attribute(string name, TypeObject type, Func<RuntimeObject, RuntimeContext, RuntimeObject> valueGetter)
 {
     public string Name = name;
-    public Type Type = type;
+    public TypeObject Type = type;
     public Func<RuntimeObject, RuntimeContext, RuntimeObject> ValueGetter = valueGetter;
 
     public RuntimeObject GetValue(

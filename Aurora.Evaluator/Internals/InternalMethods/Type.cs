@@ -8,7 +8,7 @@ internal static class Type
     public static UnitObject Create(RuntimeObject self, Dictionary<string, RawMethodArgument> args,
                                     RuntimeContext context)
     {
-        Internals.Type targetType = (Internals.Type)self;
+        TypeObject targetType = (TypeObject)self;
 
         if (targetType.IsStatic)
             Errors.AlwaysThrow(new UnsupportedOperationError($"{targetType.Name} is static and cannot be instantiated"),
@@ -19,7 +19,7 @@ internal static class Type
             using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
 
-            if (variableObject.Type != targetType)
+            if (variableObject.Type != targetType.Value)
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
                         $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
@@ -33,13 +33,13 @@ internal static class Type
 
     public static UnitObject Set(RuntimeObject self, Dictionary<string, RawMethodArgument> args, RuntimeContext context)
     {
-        Internals.Type targetType = (Internals.Type)self;
+        TypeObject targetType = (TypeObject)self;
 
         foreach (var (_, rawVar) in args)
         {
             using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
-            if (variableObject.Type != targetType)
+            if (variableObject.Type != targetType.Value)
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
                         $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
@@ -53,7 +53,7 @@ internal static class Type
 
     public static StringObject ToString(RuntimeObject self)
     {
-        if (self is Internals.Type selfType)
+        if (self is TypeObject selfType)
             return new StringObject($"<{self.Type.Name} {selfType.Name}>");
 
         return new StringObject($"Object<{self.Type.Name}>");

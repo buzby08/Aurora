@@ -6,60 +6,69 @@ namespace Aurora.Evaluator.Internals;
 
 public static class Builtins
 {
-    public static Type Type = null!;
-    public static Type Int = null!;
-    public static Type Float = null!;
-    public static Type String = null!;
-    public static Type Boolean = null!;
-    public static Type Null = null!;
-    public static Type Unit = null!;
-    public static Type Callable = null!;
-    public static Type Terminal = null!;
-    public static Type BooleanOutputStyles = null!;
-    public static Type Optional = null!;
-    public static Type Math = null!;
-    public static Type Block = null!;
-    public static Type Logic = null!;
-    public static Type LogicIfReturn = null!;
-    public static Type Loop = null!;
-    public static Type Array = null!;
+    public static TypeObject Type = null!;
+    public static TypeObject Int = null!;
+    public static TypeObject Float = null!;
+    public static TypeObject String = null!;
+    public static TypeObject Boolean = null!;
+    public static TypeObject Null = null!;
+    public static TypeObject Unit = null!;
+    public static TypeObject Callable = null!;
+    public static TypeObject Terminal = null!;
+    public static TypeObject BooleanOutputStyles = null!;
+    public static TypeObject Optional = null!;
+    public static TypeObject Math = null!;
+    public static TypeObject Block = null!;
+    public static TypeObject Logic = null!;
+    public static TypeObject LogicIfReturn = null!;
+    public static TypeObject Loop = null!;
+    public static TypeObject Array = null!;
+    public static TypeObject Interface = null!;
+    public static InterfaceObject ICollection = null!;
 
     public static void InitialiseTypes()
     {
-        Type = new Type(nameof(Type));
-        Type.Type = Type;
 
-        Callable = new Type(nameof(Callable), type: Type);
+        RuntimeType typeType = new RuntimeType(nameof(Type));
+        Type = new TypeObject(typeType, typeType);
 
-        Unit = new Type(nameof(Unit), type: Type, isStatic: true);
+        Callable = new TypeObject(new RuntimeType(nameof(Callable), type: Type));
 
-        Optional = new Type(nameof(Optional), type: Type);
+        Unit = new TypeObject(new RuntimeType(nameof(Unit), type: Type, isStatic: true));
 
-        Int = new Type(nameof(Int), type: Type);
+        Optional = new TypeObject(new RuntimeType(nameof(Optional), type: Type));
 
-        Float = new Type(nameof(Float), type: Type);
+        Int = new TypeObject(new RuntimeType(nameof(Int), type: Type));
 
-        String = new Type(nameof(String), type: Type);
+        Float = new TypeObject(new RuntimeType(nameof(Float), type: Type));
 
-        Boolean = new Type(nameof(Boolean), type: Type);
+        String = new TypeObject(new RuntimeType(nameof(String), type: Type));
 
-        Null = new Type(nameof(Null), type: Type);
+        Boolean = new TypeObject(new RuntimeType(nameof(Boolean), type: Type));
 
-        Terminal = new Type(nameof(Terminal), type: Type, isStatic: true);
+        Null = new TypeObject(new RuntimeType(nameof(Null), type: Type));
 
-        BooleanOutputStyles = new Type(nameof(BooleanOutputStyles), type: Type, isStatic: true);
+        Terminal = new TypeObject(new RuntimeType(nameof(Terminal), type: Type, isStatic: true));
 
-        Math = new Type(nameof(Math), type: Type, isStatic: true);
+        BooleanOutputStyles = new TypeObject(new RuntimeType(nameof(BooleanOutputStyles), type: Type, isStatic: true));
 
-        Block = new Type(nameof(Block), type: Type);
+        Math = new TypeObject(new RuntimeType(nameof(Math), type: Type, isStatic: true));
 
-        Logic = new Type(nameof(Logic), type: Type, isStatic: true);
+        Block = new TypeObject(new RuntimeType(nameof(Block), type: Type));
 
-        LogicIfReturn = new Type(nameof(LogicIfReturn), type: Type);
+        Logic = new TypeObject(new RuntimeType(nameof(Logic), type: Type, isStatic: true));
 
-        Loop = new Type(nameof(Loop), type: Type, isStatic: true);
+        LogicIfReturn = new TypeObject(new RuntimeType(nameof(LogicIfReturn), type: Type));
 
-        Array = new Type(nameof(Array), type: Type);
+        Loop = new TypeObject(new RuntimeType(nameof(Loop), type: Type, isStatic: true));
+
+        Array = new TypeObject(new RuntimeType(nameof(Array), type: Type));
+
+        Interface = new TypeObject(new RuntimeType(nameof(Interface), type: Type));
+
+        ICollection = new InterfaceObject(new RuntimeInterface(nameof(ICollection)));
+
+        // Todo: Add tests for interfaces.
 
         InitialiseTypeType();
         InitialiseOptionalType();
@@ -74,26 +83,42 @@ public static class Builtins
         InitialiseLogicType();
         InitialiseLogicIfReturnType();
         InitialiseLoopType();
+        InitialiseICollectionInterface();
         InitialiseArrayType();
+        InitialiseInterfaceType();
 
-        Type.MarkFinal();
-        Optional.MarkFinal();
-        Int.MarkFinal();
-        Float.MarkFinal();
-        String.MarkFinal();
-        Boolean.MarkFinal();
-        Null.MarkFinal();
-        Terminal.MarkFinal();
-        BooleanOutputStyles.MarkFinal();
-        Math.MarkFinal();
-        Logic.MarkFinal();
-        LogicIfReturn.MarkFinal();
-        Loop.MarkFinal();
-        Array.MarkFinal();
+        Type.MarkFinal(null);
+        Interface.MarkFinal(null);
+        Optional.MarkFinal(null);
+        Int.MarkFinal(null);
+        Unit.MarkFinal(null);
+        Float.MarkFinal(null);
+        String.MarkFinal(null);
+        Boolean.MarkFinal(null);
+        Null.MarkFinal(null);
+        Terminal.MarkFinal(null);
+        BooleanOutputStyles.MarkFinal(null);
+        Math.MarkFinal(null);
+        Logic.MarkFinal(null);
+        LogicIfReturn.MarkFinal(null);
+        Loop.MarkFinal(null);
+        Array.MarkFinal(null);
+    }
+
+    private static void InitialiseICollectionInterface()
+    {
+        ICollection.Value.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
+        ICollection.Value.AddMethod(name: "length", returnType: Int, []);
+    }
+
+    private static void InitialiseInterfaceType()
+    {
+        // Todo: Not implemented yet
     }
 
     private static void InitialiseArrayType()
     {
+        Array.AddInterface(ICollection, null);
         Method fromMethod = new(
             name: "from",
             returnType: Array,
@@ -102,7 +127,7 @@ public static class Builtins
             unlimitedKeywordArgumentsType: null,
             body: (_, _, context) =>
             {
-                Type type = context.GetParam<Type>("type");
+                TypeObject type = context.GetParam<TypeObject>("type");
                 List<RuntimeObject> positionals = context.GetPositionalArgs();
 
                 if (positionals.Count == 0)
@@ -115,26 +140,29 @@ public static class Builtins
             });
         Array.AddStaticMethod(fromMethod, null);
 
-        Method atMethod = new(
-            name: "at",
-            returnType: Type,
-            parameters: [new ParameterDefinition(name: "index", type: Int),],
-            body: (self, _, context) =>
-            {
-                ArrayObject selfAsArray = (ArrayObject)self;
-                IntObject index = context.GetParam<IntObject>("index");
+        Method atMethod = ICollection.Value.GetFilledMethod("at", (self, _, context) =>
+        {
+            ArrayObject selfAsArray = (ArrayObject)self;
+            IntObject index = context.GetParam<IntObject>("index");
 
-                RuntimeObject[] value = selfAsArray.Value;
-                int indexValue = index.Value;
+            RuntimeObject[] value = selfAsArray.Value;
+            int indexValue = index.Value;
 
-                if (indexValue >= value.Length || indexValue < 0)
-                    Errors.AlwaysThrow(
-                        new OutOfRangeError($"Index {indexValue} is out of bounds for array of length {value.Length}"),
-                        context.CallSiteLocation);
+            if (indexValue >= value.Length || indexValue < 0)
+                Errors.AlwaysThrow(
+                    new OutOfRangeError($"Index {indexValue} is out of bounds for array of length {value.Length}"),
+                    context.CallSiteLocation);
 
-                return value[indexValue];
-            });
+            return value[indexValue];
+        }, null);
         Array.AddInstanceMethod(atMethod, null);
+
+        Method lengthMethod = ICollection.Value.GetFilledMethod("length", (self, _, _) =>
+        {
+            ArrayObject selfAsArray = (ArrayObject)self;
+            return selfAsArray.Length;
+        }, null);
+        Array.AddInstanceMethod(lengthMethod, null);
 
         Method toString = new(
             name: "toString",
