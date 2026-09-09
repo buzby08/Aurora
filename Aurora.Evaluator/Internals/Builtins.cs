@@ -8,6 +8,7 @@ namespace Aurora.Evaluator.Internals;
 public static class Builtins
 {
     public static TypeObject Type = null!;
+    public static TypeObject Any = null!;
     public static TypeObject Int = null!;
     public static TypeObject Float = null!;
     public static TypeObject String = null!;
@@ -29,9 +30,11 @@ public static class Builtins
 
     public static void InitialiseTypes()
     {
-
         RuntimeType typeType = new RuntimeType(nameof(Type));
         Type = new TypeObject(typeType, typeType);
+
+        Any = new TypeObject(new RuntimeType(nameof(Any)));
+        Any.Type.MarkEverySubclassIsValid();
 
         Callable = new TypeObject(new RuntimeType(nameof(Callable), type: Type));
 
@@ -89,6 +92,7 @@ public static class Builtins
         InitialiseInterfaceType();
 
         Type.MarkFinal(null);
+        Any.MarkFinal(null);
         Interface.MarkFinal(null);
         Optional.MarkFinal(null);
         Int.MarkFinal(null);

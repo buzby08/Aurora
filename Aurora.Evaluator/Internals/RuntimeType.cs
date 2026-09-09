@@ -8,12 +8,13 @@ public class RuntimeType
     public string Name { get; }
     public bool CanAccessParentValues;
 
-    public bool IsStatic { get; set; }
-    public bool IsFinalized { get; set; }
+    public bool IsStatic { get; private set; }
+    public bool IsFinalized { get; private set; }
+    public bool AllowEverySubclass { get; private set; }
 
-    public TypeObject? ParentType { get; set; }
+    public TypeObject? ParentType { get; private set; }
 
-    public List<RuntimeInterface>? Interface { get; set; }
+    public List<RuntimeInterface>? Interface { get; private set; }
 
     public readonly Dictionary<string, Method> InstanceMethods = [];
     public readonly Dictionary<string, Method> StaticMethods = [];
@@ -34,6 +35,11 @@ public class RuntimeType
     public RuntimeType(string name)
     {
         this.Name = name;
+    }
+
+    public void MarkEverySubclassIsValid()
+    {
+        this.AllowEverySubclass = true;
     }
 
     public void MarkFinal(SourceLocation? location)
@@ -82,6 +88,8 @@ public class RuntimeType
 
     public bool IsSubclassOf(RuntimeObject other)
     {
+        if (this.AllowEverySubclass) return true;
+
         if (this.ParentType?.Type == null && this != other.Type) return false;
         if (this == other.Type) return true;
         return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
