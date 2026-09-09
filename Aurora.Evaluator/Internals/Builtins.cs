@@ -177,7 +177,26 @@ public static class Builtins
             });
         List.AddInstanceMethod(addMethod, null);
 
+        Method removeAtMethod = new(
+            name: "removeAt",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "index", type: Int),],
+            body: (self, args, context) =>
+            {
+                ListObject selfAsList = (ListObject)self;
+                IntObject index = context.GetParam<IntObject>("index");
 
+                if (index.Value < 0 || index.Value >= selfAsList.Value.Count)
+                    Errors.AlwaysThrow(
+                        new OutOfRangeError(
+                            $"Index {index.Value} is out of bounds for list of length {selfAsList.Value.Count}"),
+                        context.CallSiteLocation);
+
+                selfAsList.Value.RemoveAt(index.Value);
+
+                return new UnitObject();
+            });
+        List.AddInstanceMethod(removeAtMethod, null);
     }
 
     private static void InitialiseICollectionInterface()
