@@ -33,7 +33,7 @@ public static class Builtins
         RuntimeType typeType = new RuntimeType(nameof(Type));
         Type = new TypeObject(typeType, typeType);
 
-        Any = new TypeObject(new RuntimeType(nameof(Any)));
+        Any = new TypeObject(new RuntimeType(nameof(Any), type: Type, isStatic: true));
         Any.Type.MarkEverySubclassIsValid();
 
         Callable = new TypeObject(new RuntimeType(nameof(Callable), type: Type));
@@ -112,7 +112,7 @@ public static class Builtins
 
     private static void InitialiseICollectionInterface()
     {
-        ICollection.Value.AddMethod(name: "at", returnType: Type, [new ParameterDefinition(name: "index", type: Int),]);
+        ICollection.Value.AddMethod(name: "at", returnType: Any, [new ParameterDefinition(name: "index", type: Int),]);
         ICollection.Value.AddMethod(name: "length", returnType: Int, []);
     }
 
@@ -138,7 +138,7 @@ public static class Builtins
             name: "new",
             returnType: Array,
             parameters: [new ParameterDefinition(name: "type", type: Type),],
-            unlimitedPositionalArgumentsType: Type,
+            unlimitedPositionalArgumentsType: Any,
             unlimitedKeywordArgumentsType: null,
             body: (_, _, context) =>
             {
@@ -307,7 +307,7 @@ public static class Builtins
         Method equals = new(
             name: "equals",
             returnType: Boolean,
-            parameters: [new ParameterDefinition(name: "other", type: Type),],
+            parameters: [new ParameterDefinition(name: "other", type: Any),],
             body: (self, _, context) => InternalMethods.Type.Equals(self, context));
         Type.AddInstanceMethod(equals, null);
         Type.AddStaticMethod(equals, null);
@@ -318,7 +318,7 @@ public static class Builtins
         Method newMethod = new(
             name: "new",
             returnType: Optional,
-            parameters: [new ParameterDefinition(name: "value", type: Type),],
+            parameters: [new ParameterDefinition(name: "value", type: Any),],
             body: (_, _, context) =>
             {
                 RuntimeObject valueObject = context.GetParam("value");
@@ -363,7 +363,7 @@ public static class Builtins
         Method valueOrDefaultMethod = new(
             name: "valueOrDefault",
             returnType: Type,
-            parameters: [new ParameterDefinition(name: "default", type: Type),],
+            parameters: [new ParameterDefinition(name: "default", type: Any),],
             body: (self, _, context) =>
             {
                 OptionalObject selfAsOptional = (OptionalObject)self;
@@ -604,7 +604,7 @@ public static class Builtins
         Method staticConcatMethod = new(
             name: "concat",
             returnType: String,
-            unlimitedPositionalArgumentsType: Type,
+            unlimitedPositionalArgumentsType: Any,
             unlimitedKeywordArgumentsType: null,
             body: (_, args, context) =>
             {
@@ -633,7 +633,7 @@ public static class Builtins
         Method instanceConcatMethod = new(
             name: "concat",
             returnType: String,
-            parameters: [new ParameterDefinition(name: "other", type: Type),],
+            parameters: [new ParameterDefinition(name: "other", type: Any),],
             body: (self, _, context) =>
             {
                 StringObject left = (StringObject)self;
@@ -767,7 +767,7 @@ public static class Builtins
         Method writeMethod = new(
             name: "writeLine",
             returnType: Unit,
-            unlimitedPositionalArgumentsType: Type,
+            unlimitedPositionalArgumentsType: Any,
             parameters:
             [
                 new ParameterDefinition(name: "separator", type: String, defaultValue: new StringObject(" ")),
