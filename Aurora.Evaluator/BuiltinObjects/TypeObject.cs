@@ -37,6 +37,13 @@ public class TypeObject : RuntimeObject
 
     public void AddStaticMethod(Method method, SourceLocation? location)
     {
+        if (method.Name == "new")
+        {
+            this.Value.AddNewMethod(method, this, location);
+            return;
+        }
+
+
         this.Value.AddStaticMethod(method, location);
     }
 
@@ -81,6 +88,12 @@ public class TypeObject : RuntimeObject
 
     public override bool Equals(RuntimeObject other)
     {
-        return other is TypeObject;
+        if (other is not TypeObject type) return false;
+        return this.Value.Equals(type.Value);
+    }
+
+    public override string ToString()
+    {
+        return $"Type<{this.Value.Name}>";
     }
 }

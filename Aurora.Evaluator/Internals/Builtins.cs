@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
@@ -113,14 +114,24 @@ public static class Builtins
 
     private static void InitialiseInterfaceType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Interface,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+            });
+        Interface.AddStaticMethod(newMethod, null);
         // Todo: Not implemented yet
     }
 
     private static void InitialiseArrayType()
     {
         Array.AddInterface(ICollection, null);
-        Method fromMethod = new(
-            name: "from",
+
+        Method newMethod = new(
+            name: "new",
             returnType: Array,
             parameters: [new ParameterDefinition(name: "type", type: Type),],
             unlimitedPositionalArgumentsType: Type,
@@ -138,7 +149,7 @@ public static class Builtins
 
                 return new ArrayObject(positionals.ToArray());
             });
-        Array.AddStaticMethod(fromMethod, null);
+        Array.AddStaticMethod(newMethod, null);
 
         Method atMethod = ICollection.Value.GetFilledMethod("at", (self, _, context) =>
         {
@@ -217,6 +228,17 @@ public static class Builtins
 
     private static void InitialiseLogicIfReturnType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: LogicIfReturn,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                Errors.AlwaysThrow(new UnsupportedOperationError("Cannot create a LogicIfReturn object"), context.CallSiteLocation);
+                throw new UnreachableException();
+            });
+        LogicIfReturn.AddStaticMethod(newMethod, null);
+
         Method elseMethod = new(
             name: "else",
             returnType: LogicIfReturn,
@@ -243,6 +265,16 @@ public static class Builtins
 
     private static void InitialiseTypeType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Type,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+            });
+        Type.AddStaticMethod(newMethod, null);
+
         Method typeCreateMethod = new(
             name: "create",
             returnType: Unit,
@@ -279,6 +311,17 @@ public static class Builtins
 
     private static void InitialiseOptionalType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Optional,
+            parameters: [new ParameterDefinition(name: "value", type: Type),],
+            body: (_, _, context) =>
+            {
+                RuntimeObject valueObject = context.GetParam("value");
+                return new OptionalObject(valueObject);
+            });
+        Optional.AddStaticMethod(newMethod, null);
+
         Attribute isEmptyAttribute = new(
             name: "isEmpty",
             type: Boolean,
@@ -289,17 +332,6 @@ public static class Builtins
                 return new BooleanObject(selfAsOptional.HasValue);
             });
         Optional.AddInstanceAttribute(isEmptyAttribute, null);
-
-        Method fromMethod = new(
-            name: "of",
-            returnType: Optional,
-            parameters: [new ParameterDefinition(name: "value", type: Type),],
-            body: (_, _, context) =>
-            {
-                RuntimeObject valueObject = context.GetParam("value");
-                return new OptionalObject(valueObject);
-            });
-        Optional.AddStaticMethod(fromMethod, null);
 
         Method emptyOptionalMethod = new(
             name: "empty",
@@ -359,6 +391,13 @@ public static class Builtins
 
     private static void InitialiseIntType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Int,
+            parameters: [],
+            body: (self, args, context) => new IntObject(0));
+        Int.AddStaticMethod(newMethod, null);
+
         Method addMethod = new(
             name: "add",
             returnType: Int,
@@ -517,6 +556,17 @@ public static class Builtins
 
     private static void InitialiseStringType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: String,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+                // Todo: Add
+            });
+        String.AddStaticMethod(newMethod, null);
+
         Method stringAddMethod = new(
             name: "add",
             returnType: String,
@@ -796,6 +846,13 @@ public static class Builtins
 
     private static void InitialiseFloatType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Float,
+            parameters: [],
+            body: (self, args, context) => new FloatObject(0.0f));
+        Float.AddStaticMethod(newMethod, null);
+
         Method toString = new(
             name: "toString",
             returnType: String,
@@ -817,6 +874,13 @@ public static class Builtins
 
     private static void InitialiseBooleanType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Boolean,
+            parameters: [],
+            body: (self, args, context) => new BooleanObject(false));
+        Boolean.AddStaticMethod(newMethod, null);
+
         Method toString = new(
             name: "toString",
             returnType: String,
@@ -854,6 +918,13 @@ public static class Builtins
 
     private static void InitialiseNullType()
     {
+        Method newMethod = new(
+            name: "new",
+            returnType: Null,
+            parameters: [],
+            body: (self, args, context) => new NullObject());
+        Null.AddStaticMethod(newMethod, null);
+
         Method toString = new(
             name: "toString",
             returnType: String,
