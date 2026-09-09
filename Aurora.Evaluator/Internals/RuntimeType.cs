@@ -87,6 +87,13 @@ public class RuntimeType
         return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
     }
 
+    public bool IsSubclassOf(RuntimeType other)
+    {
+        if (this.ParentType?.Type == null && this != other) return false;
+        if (this == other) return true;
+        return this.ParentType?.Type == other || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
+    }
+
     public void AddInterface(RuntimeInterface type, SourceLocation? location)
     {
         if (this.IsFinalized)

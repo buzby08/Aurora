@@ -26,6 +26,7 @@ public static class Builtins
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
     public static InterfaceObject ICollection = null!;
+    public static TypeObject List = null!;
 
     public static void InitialiseTypes()
     {
@@ -65,6 +66,8 @@ public static class Builtins
 
         Array = new TypeObject(new RuntimeType(nameof(Array), type: Type));
 
+        List = new TypeObject(new RuntimeType(nameof(List), type: Type));
+
         Interface = new TypeObject(new RuntimeType(nameof(Interface), type: Type));
 
         ICollection = new InterfaceObject(new RuntimeInterface(nameof(ICollection)));
@@ -86,6 +89,7 @@ public static class Builtins
         InitialiseLoopType();
         InitialiseICollectionInterface();
         InitialiseArrayType();
+        InitialiseListType();
         InitialiseInterfaceType();
 
         Type.MarkFinal(null);
@@ -104,6 +108,76 @@ public static class Builtins
         LogicIfReturn.MarkFinal(null);
         Loop.MarkFinal(null);
         Array.MarkFinal(null);
+        List.MarkFinal(null);
+    }
+
+    private static void InitialiseListType()
+    {
+        List.AddInterface(ICollection, null);
+
+        Method newMethod = new(
+            name: "new",
+            returnType: List,
+            parameters: [new ParameterDefinition(name: "type", type: Type),],
+            unlimitedPositionalArgumentsType: Type,
+            unlimitedKeywordArgumentsType: null,
+            body: (_, _, context) =>
+            {
+                TypeObject type = context.GetParam<TypeObject>("type");
+                List<RuntimeObject> positionals = context.GetPositionalArgs();
+
+                if (!positionals.TrueForAll(x => x.IsSubclassOf(type.Value)))
+                    Errors.AlwaysThrow(new TypeMismatchError($"An list can only store one type"),
+                        context.CallSiteLocation);
+
+                return new ListObject(positionals);
+            });
+        List.AddStaticMethod(newMethod, null);
+
+        Method atMethod = ICollection.Value.GetFilledMethod("at", (self, _, context) =>
+        {
+            ListObject selfAsList = (ListObject)self;
+            IntObject index = context.GetParam<IntObject>("index");
+            int indexValue = index.Value;
+            if (indexValue >= selfAsList.Value.Count || indexValue < 0)
+                Errors.AlwaysThrow(
+                    new OutOfRangeError(
+                        $"Index {indexValue} is out of bounds for list of length {selfAsList.Value.Count}"),
+                    context.CallSiteLocation);
+
+            return selfAsList.Value[indexValue];
+        }, null);
+        List.AddInstanceMethod(atMethod, null);
+
+        Method lengthMethod = ICollection.Value.GetFilledMethod("length", (self, _, _) =>
+        {
+            ListObject selfAsList = (ListObject)self;
+            return selfAsList.Length;
+        }, null);
+        List.AddInstanceMethod(lengthMethod, null);
+
+        Method addMethod = new(
+            name: "add",
+            returnType: Unit,
+            parameters: [new ParameterDefinition(name: "element", type: Type),],
+            body: (self, args, context) =>
+            {
+                ListObject selfAsList = (ListObject)self;
+                RuntimeObject element = context.GetParam("element");
+
+                if (!element.IsSubclassOf(selfAsList.ListType))
+                    Errors.AlwaysThrow(
+                        new TypeMismatchError(
+                            $"Cannot add element of type {element.Type.Name} to list of " +
+                            $"type {selfAsList.ListType.Name}"),
+                        context.CallSiteLocation);
+
+                selfAsList.Value.Add(element);
+                return new UnitObject();
+            });
+        List.AddInstanceMethod(addMethod, null);
+
+
     }
 
     private static void InitialiseICollectionInterface()

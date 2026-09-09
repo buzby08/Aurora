@@ -74,6 +74,16 @@ public abstract class RuntimeObject
         return new IntObject(value);
     }
 
+    public bool IsSubclassOf(RuntimeObject other)
+    {
+        return this.Type.IsSubclassOf(other);
+    }
+
+    public bool IsSubclassOf(RuntimeType other)
+    {
+        return this.Type.IsSubclassOf(other);
+    }
+
     public override string ToString()
     {
         return $"Token: {this.Type}";

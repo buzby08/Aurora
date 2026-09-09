@@ -1,0 +1,9 @@
+// FAIL Aurora.TypeMismatch
+
+List.create(myList=List.new(1; 2; "string"; type=Int))
+
+myList.add(4)
+
+Loop.for(Int.create(i=0); i.lessThan(myList.length()); i.increment(); {
+    Terminal.writeLine("Element at index"; i; "is"; myList.at(i))
+})
