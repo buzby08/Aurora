@@ -21,6 +21,8 @@ public class RuntimeType
     public readonly Dictionary<string, Attribute> InstanceAttributes = [];
     public readonly Dictionary<string, Attribute> StaticAttributes = [];
 
+    private bool HasNewMethod => this.StaticMethods.ContainsKey("new");
+
     public RuntimeType(string name, TypeObject? type, bool canAccessParentValues = true, bool isStatic = false)
     {
         this.Name = name;
@@ -40,7 +42,42 @@ public class RuntimeType
             foreach (RuntimeInterface @interface in this.Interface)
                 @interface.EnsureTypeMeetsContract(this, location);
 
+        if (!this.IsStatic && !this.HasNewMethod)
+            Errors.AlwaysThrow(new ContractError($"All non-static types must have a new method. " +
+                                                 $"`{this.Name}` does not meet this requirement"), location);
+
         this.IsFinalized = true;
+    }
+
+    private void EnsureEditable(SourceLocation? location)
+    {
+        if (this.IsFinalized)
+            Errors.AlwaysThrow(
+                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                location);
+    }
+
+    public void AddNewMethod(Method method, TypeObject type, SourceLocation? location)
+    {
+        this.EnsureEditable(location);
+
+        if (!type.Equals(method.DeclaringType))
+            Errors.AlwaysThrow(
+                new InvalidMethodError(
+                    $"Method `new` cannot be added to type `{this.Name}`. " +
+                    $"Expected return type: `{type.Name}`. " +
+                    $"Actual return type: `{method.DeclaringType.Name}`"),
+                location);
+
+        this.StaticMethods.Add("new", method);
+    }
+
+    public Method GetNewMethod(SourceLocation? location)
+    {
+        if (!HasNewMethod)
+            Errors.AlwaysThrow(new InvalidMethodError($"Type {this.Name} does not have a new method"), location);
+
+        return this.StaticMethods["new"];
     }
 
     public bool IsSubclassOf(RuntimeObject other)
@@ -63,9 +100,13 @@ public class RuntimeType
 
     public void AddStaticMethod(Method method, SourceLocation? location)
     {
-        if (this.IsFinalized)
+        this.EnsureEditable(location);
+
+        if (method.Name == "new")
             Errors.AlwaysThrow(
-                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
+                new SystemError(
+                    $"New methods should be added via `{nameof(AddNewMethod)}` instead " +
+                    $"of {nameof(this.AddInstanceMethod)}"),
                 location);
 
         this.StaticMethods.Add(method.Name, method);
@@ -73,15 +114,13 @@ public class RuntimeType
 
     public void AddInstanceMethod(Method method, SourceLocation? location)
     {
-        if (this.IsFinalized)
-            Errors.AlwaysThrow(
-                new UnsupportedOperationError($"Cannot modify type {this.Name} because it has been declared as final"),
-                location);
+        this.EnsureEditable(location);
 
         if (this.IsStatic)
             Errors.AlwaysThrow(
                 new InvalidMethodError($"Cannot add instance method {method.Name} to static type {this.Name}",
                     user: false), location);
+
         this.InstanceMethods.Add(method.Name, method);
     }
 
@@ -188,6 +227,9 @@ public class RuntimeType
             Errors.AlwaysThrow(
                 new UnsupportedOperationError(
                     $"Cannot use type {this.Name} because it has not yet been declared as final"), location);
+
+        if (name == "new")
+            return this.GetNewMethod(location);
 
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
