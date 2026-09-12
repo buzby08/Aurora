@@ -28,16 +28,12 @@ public static class Builtins
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
     public static RuntimeObject ICollection = null!;
-    public static TypeObject Animal = null!;
-    public static TypeObject Dog = null!;
-    public static RuntimeObject dog = null!;
 
     public static void InitialiseTypes()
     {
-        RuntimeType typeType = new(nameof(Type));
-        Type = new TypeObject(typeType);
+        Type = new TypeObject(new RuntimeType(nameof(Type)));
 
-        Object = new TypeObject(typeType)
+        Object = new TypeObject(new RuntimeType(nameof(Object)))
         {
             InstanceOf = Type,
             SuperType = null,
@@ -84,6 +80,7 @@ public static class Builtins
 
         // Todo: Add tests for interfaces.
 
+        InitialiseObjectType();
         InitialiseTypeType();
         InitialiseOptionalType();
         InitialiseIntType();
@@ -101,6 +98,7 @@ public static class Builtins
         InitialiseArrayType();
         InitialiseInterfaceType();
 
+        Object.MarkFinal(null);
         Type.MarkFinal(null);
         Interface.MarkFinal(null);
         Optional.MarkFinal(null);
@@ -117,8 +115,52 @@ public static class Builtins
         LogicIfReturn.MarkFinal(null);
         Loop.MarkFinal(null);
         Array.MarkFinal(null);
-        Animal.MarkFinal(null);
-        Dog.MarkFinal(null);
+    }
+
+    private static void InitialiseObjectType()
+    {
+        Method newMethod = new(
+            name: "new",
+            returnType: Object,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+            });
+        Object.AddStaticMethod(newMethod, null);
+
+        Method typeCreateMethod = new(
+            name: "create",
+            returnType: Unit,
+            parameters: null,
+            body: InternalMethods.Type.Create);
+
+        Object.AddStaticMethod(typeCreateMethod, null);
+
+        Method typeSetMethod = new(
+            name: "set",
+            returnType: Unit,
+            parameters: null,
+            body: InternalMethods.Type.Set);
+
+        Object.AddStaticMethod(typeSetMethod, null);
+
+        Method toString = new(
+            name: "toString",
+            returnType: String,
+            parameters: [],
+            body: (self, _, _) => InternalMethods.Type.ToString(self));
+
+        Object.AddInstanceMethod(toString, null);
+        Object.AddStaticMethod(toString, null);
+
+        Method equals = new(
+            name: "equals",
+            returnType: Boolean,
+            parameters: [new ParameterDefinition(name: "other", type: Object),],
+            body: (self, _, context) => InternalMethods.Type.Equals(self, context));
+        Object.AddInstanceMethod(equals, null);
+        Object.AddStaticMethod(equals, null);
     }
 
     private static void InitialiseICollectionInterface()
@@ -288,39 +330,6 @@ public static class Builtins
                 throw new NotImplementedException();
             });
         Type.AddStaticMethod(newMethod, null);
-
-        Method typeCreateMethod = new(
-            name: "create",
-            returnType: Unit,
-            parameters: null,
-            body: InternalMethods.Type.Create);
-
-        Type.AddStaticMethod(typeCreateMethod, null);
-
-        Method typeSetMethod = new(
-            name: "set",
-            returnType: Unit,
-            parameters: null,
-            body: InternalMethods.Type.Set);
-
-        Type.AddStaticMethod(typeSetMethod, null);
-
-        Method toString = new(
-            name: "toString",
-            returnType: String,
-            parameters: [],
-            body: (self, _, _) => InternalMethods.Type.ToString(self));
-
-        Type.AddInstanceMethod(toString, null);
-        Type.AddStaticMethod(toString, null);
-
-        Method equals = new(
-            name: "equals",
-            returnType: Boolean,
-            parameters: [new ParameterDefinition(name: "other", type: Object),],
-            body: (self, _, context) => InternalMethods.Type.Equals(self, context));
-        Type.AddInstanceMethod(equals, null);
-        Type.AddStaticMethod(equals, null);
     }
 
     private static void InitialiseOptionalType()
