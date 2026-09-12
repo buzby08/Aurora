@@ -28,6 +28,9 @@ public static class Builtins
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
     public static RuntimeObject ICollection = null!;
+    public static TypeObject Animal = null!;
+    public static TypeObject Dog = null!;
+    public static RuntimeObject dog = null!;
 
     public static void InitialiseTypes()
     {
@@ -39,6 +42,9 @@ public static class Builtins
             InstanceOf = Type,
             SuperType = null,
         };
+
+        Type.SuperType = Object;
+        Type.InstanceOf = Type;
 
         Callable = new TypeObject(new RuntimeType(nameof(Callable)));
 
@@ -111,6 +117,8 @@ public static class Builtins
         LogicIfReturn.MarkFinal(null);
         Loop.MarkFinal(null);
         Array.MarkFinal(null);
+        Animal.MarkFinal(null);
+        Dog.MarkFinal(null);
     }
 
     private static void InitialiseICollectionInterface()

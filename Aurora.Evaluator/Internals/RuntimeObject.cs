@@ -115,7 +115,8 @@ public class RuntimeObject
 
     public bool IsInstanceOf(TypeObject other)
     {
-        return this.InstanceOf.Equals(other);
+        if (this.InstanceOf.Equals(other)) return true;
+        return this.InstanceOf.IsSubclassOf(other);
     }
 
     public virtual Method GetStaticMethod(string name, SourceLocation location)

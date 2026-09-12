@@ -42,7 +42,7 @@ public class TypeObject : RuntimeObject
 
     public bool IsSubclassOf(TypeObject other)
     {
-        if (this.ActualValue.Equals(other.ActualValue)) return true;
+        if (this.Equals(other)) return true;
 
         if (this.SuperType is null) return false;
 
@@ -146,7 +146,14 @@ public class TypeObject : RuntimeObject
 
     public override bool Equals(RuntimeObject other)
     {
+        if (this == other) return true;
+
         if (other is not TypeObject type) return false;
+
+        if (this.SuperType is null ^ type.SuperType is null) return false;
+
+        if (!this.SuperType?.Equals(type.SuperType!) ?? false) return false;
+
         return this.ActualValue.Equals(type.ActualValue);
     }
 
