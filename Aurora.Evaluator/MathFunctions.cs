@@ -2,21 +2,20 @@ using System.Diagnostics;
 using System.Globalization;
 using Aurora.Evaluator.BuiltinObjects;
 using Aurora.Evaluator.Internals;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator;
 
 internal static class MathFunctions
 {
-    public static FloatObject Truncate(RuntimeContext context)
+    public static RuntimeObject Truncate(RuntimeContext context)
     {
-        IntObject placesObject =
-            (IntObject)context.GetParam("places");
-        FloatObject valueObject =
-            (FloatObject)context.GetParam("value");
-        int places = placesObject.Value;
-        decimal value = valueObject.Value;
+        IntValue placesObject = context.GetParam("places").GetIntValue();
+        FloatValue valueObject = context.GetParam("value").GetFloatValue();
+        int places = placesObject.RawValue;
+        decimal value = valueObject.RawValue;
 
-        return new FloatObject(Truncate(places, value));
+        return FloatValue.CreateFromString(Truncate(places, value)).GetAsRuntimeObject();
     }
 
     public static string Truncate(int places, decimal value)

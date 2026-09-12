@@ -1,11 +1,12 @@
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator.Internals.InternalMethods;
 
 internal static class Type
 {
-    public static UnitObject Create(RuntimeObject self, Dictionary<string, RawMethodArgument> args,
+    public static RuntimeObject Create(RuntimeObject self, Dictionary<string, RawMethodArgument> args,
                                     RuntimeContext context)
     {
         TypeObject targetType = (TypeObject)self;
@@ -19,19 +20,19 @@ internal static class Type
             using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
 
-            if (variableObject.Type != targetType.Value)
+            if (!variableObject.IsInstanceOf(targetType))
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
-                        $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
+                        $"{targetType.Name}.create requires `{targetType.Name}`, not `{variableObject.GetInstanceName()}`"),
                     null /* Todo: Try add a better source value*/);
 
             context.Parent!.Create(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
-        return new UnitObject();
+        return UnitValue.CreateObject();
     }
 
-    public static UnitObject Set(RuntimeObject self, Dictionary<string, RawMethodArgument> args, RuntimeContext context)
+    public static RuntimeObject Set(RuntimeObject self, Dictionary<string, RawMethodArgument> args, RuntimeContext context)
     {
         TypeObject targetType = (TypeObject)self;
 
@@ -39,30 +40,30 @@ internal static class Type
         {
             using Evaluator evaluator = Evaluator.CreateChild(context.Parent!);
             RuntimeObject variableObject = evaluator.EvaluateExpressionForValue(rawVar.Value);
-            if (variableObject.Type != targetType.Value)
+            if (!variableObject.IsInstanceOf(targetType))
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
-                        $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.Type.Name}`"),
+                        $"{targetType.Name}.set requires `{targetType.Name}`, not `{variableObject.GetInstanceName()}`"),
                     null /* Todo: Try add a better source value*/);
 
             context.Set(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
-        return new UnitObject();
+        return UnitValue.CreateObject();
     }
 
-    public static StringObject ToString(RuntimeObject self)
+    public static RuntimeObject ToString(RuntimeObject self)
     {
-        if (self is TypeObject selfType)
-            return new StringObject($"<{self.Type.Name} {selfType.Name}>");
+        if (self.IsInstanceOf(Builtins.Type))
+            return StringValue.CreateObject($"<{self.GetInstanceName()} {self.GetTypeValue().Name}>");
 
-        return new StringObject($"Object<{self.Type.Name}>");
+        return StringValue.CreateObject($"Object<{self.GetInstanceName()}>");
     }
 
-    public static BooleanObject Equals(RuntimeObject self, RuntimeContext context)
+    public static RuntimeObject Equals(RuntimeObject self, RuntimeContext context)
     {
         RuntimeObject other = context.GetParam("other");
 
-        return new BooleanObject(self.Equals(other));
+        return BooleanValue.CreateObject(self.Equals(other));
     }
 }

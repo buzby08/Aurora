@@ -1,37 +1,38 @@
 using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator.Internals.InternalMethods;
 
 public static class Logic
 {
-    public static LogicIfReturnObject If(RuntimeContext context)
+    public static RuntimeObject If(RuntimeContext context)
     {
-        BooleanObject conditionObject = context.GetParam<BooleanObject>("condition");
-        BlockObject blockObject = context.GetParam<BlockObject>("block");
+        BooleanValue conditionObject = context.GetParam("condition").GetBooleanValue();
+        BlockValue blockObject = context.GetParam("block").GetBlockValue();
 
-        if (conditionObject.Value is false)
-            return new LogicIfReturnObject(conditionExecuted: false);
+        if (!conditionObject)
+            return LogicIfReturnValue.CreateObject(false);
 
         ExecuteBlock(blockObject, context);
-        return new LogicIfReturnObject(conditionExecuted: true);
+        return LogicIfReturnValue.CreateObject(true);
     }
 
-    public static LogicIfReturnObject Else(RuntimeObject self, RuntimeContext context)
+    public static RuntimeObject Else(RuntimeObject self, RuntimeContext context)
     {
-        LogicIfReturnObject selfAsLogicIf = (LogicIfReturnObject)self;
-        BlockObject blockObject = context.GetParam<BlockObject>("block");
+        LogicIfReturnValue selfAsLogicIf = self.GetLogicIfReturnValue();
+        BlockValue blockObject = context.GetParam("block").GetBlockValue();
 
-        if (selfAsLogicIf.ConditionExecuted)
-            return selfAsLogicIf;
+        if (selfAsLogicIf.AsCSharpBool)
+            return selfAsLogicIf.GetAsRuntimeObject();
 
         ExecuteBlock(blockObject, context);
-        return new LogicIfReturnObject(conditionExecuted: true);
+        return LogicIfReturnValue.CreateObject(true);
     }
 
-    private static void ExecuteBlock(BlockObject blockObject, RuntimeContext context)
+    private static void ExecuteBlock(BlockValue blockValue, RuntimeContext context)
     {
         RuntimeContext blockContext = context.CreateChild(context.CallSiteLocation);
         using Evaluator evaluator = Evaluator.CreateChild(blockContext, Evaluator.EvaluatorState.Block);
-        evaluator.EvaluateMultipleExpressions(blockObject.Value);
+        evaluator.EvaluateMultipleExpressions(blockValue.RawValue);
     }
 }

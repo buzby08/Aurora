@@ -13,15 +13,15 @@ public class Attribute(string name, TypeObject type, Func<RuntimeObject, Runtime
     public RuntimeObject GetValue(
         RuntimeObject self,
         RuntimeContext context,
-        SourceLocation location)
+        SourceLocation? location)
     {
         RuntimeObject value = this.ValueGetter(self, context);
-        if (value.Type.IsSubclassOf(this.Type))
+        if (value.InstanceOf.IsSubclassOf(this.Type))
             return value;
 
         Errors.AlwaysThrow(new TypeMismatchError(
             $"Attribute `{this.Name}` should return an object of type `{this.Type.Name}`, but an object of " +
-            $"type `{value.Type.Name}` was returned instead.", user: false), location);
+            $"type `{value.GetInstanceName()}` was returned instead.", user: location is not null), location);
         throw new UnreachableException();
     }
 }

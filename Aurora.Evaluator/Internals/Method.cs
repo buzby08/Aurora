@@ -97,10 +97,10 @@ public class Method
         if (returnedObject is null)
             Errors.AlwaysThrow(new InvalidReturnTypeError($"Method {this.Name} did not return a value"), callSite);
 
-        if (!returnedObject.Type.IsSubclassOf(this.DeclaringType))
+        if (!returnedObject.InstanceOf.IsSubclassOf(this.DeclaringType))
             Errors.AlwaysThrow(new TypeMismatchError(
-                    $"Callable is declared to return a value of type {this.DeclaringType.Value.Name}, but a value of " +
-                    $"type {returnedObject.Type.Name} was returned",
+                    $"Callable is declared to return a value of type {this.DeclaringType.Name}, but a value of " +
+                    $"type {returnedObject.GetInstanceName()} was returned",
                     user: false),
                 callSite);
 
@@ -132,11 +132,11 @@ public class Method
                 this.UnlimitedPositionalArgsType is null)
                 Errors.AlwaysThrow(new ArgumentDeficitError($"Callable {this.Name} has no attribute `{key}`"), location);
 
-            if (paramDefinition is not null && !argObject.Type.IsSubclassOf(paramDefinition.Type))
+            if (paramDefinition is not null && !argObject.IsInstanceOf(paramDefinition.Type))
                 Errors.AlwaysThrow(
                     new TypeMismatchError(
-                        $"Cannot assign {argObject.Type.Name} to parameter {paramDefinition.Name} of " +
-                        $"type {paramDefinition.Type.Value.Name}"), location);
+                        $"Cannot assign {argObject.GetInstanceName()} to parameter {paramDefinition.Name} of " +
+                        $"type {paramDefinition.Type.Name}"), location);
 
             validatedArgs[key] = argObject;
         }
@@ -161,9 +161,9 @@ public class Method
             using Evaluator evaluator = Evaluator.CreateChild(context);
             RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
 
-            if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
+            if (!valueAsObject.InstanceOf.IsSubclassOf(this.UnlimitedKeywordArgumentsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
-                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedKeywordArgumentsType.Value.Name}"), location);
+                    $"Cannot assign {valueAsObject.GetInstanceName()} to {this.UnlimitedKeywordArgumentsType.Name}"), location);
 
             validatedArgs[key] = valueAsObject;
         }
@@ -184,9 +184,9 @@ public class Method
             using Evaluator evaluator = Evaluator.CreateChild(context);
             RuntimeObject valueAsObject = evaluator.EvaluateExpressionForValue(rawArg.Value);
 
-            if (!valueAsObject.Type.IsSubclassOf(this.UnlimitedPositionalArgsType))
+            if (!valueAsObject.InstanceOf.IsSubclassOf(this.UnlimitedPositionalArgsType))
                 Errors.AlwaysThrow(new ArgumentTypeMismatchError(
-                    $"Cannot assign {valueAsObject.Type.Name} to {this.UnlimitedPositionalArgsType.Value.Name}"), location);
+                    $"Cannot assign {valueAsObject.GetInstanceName()} to {this.UnlimitedPositionalArgsType.Name}"), location);
 
             validatedArgs[key] = valueAsObject;
         }

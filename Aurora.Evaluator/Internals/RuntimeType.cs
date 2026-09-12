@@ -12,8 +12,6 @@ public class RuntimeType
     public bool IsFinalized { get; private set; }
     public bool AllowEverySubclass { get; private set; }
 
-    public TypeObject? ParentType { get; private set; }
-
     public List<RuntimeInterface>? Interface { get; private set; }
 
     public readonly Dictionary<string, Method> InstanceMethods = [];
@@ -24,12 +22,10 @@ public class RuntimeType
 
     private bool HasNewMethod => this.StaticMethods.ContainsKey("new");
 
-    public RuntimeType(string name, TypeObject? type, bool canAccessParentValues = true, bool isStatic = false)
+    public RuntimeType(string name, bool isStatic = false)
     {
         this.Name = name;
-        this.CanAccessParentValues = canAccessParentValues;
         this.IsStatic = isStatic;
-        this.ParentType = type;
     }
 
     public RuntimeType(string name)
@@ -86,14 +82,14 @@ public class RuntimeType
         return this.StaticMethods["new"];
     }
 
-    public bool IsSubclassOf(RuntimeObject other)
-    {
-        if (this.AllowEverySubclass) return true;
-
-        if (this.ParentType?.Type == null && this != other.Type) return false;
-        if (this == other.Type) return true;
-        return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
-    }
+    // public bool IsSubclassOf(RuntimeObject other)
+    // {
+    //     if (this.AllowEverySubclass) return true;
+    //
+    //     if (this.ParentType?.Type == null && this != other.Type) return false;
+    //     if (this == other.Type) return true;
+    //     return this.ParentType?.Type == other.Type || (this.ParentType?.Type.IsSubclassOf(other) ?? false);
+    // }
 
     public void AddInterface(RuntimeInterface type, SourceLocation? location)
     {
@@ -213,7 +209,7 @@ public class RuntimeType
         return attribute;
     }
 
-    private Method? GetStaticMethodOrDefault(string name, SourceLocation? location)
+    internal Method? GetStaticMethodOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
@@ -222,11 +218,7 @@ public class RuntimeType
 
         Method? method = this.StaticMethods.GetValueOrDefault(name);
 
-        if (this == this.ParentType?.Type) return method;
-
-        if (!this.CanAccessParentValues) return method;
-
-        return method ?? this.ParentType?.Type.GetStaticMethodOrDefault(name, location);
+        return method;
     }
 
     internal Method? GetInstanceMethodOrDefault(string name, SourceLocation? location, bool throwNotFinalError = true)
@@ -241,14 +233,10 @@ public class RuntimeType
 
         Method? method = this.InstanceMethods.GetValueOrDefault(name);
 
-        if (this == this.ParentType?.Type) return method;
-
-        if (!this.CanAccessParentValues) return method;
-
-        return method ?? this.ParentType?.Type.GetInstanceMethodOrDefault(name, location);
+        return method;
     }
 
-    private Attribute? GetStaticAttributeOrDefault(string name, SourceLocation? location)
+    public Attribute? GetStaticAttributeOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
@@ -257,14 +245,10 @@ public class RuntimeType
 
         Attribute? attribute = this.StaticAttributes.GetValueOrDefault(name);
 
-        if (this == this.ParentType?.Type) return attribute;
-
-        if (!this.CanAccessParentValues) return attribute;
-
-        return attribute ?? this.ParentType?.Type.GetStaticAttributeOrDefault(name, location);
+        return attribute;
     }
 
-    private Attribute? GetInstanceAttributeOrDefault(string name, SourceLocation? location)
+    public Attribute? GetInstanceAttributeOrDefault(string name, SourceLocation? location)
     {
         if (!this.IsFinalized)
             Errors.AlwaysThrow(
@@ -273,11 +257,7 @@ public class RuntimeType
 
         Attribute? attribute = this.InstanceAttributes.GetValueOrDefault(name);
 
-        if (this == this.ParentType?.Type) return attribute;
-
-        if (!this.CanAccessParentValues) return attribute;
-
-        return attribute ?? this.ParentType?.Type.GetInstanceAttributeOrDefault(name, location);
+        return attribute;
     }
 
     public bool Equals(RuntimeType other)
