@@ -8,19 +8,19 @@ internal static class Terminal
 {
     public static RuntimeObject WriteLine(RuntimeContext context)
     {
-        StringValue end = context.GetParam("end").GetStringValue();
-        StringValue separator = context.GetParam("separator").GetStringValue();
+        StringRuntimeValue end = context.GetParam("end").GetStringValue();
+        StringRuntimeValue separator = context.GetParam("separator").GetStringValue();
 
         return WriteLine(context, context.GetPositionalArgs(), end, separator);
     }
 
     public static RuntimeObject ReadLine(RuntimeContext context)
     {
-        StringValue messageObject = context.GetParam("message").GetStringValue();
+        StringRuntimeValue messageObject = context.GetParam("message").GetStringValue();
         RuntimeObject defaultValueObject = context.GetParam("default");
 
-        StringValue defaultValue = defaultValueObject.IsInstanceOf(Builtins.Null)
-            ? (StringValue)""
+        StringRuntimeValue defaultValue = defaultValueObject.IsInstanceOf(Builtins.Null)
+            ? (StringRuntimeValue)""
             : defaultValueObject.GetStringValue();
 
         return ReadLine(messageObject, defaultValue);
@@ -28,7 +28,7 @@ internal static class Terminal
 
     public static RuntimeObject ReadInteger(RuntimeContext context)
     {
-        StringValue messageObject = context.GetParam("message").GetStringValue();
+        StringRuntimeValue messageObject = context.GetParam("message").GetStringValue();
         RuntimeObject minObject = context.GetParam("min");
         RuntimeObject maxObject = context.GetParam("max");
 
@@ -40,7 +40,7 @@ internal static class Terminal
 
     public static RuntimeObject ReadFloat(RuntimeContext context)
     {
-        StringValue messageObject = context.GetParam("message").GetStringValue();
+        StringRuntimeValue messageObject = context.GetParam("message").GetStringValue();
         RuntimeObject minObject = context.GetParam("min");
         RuntimeObject maxObject = context.GetParam("max");
 
@@ -52,12 +52,12 @@ internal static class Terminal
 
     public static RuntimeObject ReadBoolean(RuntimeContext context)
     {
-        StringValue messageObject = context.GetParam("message").GetStringValue();
-        BooleanOutputStyleValue styleObject = context.GetParam("outputStyle").GetBooleanOutputStyleValue();
-        BooleanValue immediateObject = context.GetParam("immediate").GetBooleanValue();
+        StringRuntimeValue messageObject = context.GetParam("message").GetStringValue();
+        BooleanOutputStyleRuntimeValue styleObject = context.GetParam("outputStyle").GetBooleanOutputStyleValue();
+        BooleanRuntimeValue immediateObject = context.GetParam("immediate").GetBooleanValue();
 
         string message = messageObject.ToCSharpString();
-        BooleanOutputStyleValue.Style style = styleObject.AsCSharpStyle;
+        BooleanOutputStyleRuntimeValue.Style style = styleObject.AsCSharpStyle;
         bool immediate = immediateObject.AsCSharpBool;
 
         return ReadBoolean(message, style, immediate);
@@ -65,7 +65,7 @@ internal static class Terminal
 
     public static RuntimeObject ReadKey(RuntimeContext context)
     {
-        StringValue messageObject = context.GetParam("message").GetStringValue();
+        StringRuntimeValue messageObject = context.GetParam("message").GetStringValue();
 
         string message = messageObject.ToCSharpString();
 
@@ -75,13 +75,13 @@ internal static class Terminal
     public static RuntimeObject Clear()
     {
         Console.Clear();
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
-    private static RuntimeObject WriteLine(RuntimeContext context, List<RuntimeObject> positionalArgs, StringValue end,
-                                        StringValue separator)
+    private static RuntimeObject WriteLine(RuntimeContext context, List<RuntimeObject> positionalArgs, StringRuntimeValue end,
+                                        StringRuntimeValue separator)
     {
-        StringValue valueToOutput = new(string.Empty);
+        StringRuntimeValue valueToOutput = new(string.Empty);
 
         for (int index = 0; index < positionalArgs.Count; index++)
         {
@@ -95,10 +95,10 @@ internal static class Terminal
 
         Console.Write(valueToOutput.ToCSharpString());
 
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
-    private static RuntimeObject ReadLine(StringValue message, StringValue defaultValue)
+    private static RuntimeObject ReadLine(StringRuntimeValue message, StringRuntimeValue defaultValue)
     {
         Console.Write(message);
         string? inputtedValue = Console.ReadLine();
@@ -109,7 +109,7 @@ internal static class Terminal
         if (inputtedValue is null)
             return defaultValue.GetAsRuntimeObject();
 
-        return StringValue.CreateObject(inputtedValue);
+        return StringRuntimeValue.CreateObject(inputtedValue);
     }
 
     private static RuntimeObject ReadInteger(string message, int? min, int? max)
@@ -150,7 +150,7 @@ internal static class Terminal
             }
 
 
-            return IntValue.CreateObject(inputtedInt);
+            return IntRuntimeValue.CreateObject(inputtedInt);
         }
     }
 
@@ -192,23 +192,23 @@ internal static class Terminal
             }
 
 
-            return FloatValue.CreateObject(inputtedFloat);
+            return FloatRuntimeValue.CreateObject(inputtedFloat);
         }
     }
 
     private static RuntimeObject ReadBoolean(string message,
-                                             BooleanOutputStyleValue.Style style, bool immediate)
+                                             BooleanOutputStyleRuntimeValue.Style style, bool immediate)
     {
         Console.Write(message);
 
-        BooleanValue result = style switch
+        BooleanRuntimeValue result = style switch
         {
-            BooleanOutputStyleValue.Style.Word => BooleanOutputStyleValue.ReadWordOption(),
-            BooleanOutputStyleValue.Style.YesNo => BooleanOutputStyleValue.ReadYesNo(),
-            BooleanOutputStyleValue.Style.Char => BooleanOutputStyleValue.ReadChar(immediate),
-            BooleanOutputStyleValue.Style.Binary => BooleanOutputStyleValue.ReadBinary(immediate),
-            BooleanOutputStyleValue.Style.OnOff => BooleanOutputStyleValue.ReadOnOff(),
-            _ => Errors.AlwaysThrow<BooleanValue>(
+            BooleanOutputStyleRuntimeValue.Style.Word => BooleanOutputStyleRuntimeValue.ReadWordOption(),
+            BooleanOutputStyleRuntimeValue.Style.YesNo => BooleanOutputStyleRuntimeValue.ReadYesNo(),
+            BooleanOutputStyleRuntimeValue.Style.Char => BooleanOutputStyleRuntimeValue.ReadChar(immediate),
+            BooleanOutputStyleRuntimeValue.Style.Binary => BooleanOutputStyleRuntimeValue.ReadBinary(immediate),
+            BooleanOutputStyleRuntimeValue.Style.OnOff => BooleanOutputStyleRuntimeValue.ReadOnOff(),
+            _ => Errors.AlwaysThrow<BooleanRuntimeValue>(
                 new SystemError("A statement was reached that was deemed unreachable"),
                 null),
         };
@@ -220,6 +220,6 @@ internal static class Terminal
         Console.Write(message);
 
         ConsoleKeyInfo inputtedValue = Console.ReadKey();
-        return StringValue.CreateObject(inputtedValue.KeyChar.ToString());
+        return StringRuntimeValue.CreateObject(inputtedValue.KeyChar.ToString());
     }
 }

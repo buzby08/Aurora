@@ -29,7 +29,7 @@ internal static class Type
             context.Parent!.Create(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
     public static RuntimeObject Set(RuntimeObject self, Dictionary<string, RawMethodArgument> args, RuntimeContext context)
@@ -49,21 +49,21 @@ internal static class Type
             context.Set(rawVar.Name, variableObject, context.CallSiteLocation);
         }
 
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
     public static RuntimeObject ToString(RuntimeObject self)
     {
         if (self.IsInstanceOf(Builtins.Type))
-            return StringValue.CreateObject($"<{self.GetInstanceName()} {self.GetTypeValue().Name}>");
+            return StringRuntimeValue.CreateObject($"<{self.GetInstanceName()} {self.GetTypeValue().Name}>");
 
-        return StringValue.CreateObject($"Object<{self.GetInstanceName()}>");
+        return StringRuntimeValue.CreateObject($"Object<{self.GetInstanceName()}>");
     }
 
     public static RuntimeObject Equals(RuntimeObject self, RuntimeContext context)
     {
         RuntimeObject other = context.GetParam("other");
 
-        return BooleanValue.CreateObject(self.Equals(other));
+        return BooleanRuntimeValue.CreateObject(self.Equals(other));
     }
 }

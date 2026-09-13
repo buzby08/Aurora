@@ -10,12 +10,12 @@ internal static class MathFunctions
 {
     public static RuntimeObject Truncate(RuntimeContext context)
     {
-        IntValue placesObject = context.GetParam("places").GetIntValue();
-        FloatValue valueObject = context.GetParam("value").GetFloatValue();
+        IntRuntimeValue placesObject = context.GetParam("places").GetIntValue();
+        FloatRuntimeValue valueObject = context.GetParam("value").GetFloatValue();
         int places = placesObject.RawValue;
         decimal value = valueObject.RawValue;
 
-        return FloatValue.CreateFromString(Truncate(places, value)).GetAsRuntimeObject();
+        return FloatRuntimeValue.CreateFromString(Truncate(places, value)).GetAsRuntimeObject();
     }
 
     public static string Truncate(int places, decimal value)

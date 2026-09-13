@@ -3,14 +3,14 @@ using Aurora.Evaluator.BuiltinObjects;
 
 namespace Aurora.Evaluator.Internals.RuntimeValues;
 
-public class InterfaceValue(RuntimeInterface value) : BaseValue(value)
+public class InterfaceRuntimeValue(RuntimeInterface value) : BaseRuntimeValue(value)
 {
     public RuntimeInterface GetValue(SourceLocation? location) => base.GetValue<RuntimeInterface>(location)!;
     public RuntimeInterface RawValue => (RuntimeInterface)this.Value!;
 
     public string Name => this.RawValue.Name;
 
-    public static RuntimeObject GetAsObject(RuntimeInterface value) => new(new InterfaceValue(value), Builtins.Interface);
+    public static RuntimeObject GetAsObject(RuntimeInterface value) => new(new InterfaceRuntimeValue(value), Builtins.Interface);
 
     public override RuntimeObject GetAsRuntimeObject()
     {

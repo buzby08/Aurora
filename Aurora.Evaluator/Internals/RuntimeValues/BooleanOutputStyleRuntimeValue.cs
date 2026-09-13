@@ -1,6 +1,6 @@
 namespace Aurora.Evaluator.Internals.RuntimeValues;
 
-public class BooleanOutputStyleValue(BooleanOutputStyleValue.Style value) : BaseValue(value)
+public class BooleanOutputStyleRuntimeValue(BooleanOutputStyleRuntimeValue.Style value) : BaseRuntimeValue(value)
 {
     public enum Style
     {
@@ -16,13 +16,13 @@ public class BooleanOutputStyleValue(BooleanOutputStyleValue.Style value) : Base
     public Style AsCSharpStyle => this.RawValue;
 
 
-    public static BooleanValue ReadWordOption() => ReadWord("true", "false");
+    public static BooleanRuntimeValue ReadWordOption() => ReadWord("true", "false");
 
-    public static BooleanValue ReadYesNo() => ReadWord("yes", "no");
+    public static BooleanRuntimeValue ReadYesNo() => ReadWord("yes", "no");
 
-    public static BooleanValue ReadOnOff() => ReadWord("on", "off");
+    public static BooleanRuntimeValue ReadOnOff() => ReadWord("on", "off");
 
-    private static BooleanValue ReadImmediateChar(char trueOption, char falseOption)
+    private static BooleanRuntimeValue ReadImmediateChar(char trueOption, char falseOption)
     {
         char? result = null;
 
@@ -33,10 +33,10 @@ public class BooleanOutputStyleValue(BooleanOutputStyleValue.Style value) : Base
         }
         Console.Write(Environment.NewLine);
 
-        return new BooleanValue(result == trueOption);
+        return new BooleanRuntimeValue(result == trueOption);
     }
 
-    private static BooleanValue ReadWord(string trueOption, string falseOption)
+    private static BooleanRuntimeValue ReadWord(string trueOption, string falseOption)
     {
         string? result = null;
 
@@ -46,17 +46,17 @@ public class BooleanOutputStyleValue(BooleanOutputStyleValue.Style value) : Base
             result = Console.ReadLine()?.ToLower();
         }
 
-        return new BooleanValue(result == trueOption);
+        return new BooleanRuntimeValue(result == trueOption);
     }
 
-    public static BooleanValue ReadChar(bool immediate)
+    public static BooleanRuntimeValue ReadChar(bool immediate)
     {
         if (immediate)
             return ReadImmediateChar('y', 'n');
 
         return ReadWord("y", "n");
     }
-    public static BooleanValue ReadBinary(bool immediate)
+    public static BooleanRuntimeValue ReadBinary(bool immediate)
     {
         if (immediate)
             return ReadImmediateChar('1', '0');
@@ -69,5 +69,5 @@ public class BooleanOutputStyleValue(BooleanOutputStyleValue.Style value) : Base
         return new RuntimeObject(this, Builtins.BooleanOutputStyles);
     }
 
-    public static RuntimeObject CreateObject(Style value) => new RuntimeObject(new BooleanOutputStyleValue(value), Builtins.BooleanOutputStyles);
+    public static RuntimeObject CreateObject(Style value) => new RuntimeObject(new BooleanOutputStyleRuntimeValue(value), Builtins.BooleanOutputStyles);
 }

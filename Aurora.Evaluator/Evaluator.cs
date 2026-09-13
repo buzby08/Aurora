@@ -151,7 +151,7 @@ public class Evaluator : IDisposable
 
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
     {
-        return (new BlockValue(block)).GetAsRuntimeObject();
+        return (new BlockRuntimeValue(block)).GetAsRuntimeObject();
     }
 
     public void EvaluateWhile(Ast[] condition, Ast[][] body)

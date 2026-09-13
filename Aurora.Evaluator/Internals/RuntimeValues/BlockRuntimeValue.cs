@@ -2,7 +2,7 @@ using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals.RuntimeValues;
 
-public class BlockValue(IEnumerable<IEnumerable<Ast>> value) : BaseValue(ConvertToArray(value))
+public class BlockRuntimeValue(IEnumerable<IEnumerable<Ast>> value) : BaseRuntimeValue(ConvertToArray(value))
 {
     public override RuntimeObject GetAsRuntimeObject()
     {
@@ -12,9 +12,9 @@ public class BlockValue(IEnumerable<IEnumerable<Ast>> value) : BaseValue(Convert
     public Ast[][] GetValue(SourceLocation? location) => base.GetValue<Ast[][]>(location)!;
     public Ast[][] RawValue => (Ast[][])this.Value!;
 
-    public static explicit operator BlockValue(Ast[][] value) => new(value);
+    public static explicit operator BlockRuntimeValue(Ast[][] value) => new(value);
 
-    public static RuntimeObject CreateObject(Ast[][] value) => new RuntimeObject(new BlockValue(value), Builtins.Block);
+    public static RuntimeObject CreateObject(Ast[][] value) => new RuntimeObject(new BlockRuntimeValue(value), Builtins.Block);
 
     private static Ast[][] ConvertToArray(IEnumerable<IEnumerable<Ast>> value) => value.Select(x => x.ToArray()).ToArray();
 }

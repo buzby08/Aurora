@@ -34,7 +34,7 @@ internal static class Loop
         evaluator.EvaluateWhile(conditionArg.Value, body.GetBlockValue().RawValue);
 
 
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
 
     }
 
@@ -66,18 +66,18 @@ internal static class Loop
         using Evaluator evaluator = Evaluator.CreateChild(context);
         evaluator.EvaluateFor(initArg.Value, conditionArg.Value, incrementArg.Value, body.GetBlockValue().RawValue);
 
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
     public static RuntimeObject Break()
     {
         Evaluator.ExecuteBreakLoop();
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
     public static RuntimeObject Continue()
     {
         Evaluator.ExecuteContinueLoop();
-        return UnitValue.CreateObject();
+        return UnitRuntimeValue.CreateObject();
     }
 }

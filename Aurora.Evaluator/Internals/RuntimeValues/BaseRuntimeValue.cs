@@ -3,7 +3,7 @@ using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals.RuntimeValues;
 
-public abstract class BaseValue(object? value)
+public abstract class BaseRuntimeValue(object? value)
 {
     public object? Value { get; set; } = value;
 
@@ -24,5 +24,5 @@ public abstract class BaseValue(object? value)
 
     public abstract RuntimeObject GetAsRuntimeObject();
 
-    public override string ToString() => $"{nameof(BaseValue)}({this.Value ?? "null"})";
+    public override string ToString() => $"{nameof(BaseRuntimeValue)}({this.Value ?? "null"})";
 }

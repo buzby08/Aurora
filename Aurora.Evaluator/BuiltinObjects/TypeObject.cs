@@ -9,15 +9,15 @@ namespace Aurora.Evaluator.BuiltinObjects;
 public class TypeObject : RuntimeObject
 {
     public TypeObject? SuperType;
-    public RuntimeType ActualValue => ((TypeValue)this.Value).GetValue(null);
+    public RuntimeType ActualValue => ((TypeRuntimeValue)this.Value).GetValue(null);
 
-    public TypeObject(RuntimeType value) : base(new TypeValue(value))
+    public TypeObject(RuntimeType value) : base(new TypeRuntimeValue(value))
     {
         this.InstanceOf = Builtins.Type;
         this.SuperType = Builtins.Object;
     }
 
-    public TypeObject(RuntimeType value, TypeObject superType) : base(new TypeValue(value))
+    public TypeObject(RuntimeType value, TypeObject superType) : base(new TypeRuntimeValue(value))
     {
         this.InstanceOf = this;
         this.SuperType = superType;

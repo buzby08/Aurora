@@ -9,28 +9,28 @@ public class RuntimeObject
 {
     public TypeObject InstanceOf = Builtins.Type;
 
-    public RuntimeObject(BaseValue value, TypeObject instanceOf)
+    public RuntimeObject(BaseRuntimeValue value, TypeObject instanceOf)
     {
         this.InstanceOf = instanceOf;
         this.Value = value;
     }
 
-    public RuntimeObject(BaseValue value)
+    public RuntimeObject(BaseRuntimeValue value)
     {
         this.Value = value;
     }
 
-    public BaseValue Value { get; set; }
+    public BaseRuntimeValue Value { get; set; }
 
     public RuntimeType GetRuntimeType() => this.InstanceOf.ActualValue;
     public string GetInstanceName() => this.InstanceOf.Name;
 
-    public StringValue ConvertToStringValue(RuntimeContext context, SourceLocation sourceLocation)
+    public StringRuntimeValue ConvertToStringValue(RuntimeContext context, SourceLocation sourceLocation)
     {
         RuntimeObject evaluatedValueAsObject =
             this.InstanceOf.GetInstanceMethod("toString", sourceLocation)
                 .Invoke(this, null, [], context, sourceLocation);
-        StringValue valueAsString = evaluatedValueAsObject.GetStringValue();
+        StringRuntimeValue valueAsString = evaluatedValueAsObject.GetStringValue();
         return valueAsString;
     }
 
@@ -39,7 +39,7 @@ public class RuntimeObject
         RuntimeObject evaluatedValueAsObject =
             this.InstanceOf.GetInstanceMethod("toString", location)
                 .Invoke(this, null, [], context, location);
-        StringValue valueAsString = evaluatedValueAsObject.GetStringValue();
+        StringRuntimeValue valueAsString = evaluatedValueAsObject.GetStringValue();
         return valueAsString.RawValue;
     }
 
@@ -48,7 +48,7 @@ public class RuntimeObject
         variableName = null;
         return token switch
         {
-            StringToken s => StringValue.CreateObject(s.ValueAsString),
+            StringToken s => StringRuntimeValue.CreateObject(s.ValueAsString),
             NumberToken n => CreateFromNumberToken(n),
             WordToken w => CreateFromWordToken(w, context, out variableName),
             _ => Errors.AlwaysThrow<RuntimeObject>(
@@ -77,11 +77,11 @@ public class RuntimeObject
         variableName = null;
 
         if (token.ValueAsString == TrueValue)
-            return BooleanValue.CreateObject(true);
+            return BooleanRuntimeValue.CreateObject(true);
         if (token.ValueAsString == FalseValue)
-            return BooleanValue.CreateObject(false);
+            return BooleanRuntimeValue.CreateObject(false);
         if (token.ValueAsString == NullValue)
-            return RuntimeValues.NullValue.CreateObject();
+            return RuntimeValues.NullRuntimeValue.CreateObject();
 
         variableName = token.ValueAsString;
 
@@ -93,24 +93,24 @@ public class RuntimeObject
         string value = token.ValueAsString;
 
         if (value.Contains('.'))
-            return FloatValue.CreateFromString(value).GetAsRuntimeObject();
+            return FloatRuntimeValue.CreateFromString(value).GetAsRuntimeObject();
 
-        return IntValue.CreateFromString(value).GetAsRuntimeObject();
+        return IntRuntimeValue.CreateFromString(value).GetAsRuntimeObject();
     }
 
-    public StringValue GetStringValue() => (StringValue)this.Value;
-    public IntValue GetIntValue() => (IntValue)this.Value;
-    public OptionalValue GetOptionalValue() => (OptionalValue)this.Value;
-    public BooleanValue GetBooleanValue() => (BooleanValue)this.Value;
-    public FloatValue GetFloatValue() => (FloatValue)this.Value;
-    public LogicIfReturnValue GetLogicIfReturnValue() => (LogicIfReturnValue)this.Value;
+    public StringRuntimeValue GetStringValue() => (StringRuntimeValue)this.Value;
+    public IntRuntimeValue GetIntValue() => (IntRuntimeValue)this.Value;
+    public OptionalRuntimeValue GetOptionalValue() => (OptionalRuntimeValue)this.Value;
+    public BooleanRuntimeValue GetBooleanValue() => (BooleanRuntimeValue)this.Value;
+    public FloatRuntimeValue GetFloatValue() => (FloatRuntimeValue)this.Value;
+    public LogicIfReturnRuntimeValue GetLogicIfReturnValue() => (LogicIfReturnRuntimeValue)this.Value;
     public ArrayValue GetArrayValue() => (ArrayValue)this.Value;
-    public BlockValue GetBlockValue() => (BlockValue)this.Value;
-    public InterfaceValue GetInterfaceValue() => (InterfaceValue)this.Value;
-    public BooleanOutputStyleValue GetBooleanOutputStyleValue() => (BooleanOutputStyleValue)this.Value;
-    public TypeValue GetTypeValue() => (TypeValue)this.Value;
+    public BlockRuntimeValue GetBlockValue() => (BlockRuntimeValue)this.Value;
+    public InterfaceRuntimeValue GetInterfaceValue() => (InterfaceRuntimeValue)this.Value;
+    public BooleanOutputStyleRuntimeValue GetBooleanOutputStyleValue() => (BooleanOutputStyleRuntimeValue)this.Value;
+    public TypeRuntimeValue GetTypeValue() => (TypeRuntimeValue)this.Value;
 
-    public T GetValueAsBase<T>() where T : BaseValue => (T)this.Value;
+    public T GetValueAsBase<T>() where T : BaseRuntimeValue => (T)this.Value;
     public T? GetRawValue<T>(SourceLocation? location) => this.Value.GetValue<T>(location);
 
     public bool IsInstanceOf(TypeObject other)

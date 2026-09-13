@@ -2,7 +2,7 @@ using Aurora.Core;
 
 namespace Aurora.Evaluator.Internals.RuntimeValues;
 
-public class LogicIfReturnValue(bool value) : BaseValue(value)
+public class LogicIfReturnRuntimeValue(bool value) : BaseRuntimeValue(value)
 {
     public override RuntimeObject GetAsRuntimeObject()
     {
@@ -14,7 +14,7 @@ public class LogicIfReturnValue(bool value) : BaseValue(value)
     public bool AsCSharpBool => this.RawValue;
 
 
-    public static explicit operator LogicIfReturnValue(bool value) => new(value);
+    public static explicit operator LogicIfReturnRuntimeValue(bool value) => new(value);
 
-    public static RuntimeObject CreateObject(bool value) => new RuntimeObject(new LogicIfReturnValue(value), Builtins.LogicIfReturn);
+    public static RuntimeObject CreateObject(bool value) => new RuntimeObject(new LogicIfReturnRuntimeValue(value), Builtins.LogicIfReturn);
 }
