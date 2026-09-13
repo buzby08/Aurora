@@ -27,7 +27,7 @@ public static class Builtins
     public static TypeObject Loop = null!;
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
-    public static RuntimeObject ICollection = null!;
+    public static TypeObject ICollection = null!;
 
     public static void InitialiseTypes()
     {
@@ -76,7 +76,7 @@ public static class Builtins
 
         Interface = new TypeObject(new RuntimeType(nameof(Interface)));
 
-        ICollection = InterfaceRuntimeValue.GetAsObject(new RuntimeInterface(nameof(ICollection)));
+        ICollection = new TypeObject(new RuntimeInterface(nameof(ICollection)));
 
         // Todo: Add tests for interfaces.
 
@@ -248,6 +248,18 @@ public static class Builtins
             type: Int,
             valueGetter: (self, _) => self.GetArrayValue().Length.GetAsRuntimeObject());
         Array.AddInstanceAttribute(lengthAttribute, null);
+
+        // Method test = new(
+        //     name: "test",
+        //     returnType: Unit,
+        //     parameters: [new ParameterDefinition("a", ICollection),],
+        //     body: (self, args, context) =>
+        //     {
+        //
+        //         Console.WriteLine($"Worked - {context.GetParam("a").ToString()}");
+        //         return UnitRuntimeValue.CreateObject();
+        //     });
+        // Array.AddStaticMethod(test, null);
     }
 
     private static void InitialiseLoopType()

@@ -22,7 +22,7 @@ public class RuntimeObject
 
     public BaseRuntimeValue Value { get; set; }
 
-    public RuntimeType GetRuntimeType() => this.InstanceOf.ActualValue;
+    public RuntimeType GetRuntimeType() => this.InstanceOf.RuntimeType ?? throw new InvalidOperationException();
     public string GetInstanceName() => this.InstanceOf.Name;
 
     public StringRuntimeValue ConvertToStringValue(RuntimeContext context, SourceLocation sourceLocation)
