@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator.Internals.InternalMethods;
 
 internal static class Loop
 {
-    public static UnitObject While(Dictionary<string, RawMethodArgument> args, RuntimeContext context)
+    public static RuntimeObject While(Dictionary<string, RawMethodArgument> args, RuntimeContext context)
     {
         if (args.Count <= 1)
             Errors.AlwaysThrow(new ArgumentDeficitError($"{nameof(While)} requires at two arguments"), context.CallSiteLocation);
@@ -22,7 +23,7 @@ internal static class Loop
         }
 
 
-        if (body is not BlockObject blockObject)
+        if (!body.IsInstanceOf(Builtins.Block))
         {
             Errors.AlwaysThrow(new ArgumentTypeMismatchError($"Argument 2 to {nameof(While)} must be a block"),
                 context.CallSiteLocation);
@@ -30,14 +31,14 @@ internal static class Loop
         }
 
         using Evaluator evaluator = Evaluator.CreateChild(context);
-        evaluator.EvaluateWhile(conditionArg.Value, blockObject);
+        evaluator.EvaluateWhile(conditionArg.Value, body.GetBlockValue().RawValue);
 
 
-        return new UnitObject();
+        return UnitRuntimeValue.CreateObject();
 
     }
 
-    public static UnitObject For(Dictionary<string, RawMethodArgument> args, RuntimeContext context)
+    public static RuntimeObject For(Dictionary<string, RawMethodArgument> args, RuntimeContext context)
     {
         if (args.Count <= 3)
             Errors.AlwaysThrow(new ArgumentDeficitError($"{nameof(While)} requires four arguments"), context.CallSiteLocation);
@@ -55,7 +56,7 @@ internal static class Loop
         }
 
 
-        if (body is not BlockObject blockObject)
+        if (!body.IsInstanceOf(Builtins.Block))
         {
             Errors.AlwaysThrow(new ArgumentTypeMismatchError($"Argument 2 to {nameof(While)} must be a block"),
                 context.CallSiteLocation);
@@ -63,20 +64,20 @@ internal static class Loop
         }
 
         using Evaluator evaluator = Evaluator.CreateChild(context);
-        evaluator.EvaluateFor(initArg.Value, conditionArg.Value, incrementArg.Value, blockObject);
+        evaluator.EvaluateFor(initArg.Value, conditionArg.Value, incrementArg.Value, body.GetBlockValue().RawValue);
 
-        return new UnitObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
-    public static UnitObject Break()
+    public static RuntimeObject Break()
     {
         Evaluator.ExecuteBreakLoop();
-        return new UnitObject();
+        return UnitRuntimeValue.CreateObject();
     }
 
-    public static UnitObject Continue()
+    public static RuntimeObject Continue()
     {
         Evaluator.ExecuteContinueLoop();
-        return new UnitObject();
+        return UnitRuntimeValue.CreateObject();
     }
 }

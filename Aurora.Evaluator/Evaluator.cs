@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
 using Aurora.Evaluator.Internals;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator;
 
@@ -127,7 +128,7 @@ public class Evaluator : IDisposable
             return type.GetStaticAttribute(attributeName, literal.StartLocation)
                 .GetValue(previousResult, this.Context, literal.StartLocation);
 
-        return previousResult.Type.GetInstanceAttribute(attributeName, literal.StartLocation)
+        return previousResult.GetInstanceAttribute(attributeName, literal.StartLocation)
             .GetValue(previousResult, this.Context, literal.StartLocation);
     }
 
@@ -143,30 +144,30 @@ public class Evaluator : IDisposable
             method = type.GetStaticMethod(methodNameString, methodName.StartLocation);
 
         if (previousResult is not TypeObject)
-            method = previousResult.Type.GetInstanceMethod(methodNameString, methodName.StartLocation);
+            method = previousResult.GetInstanceMethod(methodNameString, methodName.StartLocation);
 
         return method.Invoke(previousResult, PreviousVariableName, args, this.Context, methodName.StartLocation);
     }
 
     private RuntimeObject EvaluateBlock(IEnumerable<IEnumerable<Ast>> block)
     {
-        return new BlockObject(block);
+        return (new BlockRuntimeValue(block)).GetAsRuntimeObject();
     }
 
-    public void EvaluateWhile(Ast[] condition, BlockObject body)
+    public void EvaluateWhile(Ast[] condition, Ast[][] body)
     {
         this.State = EvaluatorState.Loop;
 
         while (!this.BreakLoop && EvaluateCondition(condition))
         {
             using Evaluator evaluator = CreateChild(this.Context, EvaluatorState.Block);
-            evaluator.EvaluateMultipleExpressions(body.Value);
+            evaluator.EvaluateMultipleExpressions(body);
         }
 
         this.BreakLoop = false;
     }
 
-    public void EvaluateFor(Ast[] initialiser, Ast[] condition, Ast[] incrementer, BlockObject body)
+    public void EvaluateFor(Ast[] initialiser, Ast[] condition, Ast[] incrementer, Ast[][] body)
     {
         this.State = EvaluatorState.Loop;
         string[] variables = this.Context.GetVariables();
@@ -183,7 +184,7 @@ public class Evaluator : IDisposable
         while (!this.BreakLoop && EvaluateCondition(condition))
         {
             Evaluator blockEvaluator = CreateChild(this.Context, EvaluatorState.Block);
-            blockEvaluator.EvaluateMultipleExpressions(body.Value);
+            blockEvaluator.EvaluateMultipleExpressions(body);
             RunIncrementer(incrementer);
         }
 
@@ -220,7 +221,7 @@ public class Evaluator : IDisposable
         using Evaluator evaluator = CreateChild(this.Context);
         RuntimeObject evaluatedObject = evaluator.EvaluateExpressionForValue(condition);
 
-        if (evaluatedObject is BooleanObject booleanObject) return booleanObject.Value;
+        if (evaluatedObject.IsInstanceOf(Builtins.Boolean)) return evaluatedObject.GetBooleanValue().AsCSharpBool;
 
         Errors.AlwaysThrow(
             new UnsupportedOperationError($"Argument 1 to while must evaluate be a boolean"),

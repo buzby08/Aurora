@@ -107,7 +107,17 @@ public class RuntimeContext
 
     public T GetParam<T>(string name) where T : RuntimeObject
     {
-        return (T)this.GetParam(name);
+        RuntimeObject value = this.GetParam(name);
+        try
+        {
+            return (T)value;
+        }
+        catch
+        {
+            Errors.AlwaysThrow(new SystemError($"Could not convert object of type `{value.GetType()}` to type `{typeof(T)}`"), this.CallSiteLocation);
+            throw new UnreachableException();
+        }
+
     }
 
     public List<RuntimeObject> GetPositionalArgs()
@@ -175,9 +185,9 @@ public class RuntimeContext
             return;
         }
 
-        if (old!.Type != value.Type)
+        if (!value.IsInstanceOf(old!.InstanceOf))
             Errors.AlwaysThrow(
-                new TypeMismatchError($"Cannot assign value of type {value.Type.Name} to {old.Type.Name}"), location);
+                new TypeMismatchError($"Cannot assign value of type {value.GetInstanceName()} to {old.GetInstanceName()}"), location);
 
         this._variables[name] = value;
     }

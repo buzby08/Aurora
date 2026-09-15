@@ -1,29 +1,46 @@
 using System.Diagnostics;
 using Aurora.Core;
 using Aurora.Evaluator.BuiltinObjects;
+using Aurora.Evaluator.Internals.RuntimeValues;
 
 namespace Aurora.Evaluator.Internals;
 
-public abstract class RuntimeObject
+public class RuntimeObject
 {
-    public RuntimeType Type;
+    public TypeObject InstanceOf = Builtins.Type;
 
-    public StringObject ConvertToStringObject(RuntimeContext context, SourceLocation sourceLocation)
+    public RuntimeObject(BaseRuntimeValue value, TypeObject instanceOf)
+    {
+        this.InstanceOf = instanceOf;
+        this.Value = value;
+    }
+
+    public RuntimeObject(BaseRuntimeValue value)
+    {
+        this.Value = value;
+    }
+
+    public BaseRuntimeValue Value { get; set; }
+
+    public RuntimeType GetRuntimeType() => this.InstanceOf.RuntimeType ?? throw new InvalidOperationException();
+    public string GetInstanceName() => this.InstanceOf.Name;
+
+    public StringRuntimeValue ConvertToStringValue(RuntimeContext context, SourceLocation sourceLocation)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", sourceLocation)
+            this.InstanceOf.GetInstanceMethod("toString", sourceLocation)
                 .Invoke(this, null, [], context, sourceLocation);
-        StringObject valueAsString = (StringObject)evaluatedValueAsObject;
+        StringRuntimeValue valueAsString = evaluatedValueAsObject.GetStringValue();
         return valueAsString;
     }
 
     public string ConvertToCSharpString(RuntimeContext context, SourceLocation location)
     {
         RuntimeObject evaluatedValueAsObject =
-            this.Type.GetInstanceMethod("toString", location)
+            this.InstanceOf.GetInstanceMethod("toString", location)
                 .Invoke(this, null, [], context, location);
-        StringObject valueAsString = (StringObject)evaluatedValueAsObject;
-        return valueAsString.Value;
+        StringRuntimeValue valueAsString = evaluatedValueAsObject.GetStringValue();
+        return valueAsString.RawValue;
     }
 
     public static RuntimeObject CreateFromToken(Token token, RuntimeContext context, out string? variableName)
@@ -31,7 +48,7 @@ public abstract class RuntimeObject
         variableName = null;
         return token switch
         {
-            StringToken s => new StringObject(s.ValueAsString),
+            StringToken s => StringRuntimeValue.CreateObject(s.ValueAsString),
             NumberToken n => CreateFromNumberToken(n),
             WordToken w => CreateFromWordToken(w, context, out variableName),
             _ => Errors.AlwaysThrow<RuntimeObject>(
@@ -39,7 +56,14 @@ public abstract class RuntimeObject
         };
     }
 
-    public abstract bool Equals(RuntimeObject other);
+    public virtual bool Equals(RuntimeObject other)
+    {
+        if (!this.InstanceOf.Equals(other.InstanceOf)) return false;
+
+        if (this.Value.Value is null ^ other.Value.Value is null) return false;
+
+        return this.Value.Value?.Equals(other.Value.Value) ?? true;
+    }
 
     public virtual RuntimeObject Invoke(List<Argument> arguments, RuntimeContext parentContext, SourceLocation callSiteLocation)
     {
@@ -53,11 +77,11 @@ public abstract class RuntimeObject
         variableName = null;
 
         if (token.ValueAsString == TrueValue)
-            return new BooleanObject(true);
+            return BooleanRuntimeValue.CreateObject(true);
         if (token.ValueAsString == FalseValue)
-            return new BooleanObject(false);
+            return BooleanRuntimeValue.CreateObject(false);
         if (token.ValueAsString == NullValue)
-            return new NullObject();
+            return RuntimeValues.NullRuntimeValue.CreateObject();
 
         variableName = token.ValueAsString;
 
@@ -69,17 +93,58 @@ public abstract class RuntimeObject
         string value = token.ValueAsString;
 
         if (value.Contains('.'))
-            return new FloatObject(value);
+            return FloatRuntimeValue.CreateFromString(value).GetAsRuntimeObject();
 
-        return new IntObject(value);
+        return IntRuntimeValue.CreateFromString(value).GetAsRuntimeObject();
+    }
+
+    public StringRuntimeValue GetStringValue() => (StringRuntimeValue)this.Value;
+    public IntRuntimeValue GetIntValue() => (IntRuntimeValue)this.Value;
+    public OptionalRuntimeValue GetOptionalValue() => (OptionalRuntimeValue)this.Value;
+    public BooleanRuntimeValue GetBooleanValue() => (BooleanRuntimeValue)this.Value;
+    public FloatRuntimeValue GetFloatValue() => (FloatRuntimeValue)this.Value;
+    public LogicIfReturnRuntimeValue GetLogicIfReturnValue() => (LogicIfReturnRuntimeValue)this.Value;
+    public ArrayValue GetArrayValue() => (ArrayValue)this.Value;
+    public BlockRuntimeValue GetBlockValue() => (BlockRuntimeValue)this.Value;
+    public InterfaceRuntimeValue GetInterfaceValue() => (InterfaceRuntimeValue)this.Value;
+    public BooleanOutputStyleRuntimeValue GetBooleanOutputStyleValue() => (BooleanOutputStyleRuntimeValue)this.Value;
+    public TypeRuntimeValue GetTypeValue() => (TypeRuntimeValue)this.Value;
+
+    public T GetValueAsBase<T>() where T : BaseRuntimeValue => (T)this.Value;
+    public T? GetRawValue<T>(SourceLocation? location) => this.Value.GetValue<T>(location);
+
+    public bool IsInstanceOf(TypeObject other)
+    {
+        if (this.InstanceOf.Equals(other)) return true;
+        return this.InstanceOf.IsSubclassOf(other);
+    }
+
+    public virtual Method GetStaticMethod(string name, SourceLocation location)
+    {
+        return this.InstanceOf.GetStaticMethod(name, location);
+    }
+
+    public virtual Method GetInstanceMethod(string name, SourceLocation location)
+    {
+        return this.InstanceOf.GetInstanceMethod(name, location);
+    }
+
+    public virtual Attribute GetStaticAttribute(string name, SourceLocation location)
+    {
+        return this.InstanceOf.GetStaticAttribute(name, location);
+    }
+
+    public virtual Attribute GetInstanceAttribute(string name, SourceLocation location)
+    {
+        return this.InstanceOf.GetInstanceAttribute(name, location);
     }
 
     public override string ToString()
     {
-        return $"Token: {this.Type}";
+        return $"RuntimeObject<Instance of {this.InstanceOf.Name}, value: {this.Value}>";
     }
 
-    private static string TrueValue = "true";
-    private static string FalseValue = "false";
-    private static string NullValue = "null";
+    private const string TrueValue = "true";
+    private const string FalseValue = "false";
+    private const string NullValue = "null";
 }
