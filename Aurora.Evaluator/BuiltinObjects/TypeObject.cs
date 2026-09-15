@@ -258,4 +258,14 @@ public class TypeObject : RuntimeObject
 
         return true;
     }
+
+    public void AddInterfaceMethod(string name, TypeObject returnType, ParameterDefinition[] parameterDefinitions, SourceLocation? location)
+    {
+        if (this.InterfaceContract is null)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Cannot add method {name} to interface {this.Name}",
+                    user: location is not null), location);
+
+        this.InterfaceContract.AddMethod(name, returnType, parameterDefinitions);
+    }
 }
