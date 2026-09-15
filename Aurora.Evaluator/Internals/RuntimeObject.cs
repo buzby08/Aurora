@@ -11,6 +11,12 @@ public class RuntimeObject
 
     public RuntimeObject(BaseRuntimeValue value, TypeObject instanceOf)
     {
+        if (!instanceOf.IsFinalized())
+            Errors.AlwaysThrow(new UnsupportedOperationError($"Cannot create a runtime object of type " +
+                                                             $"`{instanceOf.Name}` because it has not yet been " +
+                                                             $"declared as final"),
+                null);
+
         this.InstanceOf = instanceOf;
         this.Value = value;
     }
