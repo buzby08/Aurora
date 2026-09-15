@@ -38,10 +38,16 @@ public class TypeObject : RuntimeObject
     {
         BaseRuntimeValue value = this.Value;
 
-        if (value is TypeRuntimeValue typeRuntimeValue)
-            return typeRuntimeValue.GetValue(null);
+        if (value is not TypeRuntimeValue typeRuntimeValue)
+            return null;
 
-        return null;
+        RuntimeType type = typeRuntimeValue.GetValue(null);
+
+        if (!type.IsFinalized)
+            // Todo: Use an actual source location, and force them throughout the repository where possible.
+            Errors.AlwaysThrow(new UnsupportedOperationError($"Cannot utilize unfinalized type {type.Name}"), null);
+
+        return type;
     }
 
     public RuntimeInterface? GetValueAsRuntimeInterface()
