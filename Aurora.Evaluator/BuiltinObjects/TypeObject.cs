@@ -83,7 +83,7 @@ public class TypeObject : RuntimeObject
                     $"for type {this.Name}", user: location is not null),
                 location);
 
-        this.RuntimeType!.AddInterface(@interface.GetInterfaceValue().RawValue, location);
+        this.RuntimeType!.AddInterface(@interface.InterfaceContract!, location);
         this.SuperType = @interface;
     }
 
