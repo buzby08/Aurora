@@ -248,4 +248,12 @@ public class TypeObject : RuntimeObject
 
         return $"Type<?>";
     }
+
+    public bool IsFinalized()
+    {
+        if (this.RuntimeType is not null)
+            return this.RuntimeType.IsFinalized;
+
+        return true;
+    }
 }
