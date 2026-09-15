@@ -20,7 +20,7 @@ public class RuntimeObject
         this.Value = value;
     }
 
-    public BaseRuntimeValue Value { get; set; }
+    internal BaseRuntimeValue Value { get; set; }
 
     public RuntimeType GetRuntimeType() => this.InstanceOf.RuntimeType ?? throw new InvalidOperationException();
     public string GetInstanceName() => this.InstanceOf.Name;
