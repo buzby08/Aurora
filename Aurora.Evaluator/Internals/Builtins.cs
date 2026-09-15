@@ -81,40 +81,57 @@ public static class Builtins
         // Todo: Add tests for interfaces.
 
         InitialiseObjectType();
-        InitialiseTypeType();
-        InitialiseOptionalType();
-        InitialiseIntType();
-        InitialiseFloatType();
-        InitialiseStringType();
-        InitialiseBooleanType();
-        InitialiseNullType();
-        InitialiseTerminalType();
-        InitialiseBooleanOutputStylesType();
-        InitialiseMathType();
-        InitialiseLogicType();
-        InitialiseLogicIfReturnType();
-        InitialiseLoopType();
-        InitialiseICollectionInterface();
-        InitialiseArrayType();
-        InitialiseInterfaceType();
-
         Object.MarkFinal(null);
+
+        InitialiseTypeType();
         Type.MarkFinal(null);
+
+        InitialiseInterfaceType();
         Interface.MarkFinal(null);
+
+        InitialiseOptionalType();
         Optional.MarkFinal(null);
+
+        InitialiseIntType();
         Int.MarkFinal(null);
+        
         Unit.MarkFinal(null);
+
+        InitialiseFloatType();
         Float.MarkFinal(null);
+
+        InitialiseStringType();
         String.MarkFinal(null);
+
+        InitialiseBooleanType();
         Boolean.MarkFinal(null);
+
+        InitialiseNullType();
         Null.MarkFinal(null);
+
+        InitialiseTerminalType();
         Terminal.MarkFinal(null);
+
+        InitialiseBooleanOutputStylesType();
         BooleanOutputStyles.MarkFinal(null);
+
+        InitialiseMathType();
         Math.MarkFinal(null);
+
+        InitialiseLogicType();
         Logic.MarkFinal(null);
+
+        InitialiseLogicIfReturnType();
         LogicIfReturn.MarkFinal(null);
+
+        InitialiseLoopType();
         Loop.MarkFinal(null);
+
+        InitialiseICollectionInterface();
+
+        InitialiseArrayType();
         Array.MarkFinal(null);
+
     }
 
     private static void InitialiseObjectType()
