@@ -7,7 +7,7 @@ public class FloatRuntimeValue(decimal value) : BaseRuntimeValue(value)
 {
     public override RuntimeObject GetAsRuntimeObject()
     {
-        return new RuntimeObject(this, Builtins.Boolean);
+        return new RuntimeObject(this, Builtins.Float);
     }
 
     public decimal GetValue(SourceLocation? location) => base.GetValue<decimal>(location);
