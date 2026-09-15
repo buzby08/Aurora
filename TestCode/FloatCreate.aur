@@ -1,0 +1,3 @@
+Float.create(myFloat=7.5)
+
+Terminal.writeLine(myFloat)
