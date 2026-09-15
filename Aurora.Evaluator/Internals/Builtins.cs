@@ -165,9 +165,9 @@ public static class Builtins
 
     private static void InitialiseICollectionInterface()
     {
-        InterfaceRuntimeValue rawInterface = ICollection.GetInterfaceValue();
-        rawInterface.AddMethod(name: "at", returnType: Object, [new ParameterDefinition(name: "index", type: Int),]);
-        rawInterface.AddMethod(name: "length", returnType: Int, []);
+        ICollection.AddInterfaceMethod(name: "at", returnType: Object,
+            [new ParameterDefinition(name: "index", type: Int),], location: null);
+        ICollection.AddInterfaceMethod(name: "length", returnType: Int, [], location: null);
     }
 
     private static void InitialiseInterfaceType()
