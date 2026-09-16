@@ -89,12 +89,15 @@ public static class Builtins
         InitialiseInterfaceType();
         Interface.MarkFinal(null);
 
+        InitialiseBlockType();
+        Block.MarkFinal(null);
+
         InitialiseOptionalType();
         Optional.MarkFinal(null);
 
         InitialiseIntType();
         Int.MarkFinal(null);
-        
+
         Unit.MarkFinal(null);
 
         InitialiseFloatType();
@@ -132,6 +135,31 @@ public static class Builtins
         InitialiseArrayType();
         Array.MarkFinal(null);
 
+    }
+
+    private static void InitialiseBlockType()
+    {
+        Method newMethod = new(
+            name: "new",
+            returnType: Block,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+            });
+        Block.AddStaticMethod(newMethod, null);
+
+        Method toStringMethod = new(
+            name: "toString",
+            returnType: String,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                BlockRuntimeValue selfAsBlock = self.GetBlockValue();
+
+                return selfAsBlock.ToStringValue().GetAsRuntimeObject();
+            });
+        Block.AddInstanceMethod(toStringMethod, null);
     }
 
     private static void InitialiseObjectType()
