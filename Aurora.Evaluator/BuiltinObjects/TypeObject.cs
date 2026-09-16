@@ -36,17 +36,19 @@ public class TypeObject : RuntimeObject
 
     public RuntimeType? GetValueAsRuntimeType()
     {
-        BaseRuntimeValue value = this.Value;
+        BaseRuntimeValue value = this._value;
 
-        if (value is TypeRuntimeValue typeRuntimeValue)
-            return typeRuntimeValue.GetValue(null);
+        if (value is not TypeRuntimeValue typeRuntimeValue)
+            return null;
 
-        return null;
+        RuntimeType type = typeRuntimeValue.GetValue(null);
+
+        return type;
     }
 
     public RuntimeInterface? GetValueAsRuntimeInterface()
     {
-        BaseRuntimeValue value = this.Value;
+        BaseRuntimeValue value = this._value;
 
         if (value is InterfaceRuntimeValue interfaceRuntimeValue)
             return interfaceRuntimeValue.GetValue(null);
@@ -81,7 +83,7 @@ public class TypeObject : RuntimeObject
                     $"for type {this.Name}", user: location is not null),
                 location);
 
-        this.RuntimeType!.AddInterface(@interface.GetInterfaceValue().RawValue, location);
+        this.RuntimeType!.AddInterface(@interface.InterfaceContract!, location);
         this.SuperType = @interface;
     }
 
@@ -247,5 +249,23 @@ public class TypeObject : RuntimeObject
             return $"Type<(Interface){this.InterfaceContract.Name}>";
 
         return $"Type<?>";
+    }
+
+    public bool IsFinalized()
+    {
+        if (this.RuntimeType is not null)
+            return this.RuntimeType.IsFinalized;
+
+        return true;
+    }
+
+    public void AddInterfaceMethod(string name, TypeObject returnType, ParameterDefinition[] parameterDefinitions, SourceLocation? location)
+    {
+        if (this.InterfaceContract is null)
+            Errors.AlwaysThrow(
+                new InvalidMethodError($"Cannot add method {name} to interface {this.Name}",
+                    user: location is not null), location);
+
+        this.InterfaceContract.AddMethod(name, returnType, parameterDefinitions);
     }
 }

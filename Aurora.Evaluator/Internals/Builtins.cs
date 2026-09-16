@@ -81,40 +81,85 @@ public static class Builtins
         // Todo: Add tests for interfaces.
 
         InitialiseObjectType();
-        InitialiseTypeType();
-        InitialiseOptionalType();
-        InitialiseIntType();
-        InitialiseFloatType();
-        InitialiseStringType();
-        InitialiseBooleanType();
-        InitialiseNullType();
-        InitialiseTerminalType();
-        InitialiseBooleanOutputStylesType();
-        InitialiseMathType();
-        InitialiseLogicType();
-        InitialiseLogicIfReturnType();
-        InitialiseLoopType();
-        InitialiseICollectionInterface();
-        InitialiseArrayType();
-        InitialiseInterfaceType();
-
         Object.MarkFinal(null);
+
+        InitialiseTypeType();
         Type.MarkFinal(null);
+
+        InitialiseInterfaceType();
         Interface.MarkFinal(null);
+
+        InitialiseBlockType();
+        Block.MarkFinal(null);
+
+        InitialiseOptionalType();
         Optional.MarkFinal(null);
+
+        InitialiseIntType();
         Int.MarkFinal(null);
+
         Unit.MarkFinal(null);
+
+        InitialiseFloatType();
         Float.MarkFinal(null);
+
+        InitialiseStringType();
         String.MarkFinal(null);
+
+        InitialiseBooleanType();
         Boolean.MarkFinal(null);
+
+        InitialiseNullType();
         Null.MarkFinal(null);
+
+        InitialiseTerminalType();
         Terminal.MarkFinal(null);
+
+        InitialiseBooleanOutputStylesType();
         BooleanOutputStyles.MarkFinal(null);
+
+        InitialiseMathType();
         Math.MarkFinal(null);
+
+        InitialiseLogicType();
         Logic.MarkFinal(null);
+
+        InitialiseLogicIfReturnType();
         LogicIfReturn.MarkFinal(null);
+
+        InitialiseLoopType();
         Loop.MarkFinal(null);
+
+        InitialiseICollectionInterface();
+
+        InitialiseArrayType();
         Array.MarkFinal(null);
+
+    }
+
+    private static void InitialiseBlockType()
+    {
+        Method newMethod = new(
+            name: "new",
+            returnType: Block,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                throw new NotImplementedException();
+            });
+        Block.AddStaticMethod(newMethod, null);
+
+        Method toStringMethod = new(
+            name: "toString",
+            returnType: String,
+            parameters: [],
+            body: (self, args, context) =>
+            {
+                BlockRuntimeValue selfAsBlock = self.GetBlockValue();
+
+                return selfAsBlock.ToStringValue().GetAsRuntimeObject();
+            });
+        Block.AddInstanceMethod(toStringMethod, null);
     }
 
     private static void InitialiseObjectType()
@@ -165,9 +210,9 @@ public static class Builtins
 
     private static void InitialiseICollectionInterface()
     {
-        InterfaceRuntimeValue rawInterface = ICollection.GetInterfaceValue();
-        rawInterface.AddMethod(name: "at", returnType: Object, [new ParameterDefinition(name: "index", type: Int),]);
-        rawInterface.AddMethod(name: "length", returnType: Int, []);
+        ICollection.AddInterfaceMethod(name: "at", returnType: Object,
+            [new ParameterDefinition(name: "index", type: Int),], location: null);
+        ICollection.AddInterfaceMethod(name: "length", returnType: Int, [], location: null);
     }
 
     private static void InitialiseInterfaceType()

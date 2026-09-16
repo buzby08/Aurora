@@ -12,15 +12,27 @@ public class RuntimeObject
     public RuntimeObject(BaseRuntimeValue value, TypeObject instanceOf)
     {
         this.InstanceOf = instanceOf;
-        this.Value = value;
+        this._value = value;
     }
 
     public RuntimeObject(BaseRuntimeValue value)
     {
-        this.Value = value;
+        this._value = value;
     }
 
-    public BaseRuntimeValue Value { get; set; }
+    protected BaseRuntimeValue _value { get; set; }
+    public BaseRuntimeValue Value => this.GetValue();
+
+    public BaseRuntimeValue GetValue()
+    {
+        if (!this.InstanceOf.IsFinalized())
+            // Todo: Add source location and require throughout the repository
+            Errors.AlwaysThrow(new UnsupportedOperationError($"Cannot get value of unfinalized " +
+                                                             $"type `{this.InstanceOf.Name}`"),
+                null);
+
+        return this._value;
+    }
 
     public RuntimeType GetRuntimeType() => this.InstanceOf.RuntimeType ?? throw new InvalidOperationException();
     public string GetInstanceName() => this.InstanceOf.Name;
