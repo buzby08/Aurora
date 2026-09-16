@@ -438,6 +438,8 @@ public class Tokenizer
                 startPosition = i;
         }
 
+        if (startPosition is not null) skipPositions.Add(startPosition.Value, this.Text.Length);
+
         this.SkipPositions = skipPositions;
     }
 
