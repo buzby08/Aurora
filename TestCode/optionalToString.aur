@@ -1,0 +1,5 @@
+Optional.create(myOptional = Optional.new("hello"))
+Optional.create(myEmptyOptional = Optional.empty())
+
+Terminal.writeLine("myOptional is"; myOptional)
+Terminal.writeLine("myEmptyOptional is"; myEmptyOptional)

@@ -134,7 +134,6 @@ public static class Builtins
 
         InitialiseArrayType();
         Array.MarkFinal(null);
-
     }
 
     private static void InitialiseBlockType()
@@ -143,10 +142,7 @@ public static class Builtins
             name: "new",
             returnType: Block,
             parameters: [],
-            body: (self, args, context) =>
-            {
-                throw new NotImplementedException();
-            });
+            body: (self, args, context) => { throw new NotImplementedException(); });
         Block.AddStaticMethod(newMethod, null);
 
         Method toStringMethod = new(
@@ -168,10 +164,7 @@ public static class Builtins
             name: "new",
             returnType: Object,
             parameters: [],
-            body: (self, args, context) =>
-            {
-                throw new NotImplementedException();
-            });
+            body: (self, args, context) => { throw new NotImplementedException(); });
         Object.AddStaticMethod(newMethod, null);
 
         Method typeCreateMethod = new(
@@ -221,10 +214,7 @@ public static class Builtins
             name: "new",
             returnType: Interface,
             parameters: [],
-            body: (self, args, context) =>
-            {
-                throw new NotImplementedException();
-            });
+            body: (self, args, context) => { throw new NotImplementedException(); });
         Interface.AddStaticMethod(newMethod, null);
         // Todo: Not implemented yet
     }
@@ -248,7 +238,8 @@ public static class Builtins
                     return ArrayValue.CreateObject(positionals.ToArray());
 
                 if (!positionals.TrueForAll(x => x.InstanceOf.IsSubclassOf(type)))
-                    Errors.AlwaysThrow(new TypeMismatchError($"An array can only store one type"), context.CallSiteLocation);
+                    Errors.AlwaysThrow(new TypeMismatchError($"An array can only store one type"),
+                        context.CallSiteLocation);
 
                 return ArrayValue.CreateObject(positionals.ToArray());
             });
@@ -347,7 +338,8 @@ public static class Builtins
             body: (self, args, context) =>
             {
                 // Todo: Turn into a private constructor, or internal, so not accessible from user code
-                Errors.AlwaysThrow(new UnsupportedOperationError("Cannot create a LogicIfReturn object"), context.CallSiteLocation);
+                Errors.AlwaysThrow(new UnsupportedOperationError("Cannot create a LogicIfReturn object"),
+                    context.CallSiteLocation);
                 throw new UnreachableException();
             });
         LogicIfReturn.AddStaticMethod(newMethod, null);
@@ -382,10 +374,7 @@ public static class Builtins
             name: "new",
             returnType: Type,
             parameters: [],
-            body: (self, args, context) =>
-            {
-                throw new NotImplementedException();
-            });
+            body: (self, args, context) => { throw new NotImplementedException(); });
         Type.AddStaticMethod(newMethod, null);
     }
 
@@ -462,7 +451,7 @@ public static class Builtins
 
                 if (selfValue.HasValue)
                     return StringRuntimeValue.CreateObject(
-                        $"Optional({self.ConvertToCSharpString(context, context.CallSiteLocation)})");
+                        $"Optional({selfValue.RawValue!.ConvertToCSharpString(context, context.CallSiteLocation)})");
 
                 return StringRuntimeValue.CreateObject("Optional(Empty)");
             });
@@ -602,7 +591,10 @@ public static class Builtins
         Method incrementInstance = new(
             name: "increment",
             returnType: Unit,
-            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: IntRuntimeValue.CreateObject(1)),],
+            parameters:
+            [
+                new ParameterDefinition(name: "amount", type: Int, defaultValue: IntRuntimeValue.CreateObject(1)),
+            ],
             body: (self, _, context) =>
             {
                 IntRuntimeValue selfAsInt = self.GetIntValue();
@@ -616,7 +608,10 @@ public static class Builtins
         Method decrementInstance = new(
             name: "decrement",
             returnType: Unit,
-            parameters: [new ParameterDefinition(name: "amount", type: Int, defaultValue: IntRuntimeValue.CreateObject(1)),],
+            parameters:
+            [
+                new ParameterDefinition(name: "amount", type: Int, defaultValue: IntRuntimeValue.CreateObject(1)),
+            ],
             body: (self, _, context) =>
             {
                 IntRuntimeValue selfAsInt = self.GetIntValue();
@@ -663,10 +658,7 @@ public static class Builtins
             name: "toString",
             returnType: String,
             parameters: [],
-            body: (self, _, _) =>
-            {
-                return self;
-            });
+            body: (self, _, _) => { return self; });
 
         String.AddInstanceMethod(toString, null);
 
@@ -836,7 +828,8 @@ public static class Builtins
             unlimitedPositionalArgumentsType: Object,
             parameters:
             [
-                new ParameterDefinition(name: "separator", type: String, defaultValue: StringRuntimeValue.CreateObject(" ")),
+                new ParameterDefinition(name: "separator", type: String,
+                    defaultValue: StringRuntimeValue.CreateObject(" ")),
                 // Todo: Change all SystemError calls to have a unique identifier, to find their location in the code.
                 new ParameterDefinition(name: "end", type: String, defaultValue: StringRuntimeValue.CreateObject("\n")),
             ],
@@ -850,8 +843,10 @@ public static class Builtins
             returnType: String,
             parameters:
             [
-                new ParameterDefinition(name: "message", type: String, defaultValue: StringRuntimeValue.CreateObject("")),
-                new ParameterDefinition(name: "default", type: String, nullable: true, defaultValue: NullRuntimeValue.CreateObject()),
+                new ParameterDefinition(name: "message", type: String,
+                    defaultValue: StringRuntimeValue.CreateObject("")),
+                new ParameterDefinition(name: "default", type: String, nullable: true,
+                    defaultValue: NullRuntimeValue.CreateObject()),
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadLine(context));
 
@@ -862,9 +857,12 @@ public static class Builtins
             returnType: Int,
             parameters:
             [
-                new ParameterDefinition(name: "message", type: String, defaultValue: StringRuntimeValue.CreateObject("")),
-                new ParameterDefinition(name: "min", type: Int, nullable: true, defaultValue: NullRuntimeValue.CreateObject()),
-                new ParameterDefinition(name: "max", type: Int, nullable: true, defaultValue: NullRuntimeValue.CreateObject()),
+                new ParameterDefinition(name: "message", type: String,
+                    defaultValue: StringRuntimeValue.CreateObject("")),
+                new ParameterDefinition(name: "min", type: Int, nullable: true,
+                    defaultValue: NullRuntimeValue.CreateObject()),
+                new ParameterDefinition(name: "max", type: Int, nullable: true,
+                    defaultValue: NullRuntimeValue.CreateObject()),
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadInteger(context));
 
@@ -875,9 +873,12 @@ public static class Builtins
             returnType: Int,
             parameters:
             [
-                new ParameterDefinition(name: "message", type: String, defaultValue: StringRuntimeValue.CreateObject("")),
-                new ParameterDefinition(name: "min", type: Float, nullable: true, defaultValue: NullRuntimeValue.CreateObject()),
-                new ParameterDefinition(name: "max", type: Float, nullable: true, defaultValue: NullRuntimeValue.CreateObject()),
+                new ParameterDefinition(name: "message", type: String,
+                    defaultValue: StringRuntimeValue.CreateObject("")),
+                new ParameterDefinition(name: "min", type: Float, nullable: true,
+                    defaultValue: NullRuntimeValue.CreateObject()),
+                new ParameterDefinition(name: "max", type: Float, nullable: true,
+                    defaultValue: NullRuntimeValue.CreateObject()),
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadFloat(context));
 
@@ -892,8 +893,10 @@ public static class Builtins
                 new ParameterDefinition(
                     name: "outputStyle",
                     type: BooleanOutputStyles,
-                    defaultValue: BooleanOutputStyleRuntimeValue.CreateObject(BooleanOutputStyleRuntimeValue.Style.Word)),
-                new ParameterDefinition(name: "immediate", type: Boolean, defaultValue: BooleanRuntimeValue.CreateObject(false)),
+                    defaultValue: BooleanOutputStyleRuntimeValue.CreateObject(BooleanOutputStyleRuntimeValue.Style
+                        .Word)),
+                new ParameterDefinition(name: "immediate", type: Boolean,
+                    defaultValue: BooleanRuntimeValue.CreateObject(false)),
             ],
             body: (_, _, context) => InternalMethods.Terminal.ReadBoolean(context));
 
