@@ -411,7 +411,7 @@ public static class Builtins
 
         Attribute valueAttribute = new(
             name: "value",
-            type: Type,
+            type: Object,
             valueGetter: (self, context) =>
             {
                 OptionalRuntimeValue value = (OptionalRuntimeValue)self.Value;
@@ -427,7 +427,7 @@ public static class Builtins
 
         Method valueOrDefaultMethod = new(
             name: "valueOrDefault",
-            returnType: Type,
+            returnType: Object,
             parameters: [new ParameterDefinition(name: "default", type: Object),],
             body: (self, _, context) =>
             {
