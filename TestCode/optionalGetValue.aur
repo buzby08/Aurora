@@ -1,0 +1,5 @@
+Optional.create(myOptional = Optional.new("hello"))
+Optional.create(myEmptyOptional = Optional.empty())
+
+Terminal.writeLine("myEmptyOptional has a value of"; myEmptyOptional.valueOrDefault("optional is empty"))
+Terminal.writeLine("myOptional has a value of"; myOptional.value)
