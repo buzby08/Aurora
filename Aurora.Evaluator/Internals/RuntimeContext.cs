@@ -11,7 +11,7 @@ public class RuntimeContext
     public static string GlobalFilePath => GlobalContext?.CallSiteLocation.FilePath ??
                                            throw new InvalidOperationException("Global context not initialized");
 
-    private readonly Dictionary<string, RuntimeObject> _variables = [];
+    private Dictionary<string, RuntimeObject> _variables { get; set; } = [];
     private string? thisVariable = null;
 
     public RuntimeContext? Parent { get; }
@@ -37,6 +37,15 @@ public class RuntimeContext
     public RuntimeContext CreateChild(SourceLocation callSiteLocation)
     {
         return new RuntimeContext(this, callSiteLocation);
+    }
+
+    public RuntimeContext CreateCopyChild()
+    {
+        RuntimeContext copy = new(this.Parent, this.CallSiteLocation)
+        {
+            _variables = this._variables.ToDictionary(x => x.Key, x => x.Value),
+        };
+        return copy;
     }
 
     public string[] GetVariables()

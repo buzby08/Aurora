@@ -1,0 +1,4 @@
+Loop.for(Int.create(i = 0); i.lessThan(5); i.increment(); {
+	Int.create(y = 1)
+	Terminal.writeLine("y ="; y)
+})
