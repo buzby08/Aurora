@@ -1,0 +1,7 @@
+// FAIL Aurora.ObjectNotFound
+
+Loop.for(Int.create(i = 0); i.lessThan(3); i.increment(); {
+	Terminal.writeLine("i is"; i)
+})
+
+Terminal.writeLine(i)
