@@ -183,7 +183,8 @@ public class Evaluator : IDisposable
 
         while (!this.BreakLoop && EvaluateCondition(condition))
         {
-            Evaluator blockEvaluator = CreateChild(this.Context, EvaluatorState.Block);
+            RuntimeContext subContext = this.Context.CreateChild(this.Context.CallSiteLocation);
+            Evaluator blockEvaluator = CreateChild(subContext, EvaluatorState.Block);
             blockEvaluator.EvaluateMultipleExpressions(body);
             RunIncrementer(incrementer);
         }
