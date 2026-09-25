@@ -27,6 +27,8 @@ public static class Builtins
     public static TypeObject Loop = null!;
     public static TypeObject Array = null!;
     public static TypeObject Interface = null!;
+    public static TypeObject IComparable = null!;
+    public static TypeObject INumber = null!;
     public static TypeObject ICollection = null!;
 
     public static void InitialiseTypes()
@@ -76,6 +78,10 @@ public static class Builtins
 
         Interface = new TypeObject(new RuntimeType(nameof(Interface)));
 
+        IComparable = new TypeObject(new RuntimeInterface(nameof(IComparable)));
+
+        INumber = new TypeObject(new RuntimeInterface(nameof(INumber)));
+
         ICollection = new TypeObject(new RuntimeInterface(nameof(ICollection)));
 
         // Todo: Add tests for interfaces.
@@ -88,6 +94,12 @@ public static class Builtins
 
         InitialiseInterfaceType();
         Interface.MarkFinal(null);
+
+        InitialiseIComparableType();
+        IComparable.MarkFinal(null);
+
+        InitialiseINumberType();
+        INumber.MarkFinal(null);
 
         InitialiseBlockType();
         Block.MarkFinal(null);
@@ -134,6 +146,18 @@ public static class Builtins
 
         InitialiseArrayType();
         Array.MarkFinal(null);
+    }
+
+    private static void InitialiseIComparableType()
+    {
+        IComparable.AddInterfaceMethod(name: "lessThan", returnType: Boolean,
+            parameterDefinitions: [new ParameterDefinition("other", Object),], location: null);
+        IComparable.AddInterfaceMethod(name: "lessThanOrEqual", returnType: Boolean,
+            parameterDefinitions: [new ParameterDefinition("other", Object),], location: null);
+        IComparable.AddInterfaceMethod(name: "greaterThan", returnType: Boolean,
+            parameterDefinitions: [new ParameterDefinition("other", Object),], location: null);
+        IComparable.AddInterfaceMethod(name: "greaterThanOrEqual", returnType: Boolean,
+            parameterDefinitions: [new ParameterDefinition("other", Object),], location: null);
     }
 
     private static void InitialiseBlockType()
