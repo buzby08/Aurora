@@ -148,6 +148,11 @@ public static class Builtins
         Array.MarkFinal(null);
     }
 
+    private static void InitialiseINumberType()
+    {
+        
+    }
+
     private static void InitialiseIComparableType()
     {
         IComparable.AddInterfaceMethod(name: "lessThan", returnType: Boolean,
