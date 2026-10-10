@@ -870,7 +870,7 @@ public static class Builtins
 
         Method readFloatMethod = new(
             name: "readFloat",
-            returnType: Int,
+            returnType: Float,
             parameters:
             [
                 new ParameterDefinition(name: "message", type: String,
