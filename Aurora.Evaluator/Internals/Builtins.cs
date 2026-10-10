@@ -150,7 +150,7 @@ public static class Builtins
 
     private static void InitialiseINumberType()
     {
-        
+
     }
 
     private static void InitialiseIComparableType()
