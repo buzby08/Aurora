@@ -100,7 +100,7 @@ internal static class Terminal
 
     private static RuntimeObject ReadLine(StringRuntimeValue message, StringRuntimeValue defaultValue)
     {
-        Console.Write(message);
+        Console.Write(message.ToCSharpString());
         string? inputtedValue = Console.ReadLine();
 
         if (string.IsNullOrWhiteSpace(inputtedValue))
